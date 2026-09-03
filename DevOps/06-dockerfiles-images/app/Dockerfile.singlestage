@@ -1,0 +1,15 @@
+# =====================================================================
+#  SINGLE-STAGE equivalent, kept ONLY for size comparison.
+#  It ships the whole JDK plus the .java source into the final image.
+#  Build with:
+#     docker build -f app/Dockerfile.singlestage -t hello-singlestage:1.0 app/
+# =====================================================================
+FROM eclipse-temurin:21-jdk
+
+WORKDIR /app
+COPY src/HelloWorld.java ./
+RUN javac -d /app/classes HelloWorld.java
+
+WORKDIR /app/classes
+EXPOSE 8080
+CMD ["java", "HelloWorld"]
