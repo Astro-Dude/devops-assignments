@@ -1,0 +1,47 @@
+### ROLLBACK to revision 1
+@@@CMD@@@ helm rollback my-notes 1 --wait --timeout 5m
+Rollback was a success! Happy Helming!
+@@@RC@@@ 0
+@@@CMD@@@ helm history my-notes
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION     
+1       	Mon Sep 21 15:56:23 2026	superseded	notes-app-0.1.0	1.27       	Install complete
+2       	Mon Sep 21 15:56:45 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete
+3       	Mon Sep 21 15:57:05 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete
+4       	Mon Sep 21 15:57:32 2026	deployed  	notes-app-0.1.0	1.27       	Rollback to 1   
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy,hpa -l app.kubernetes.io/instance=my-notes
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/my-notes-notes-app   1/1     1            1           77s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl port-forward svc/my-notes-notes-app 8088:80 >/dev/null 2>&1 & sleep 4; curl -s http://localhost:8088; kill %1
+<html>
+  <body>
+    <h1>Notes App - development</h1>
+    <p>release: my-notes</p>
+    <p>chart: notes-app-0.1.0</p>
+    <p>appVersion: 1.27</p>
+    <p>environment: development</p>
+    <p>revision: 1</p>
+  </body>
+</html>
+@@@RC@@@ 0
+### A FAILING UPGRADE, WITHOUT --atomic
+@@@CMD@@@ helm upgrade my-notes /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart --set image.tag=does-not-exist --wait --timeout 45s
+level=WARN msg="upgrade failed" name=my-notes error="resource Deployment/default/my-notes-notes-app not ready. status: InProgress, message: Pending termination: 1\ncontext deadline exceeded"
+Error: UPGRADE FAILED: resource Deployment/default/my-notes-notes-app not ready. status: InProgress, message: Pending termination: 1
+context deadline exceeded
+/private/tmp/claude-501/-Users-shauryaverma-SST/eef366f0-5428-4398-b8e9-8679df33ac44/scratchpad/k8s/cap.sh: line 4: 39013 Terminated: 15          kubectl port-forward svc/my-notes-notes-app 8088:80 > /dev/null 2>&1
+@@@RC@@@ 1
+@@@CMD@@@ helm history my-notes
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION                                                                                                                             
+1       	Mon Sep 21 15:56:23 2026	superseded	notes-app-0.1.0	1.27       	Install complete                                                                                                                        
+2       	Mon Sep 21 15:56:45 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete                                                                                                                        
+3       	Mon Sep 21 15:57:05 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete                                                                                                                        
+4       	Mon Sep 21 15:57:32 2026	deployed  	notes-app-0.1.0	1.27       	Rollback to 1                                                                                                                           
+5       	Mon Sep 21 15:57:44 2026	failed    	notes-app-0.1.0	1.27       	Upgrade "my-notes" failed: resource Deployment/default/my-notes-notes-app not ready. status: InProgress, message: Pending termination...
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app.kubernetes.io/instance=my-notes
+NAME                                  READY   STATUS             RESTARTS   AGE
+my-notes-notes-app-66cd88d97b-vg7pz   1/1     Running            0          57s
+my-notes-notes-app-96f86bdf7-4s2j5    0/1     ImagePullBackOff   0          45s
+@@@RC@@@ 0

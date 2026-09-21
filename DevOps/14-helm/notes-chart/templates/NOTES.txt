@@ -1,0 +1,9 @@
+{{ .Chart.Name }} ({{ .Chart.Version }}) has been deployed as release "{{ .Release.Name }}".
+
+  Environment : {{ .Values.config.environment }}
+  Revision    : {{ .Release.Revision }}
+  Replicas    : {{ if .Values.autoscaling.enabled }}autoscaled {{ .Values.autoscaling.minReplicas }}-{{ .Values.autoscaling.maxReplicas }}{{ else }}{{ .Values.replicaCount }}{{ end }}
+
+Reach the app with:
+  kubectl port-forward svc/{{ include "notes-app.fullname" . }} 8088:{{ .Values.service.port }}
+  curl http://localhost:8088

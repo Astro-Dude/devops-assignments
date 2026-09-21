@@ -1,0 +1,38 @@
+### SYMPTOM: the client cannot reach the service
+@@@CMD@@@ kubectl exec client -- curl -s --max-time 5 http://payments-svc; echo "curl exit=$?"
+command terminated with exit code 7
+curl exit=7
+@@@RC@@@ 0
+### STEP 1 - does the name even resolve?
+@@@CMD@@@ kubectl exec client -- nslookup payments-svc.default.svc.cluster.local 2>&1 | tail -6
+Address:	10.96.0.10#53
+
+Name:	payments-svc.default.svc.cluster.local
+Address: 10.96.127.43
+;; Got recursion not available from 10.96.0.10
+
+@@@RC@@@ 0
+### STEP 2 - are the pods actually healthy?
+@@@CMD@@@ kubectl get pods -l app=payments
+NAME                        READY   STATUS    RESTARTS   AGE
+payments-68c8d7799b-g66bm   1/1     Running   0          1s
+payments-68c8d7799b-qmggv   1/1     Running   0          1s
+@@@RC@@@ 0
+### STEP 3 - does the SERVICE have endpoints?  <-- the decisive check
+@@@CMD@@@ kubectl get endpoints payments-svc
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME           ENDPOINTS   AGE
+payments-svc   <none>      1s
+@@@RC@@@ 0
+### STEP 4 - compare the selector with the real pod labels
+@@@CMD@@@ kubectl get svc payments-svc -o jsonpath='service selector: {.spec.selector}'; echo
+service selector: {"app":"payment"}
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=payments -o jsonpath='{range .items[*]}pod labels:    {.metadata.labels}{"\n"}{end}'
+pod labels:    {"app":"payments","pod-template-hash":"68c8d7799b"}
+pod labels:    {"app":"payments","pod-template-hash":"68c8d7799b"}
+@@@RC@@@ 0
+### STEP 5 - prove the pods themselves are fine by bypassing the Service
+@@@CMD@@@ kubectl get pods -l app=payments -o jsonpath='{.items[0].status.podIP}'; echo
+10.244.2.83
+@@@RC@@@ 0

@@ -1,13 +1,21 @@
+# Production overrides. Only the differences from values.yaml need to appear.
 replicaCount: 3
 
-image:
-  repository: nginx
-  tag: "1.25"
-
-service:
-  port: 80
-  nodePort: 30090
-
-app:
-  name: notes-app
+config:
   environment: production
+  logLevel: warn
+  welcomeMessage: "Notes App - PRODUCTION"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60

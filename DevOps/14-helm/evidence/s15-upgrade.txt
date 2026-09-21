@@ -1,0 +1,73 @@
+### UPGRADE to revision 2 - just bump replicas with --set
+@@@CMD@@@ helm upgrade my-notes /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart --set replicaCount=3 --wait --timeout 5m
+Release "my-notes" has been upgraded. Happy Helming!
+NAME: my-notes
+LAST DEPLOYED: Mon Sep 21 15:56:45 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "my-notes".
+
+  Environment : development
+  Revision    : 2
+  Replicas    : 3
+
+Reach the app with:
+  kubectl port-forward svc/my-notes-notes-app 8088:80
+  curl http://localhost:8088
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy my-notes-notes-app
+NAME                 READY   UP-TO-DATE   AVAILABLE   AGE
+my-notes-notes-app   3/3     3            3           41s
+@@@RC@@@ 0
+### UPGRADE to revision 3 - switch to production values
+@@@CMD@@@ helm upgrade my-notes /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart -f /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart/values-prod.yaml --wait --timeout 5m
+Release "my-notes" has been upgraded. Happy Helming!
+NAME: my-notes
+LAST DEPLOYED: Mon Sep 21 15:57:05 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 3
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "my-notes".
+
+  Environment : production
+  Revision    : 3
+  Replicas    : autoscaled 3-10
+
+Reach the app with:
+  kubectl port-forward svc/my-notes-notes-app 8088:80
+  curl http://localhost:8088
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy,hpa -l app.kubernetes.io/instance=my-notes
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/my-notes-notes-app   3/3     3            3           55s
+
+NAME                                                     REFERENCE                       TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/my-notes-notes-app   Deployment/my-notes-notes-app   cpu: <unknown>/60%   3         10        1          13s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl port-forward svc/my-notes-notes-app 8088:80 >/dev/null 2>&1 & sleep 4; curl -s http://localhost:8088; kill %1
+<html>
+  <body>
+    <h1>Notes App - PRODUCTION</h1>
+    <p>release: my-notes</p>
+    <p>chart: notes-app-0.1.0</p>
+    <p>appVersion: 1.27</p>
+    <p>environment: production</p>
+    <p>revision: 3</p>
+  </body>
+</html>
+@@@RC@@@ 0
+### HISTORY
+@@@CMD@@@ helm history my-notes
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION     
+1       	Mon Sep 21 15:56:23 2026	superseded	notes-app-0.1.0	1.27       	Install complete
+2       	Mon Sep 21 15:56:45 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete
+3       	Mon Sep 21 15:57:05 2026	deployed  	notes-app-0.1.0	1.27       	Upgrade complete
+/private/tmp/claude-501/-Users-shauryaverma-SST/eef366f0-5428-4398-b8e9-8679df33ac44/scratchpad/k8s/cap.sh: line 4: 38455 Terminated: 15          kubectl port-forward svc/my-notes-notes-app 8088:80 > /dev/null 2>&1
+@@@RC@@@ 0

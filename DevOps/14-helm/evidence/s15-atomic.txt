@@ -1,0 +1,37 @@
+### clean up the mess left by the non-atomic failure
+@@@CMD@@@ helm rollback my-notes 4 --wait --timeout 5m
+Rollback was a success! Happy Helming!
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app.kubernetes.io/instance=my-notes
+NAME                                  READY   STATUS        RESTARTS   AGE
+my-notes-notes-app-66cd88d97b-vg7pz   1/1     Running       0          69s
+my-notes-notes-app-96f86bdf7-4s2j5    0/1     Terminating   0          57s
+@@@RC@@@ 0
+### THE SAME FAILING UPGRADE, WITH --atomic
+@@@CMD@@@ helm upgrade my-notes /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart --set image.tag=does-not-exist --atomic --wait --timeout 45s
+Flag --atomic has been deprecated, use --rollback-on-failure instead
+level=WARN msg="upgrade failed" name=my-notes error="resource Deployment/default/my-notes-notes-app not ready. status: InProgress, message: Pending termination: 1\ncontext deadline exceeded"
+Error: UPGRADE FAILED: release my-notes failed, and has been rolled back due to rollback-on-failure being set: resource Deployment/default/my-notes-notes-app not ready. status: InProgress, message: Pending termination: 1
+context deadline exceeded
+@@@RC@@@ 1
+--- --atomic rolled it back automatically; no broken pod is left behind ---
+@@@CMD@@@ kubectl get pods -l app.kubernetes.io/instance=my-notes
+NAME                                  READY   STATUS        RESTARTS   AGE
+my-notes-notes-app-66cd88d97b-vg7pz   1/1     Running       0          114s
+my-notes-notes-app-c7b76bf4-v7tjd     0/1     Terminating   0          45s
+@@@RC@@@ 0
+@@@CMD@@@ helm history my-notes
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION                                                                                                                             
+1       	Mon Sep 21 15:56:23 2026	superseded	notes-app-0.1.0	1.27       	Install complete                                                                                                                        
+2       	Mon Sep 21 15:56:45 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete                                                                                                                        
+3       	Mon Sep 21 15:57:05 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete                                                                                                                        
+4       	Mon Sep 21 15:57:32 2026	superseded	notes-app-0.1.0	1.27       	Rollback to 1                                                                                                                           
+5       	Mon Sep 21 15:57:44 2026	failed    	notes-app-0.1.0	1.27       	Upgrade "my-notes" failed: resource Deployment/default/my-notes-notes-app not ready. status: InProgress, message: Pending termination...
+6       	Mon Sep 21 15:58:40 2026	superseded	notes-app-0.1.0	1.27       	Rollback to 4                                                                                                                           
+7       	Mon Sep 21 15:58:41 2026	failed    	notes-app-0.1.0	1.27       	Upgrade "my-notes" failed: resource Deployment/default/my-notes-notes-app not ready. status: InProgress, message: Pending termination...
+8       	Mon Sep 21 15:59:26 2026	deployed  	notes-app-0.1.0	1.27       	Rollback to 6                                                                                                                           
+@@@RC@@@ 0
+@@@CMD@@@ helm list
+NAME    	NAMESPACE	REVISION	UPDATED                             	STATUS  	CHART          	APP VERSION
+my-notes	default  	8       	2026-09-21 15:59:26.212768 +0530 IST	deployed	notes-app-0.1.0	1.27       
+@@@RC@@@ 0

@@ -1,0 +1,40 @@
+### install a real third-party chart, overriding its values
+@@@CMD@@@ helm install web bitnami/nginx --version 25.1.14 --set service.type=ClusterIP --set replicaCount=1 --set resourcesPreset=nano --wait --timeout 6m 2>&1 | head -25
+NAME: web
+LAST DEPLOYED: Mon Sep 21 16:00:04 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+NOTES:
+CHART NAME: nginx
+CHART VERSION: 25.1.14
+APP VERSION: 1.31.6
+
+⚠ WARNING: Since August 28th, 2025, only a limited subset of images/charts are available for free.
+    Subscribe to Bitnami Secure Images to receive continued support and security updates.
+    More info at https://bitnami.com and https://github.com/bitnami/containers/issues/83267
+
+** Please be patient while the chart is being deployed **
+NGINX can be accessed through the following DNS name from within your cluster:
+
+    web-nginx.default.svc.cluster.local (port 80)
+
+To access NGINX from outside the cluster, follow the steps below:
+
+1. Get the NGINX URL by running these commands:
+
+@@@RC@@@ 0
+@@@CMD@@@ helm list
+NAME    	NAMESPACE	REVISION	UPDATED                             	STATUS  	CHART          	APP VERSION
+my-notes	default  	8       	2026-09-21 15:59:26.212768 +0530 IST	deployed	notes-app-0.1.0	1.27       
+web     	default  	1       	2026-09-21 16:00:04.529338 +0530 IST	deployed	nginx-25.1.14  	1.31.6     
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods,svc -l app.kubernetes.io/instance=web
+NAME                             READY   STATUS    RESTARTS   AGE
+pod/web-nginx-6476798679-xqrh7   1/1     Running   0          19s
+
+NAME                TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+service/web-nginx   ClusterIP   10.96.220.51   <none>        80/TCP,443/TCP   20s
+@@@RC@@@ 0

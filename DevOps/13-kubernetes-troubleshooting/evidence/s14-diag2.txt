@@ -1,0 +1,59 @@
+### FAULT 1 - ImagePullBackOff
+@@@CMD@@@ kubectl describe pod -l app=broken-image | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason     Age                 From               Message
+  ----     ------     ----                ----               -------
+  Normal   Scheduled  113s                default-scheduler  Successfully assigned default/broken-image-585848ccd5-g8jkl to devops-hw-worker
+  Normal   Pulling    21s (x4 over 114s)  kubelet            spec.containers{app}: Pulling image "nginx:1.99-does-not-exist"
+  Warning  Failed     20s (x4 over 108s)  kubelet            spec.containers{app}: Failed to pull image "nginx:1.99-does-not-exist": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:1.99-does-not-exist": failed to resolve reference "docker.io/library/nginx:1.99-does-not-exist": docker.io/library/nginx:1.99-does-not-exist: not found
+  Warning  Failed     20s (x4 over 108s)  kubelet            spec.containers{app}: Error: ErrImagePull
+  Normal   BackOff    8s (x5 over 107s)   kubelet            spec.containers{app}: Back-off pulling image "nginx:1.99-does-not-exist"
+  Warning  Failed     8s (x5 over 107s)   kubelet            spec.containers{app}: Error: ImagePullBackOff
+@@@RC@@@ 0
+### FAULT 2 - CrashLoopBackOff
+@@@CMD@@@ kubectl describe pod -l app=broken-crash | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason     Age                 From               Message
+  ----     ------     ----                ----               -------
+  Normal   Scheduled  113s                default-scheduler  Successfully assigned default/broken-crash-68ccc8b7d7-dkv9h to devops-hw-worker2
+  Normal   Pulled     27s (x5 over 114s)  kubelet            spec.containers{app}: Container image "busybox:1.36" already present on machine and can be accessed by the pod
+  Normal   Created    27s (x5 over 113s)  kubelet            spec.containers{app}: Container created
+  Normal   Started    27s (x5 over 113s)  kubelet            spec.containers{app}: Container started
+  Warning  BackOff    27s (x4 over 112s)  kubelet            spec.containers{app}: Back-off restarting failed container app in pod broken-crash-68ccc8b7d7-dkv9h_default(d528c8c9-d5dc-4ea0-bd37-41c44c70997c)
+@@@RC@@@ 0
+@@@CMD@@@ kubectl logs -l app=broken-crash --tail=10
+FATAL: DATABASE_URL is not set
+starting checkout-service...
+@@@RC@@@ 0
+### FAULT 3 - Pending
+@@@CMD@@@ kubectl describe pod -l app=broken-pending | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason            Age   From               Message
+  ----     ------            ----  ----               -------
+  Warning  FailedScheduling  113s  default-scheduler  0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 node(s) didn't match Pod's node affinity/selector. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get nodes --show-labels | tr ',' '\n' | grep -i disktype; echo "(no disktype label anywhere: exit $?)"
+(no disktype label anywhere: exit 1)
+@@@RC@@@ 0
+### FAULT 4 - OOMKilled
+@@@CMD@@@ kubectl describe pod broken-oom | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason     Age                 From               Message
+  ----     ------     ----                ----               -------
+  Normal   Scheduled  114s                default-scheduler  Successfully assigned default/broken-oom to devops-hw-worker2
+  Normal   Pulled     104s                kubelet            spec.containers{hungry}: Successfully pulled image "polinux/stress" in 9.057s (9.057s including waiting). Image size: 4041495 bytes.
+  Normal   Pulled     102s                kubelet            spec.containers{hungry}: Successfully pulled image "polinux/stress" in 1.534s (1.534s including waiting). Image size: 4041495 bytes.
+  Normal   Pulled     89s                 kubelet            spec.containers{hungry}: Successfully pulled image "polinux/stress" in 1.518s (1.518s including waiting). Image size: 4041495 bytes.
+  Normal   Pulled     64s                 kubelet            spec.containers{hungry}: Successfully pulled image "polinux/stress" in 1.434s (1.434s including waiting). Image size: 4041495 bytes.
+  Normal   Pulling    22s (x5 over 114s)  kubelet            spec.containers{hungry}: Pulling image "polinux/stress"
+  Normal   Created    21s (x5 over 104s)  kubelet            spec.containers{hungry}: Container created
+  Normal   Started    21s (x5 over 104s)  kubelet            spec.containers{hungry}: Container started
+  Warning  BackOff    21s (x5 over 102s)  kubelet            spec.containers{hungry}: Back-off restarting failed container hungry in pod broken-oom_default(1a7318e9-efe5-47ce-a1f6-0f9496c5b947)
+  Normal   Pulled     21s                 kubelet            spec.containers{hungry}: Successfully pulled image "polinux/stress" in 1.588s (1.588s including waiting). Image size: 4041495 bytes.
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pod broken-oom -o jsonpath='{.status.containerStatuses[0].lastState.terminated}'; echo
+{"containerID":"containerd://8f661aef062479cfb3b245e832bbcc97f2e821b6e6444261c09ccf102cb7149e","exitCode":137,"finishedAt":"2026-09-21T10:19:37Z","reason":"OOMKilled","startedAt":"2026-09-21T10:19:37Z"}
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pod broken-oom -o jsonpath='limits={.spec.containers[0].resources.limits.memory}'; echo
+limits=50Mi
+@@@RC@@@ 0

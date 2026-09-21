@@ -1,7 +1,20 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Release.Name }}-config
+  name: {{ include "notes-app.fullname" . }}-config
+  labels:
+    {{- include "notes-app.labels" . | nindent 4 }}
 data:
-  APP_NAME: {{ .Values.app.name | quote }}
-  ENVIRONMENT: {{ .Values.app.environment | quote }}
+  ENVIRONMENT: {{ .Values.config.environment | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  index.html: |
+    <html>
+      <body>
+        <h1>{{ .Values.config.welcomeMessage }}</h1>
+        <p>release: {{ .Release.Name }}</p>
+        <p>chart: {{ .Chart.Name }}-{{ .Chart.Version }}</p>
+        <p>appVersion: {{ .Chart.AppVersion }}</p>
+        <p>environment: {{ .Values.config.environment }}</p>
+        <p>revision: {{ .Release.Revision }}</p>
+      </body>
+    </html>

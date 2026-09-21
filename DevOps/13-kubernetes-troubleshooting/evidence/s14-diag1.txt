@@ -1,0 +1,55 @@
+### STEP 1 - kubectl get: WHAT is broken
+@@@CMD@@@ kubectl get pods
+NAME                              READY   STATUS             RESTARTS      AGE
+broken-crash-68ccc8b7d7-dkv9h     0/1     Error              4 (57s ago)   101s
+broken-image-585848ccd5-g8jkl     0/1     ImagePullBackOff   0             101s
+broken-oom                        0/1     OOMKilled          4 (51s ago)   101s
+broken-pending-68587d49d6-rfbm2   0/1     Pending            0             101s
+client                            1/1     Running            0             66m
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods --field-selector=status.phase!=Running
+NAME                              READY   STATUS             RESTARTS   AGE
+broken-image-585848ccd5-g8jkl     0/1     ImagePullBackOff   0          101s
+broken-pending-68587d49d6-rfbm2   0/1     Pending            0          101s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy
+NAME             READY   UP-TO-DATE   AVAILABLE   AGE
+broken-crash     0/1     1            0           101s
+broken-image     0/1     1            0           101s
+broken-pending   0/1     1            0           101s
+@@@RC@@@ 0
+### STEP 2 - kubectl get events: the whole cluster at once
+@@@CMD@@@ kubectl get events --sort-by=.lastTimestamp -A --field-selector type=Warning | tail -15
+kube-system          29m         Warning   Unhealthy                      pod/kube-controller-manager-devops-hw-control-plane   Liveness probe failed: Get "https://127.0.0.1:10257/healthz": unexpected EOF
+kube-system          29m         Warning   Unhealthy                      pod/kube-controller-manager-devops-hw-control-plane   Liveness probe failed: Get "https://127.0.0.1:10257/healthz": dial tcp 127.0.0.1:10257: connect: connection refused
+default              28m         Warning   SystemOOM                      node/devops-hw-control-plane                          System OOM encountered, victim process: speaker, pid: 31060
+default              28m         Warning   SystemOOM                      node/devops-hw-worker2                                System OOM encountered, victim process: speaker, pid: 31060
+default              28m         Warning   SystemOOM                      node/devops-hw-worker                                 System OOM encountered, victim process: speaker, pid: 31060
+kube-system          28m         Warning   Unhealthy                      pod/kube-controller-manager-devops-hw-control-plane   Startup probe failed: Get "https://127.0.0.1:10257/healthz": net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)
+kube-system          27m         Warning   Unhealthy                      pod/kube-controller-manager-devops-hw-control-plane   Startup probe failed: Get "https://127.0.0.1:10257/healthz": net/http: TLS handshake timeout
+default              26m         Warning   SystemOOM                      node/devops-hw-worker2                                System OOM encountered, victim process: local-path-prov, pid: 97446
+default              26m         Warning   SystemOOM                      node/devops-hw-control-plane                          System OOM encountered, victim process: local-path-prov, pid: 97446
+default              26m         Warning   SystemOOM                      node/devops-hw-worker                                 System OOM encountered, victim process: local-path-prov, pid: 97446
+default              22s         Warning   Failed                         pod/broken-image-585848ccd5-g8jkl                     Error: ImagePullBackOff
+default              14s         Warning   BackOff                        pod/broken-crash-68ccc8b7d7-dkv9h                     Back-off restarting failed container app in pod broken-crash-68ccc8b7d7-dkv9h_default(d528c8c9-d5dc-4ea0-bd37-41c44c70997c)
+default              8s          Warning   BackOff                        pod/broken-oom                                        Back-off restarting failed container hungry in pod broken-oom_default(1a7318e9-efe5-47ce-a1f6-0f9496c5b947)
+default              7s          Warning   Failed                         pod/broken-image-585848ccd5-g8jkl                     Failed to pull image "nginx:1.99-does-not-exist": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:1.99-does-not-exist": failed to resolve reference "docker.io/library/nginx:1.99-does-not-exist": docker.io/library/nginx:1.99-does-not-exist: not found
+default              7s          Warning   Failed                         pod/broken-image-585848ccd5-g8jkl                     Error: ErrImagePull
+@@@RC@@@ 0
+### FAULT 1 - ImagePullBackOff
+@@@CMD@@@ kubectl describe pod -l app=broken-image | sed -n '/^Events:/,'
+sed: 1: "/^Events:/,
+": expected context address
+@@@RC@@@ 1
+@@@CMD@@@ kubectl get pod -l app=broken-image -o jsonpath='{.items[0].status.containerStatuses[0].state.waiting}'; echo
+{"message":"Back-off pulling image \"nginx:1.99-does-not-exist\": ErrImagePull: rpc error: code = NotFound desc = failed to pull and unpack image \"docker.io/library/nginx:1.99-does-not-exist\": failed to resolve reference \"docker.io/library/nginx:1.99-does-not-exist\": docker.io/library/nginx:1.99-does-not-exist: not found","reason":"ImagePullBackOff"}
+@@@RC@@@ 0
+### FAULT 2 - CrashLoopBackOff: logs are the answer
+@@@CMD@@@ kubectl describe pod -l app=broken-crash | sed -n '/^Events:/,'
+sed: 1: "/^Events:/,
+": expected context address
+@@@RC@@@ 1
+@@@CMD@@@ kubectl logs -l app=broken-crash --tail=10
+FATAL: DATABASE_URL is not set
+starting checkout-service...
+@@@RC@@@ 0

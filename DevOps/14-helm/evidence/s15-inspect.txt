@@ -1,0 +1,63 @@
+### INSPECTING A LIVE RELEASE
+@@@CMD@@@ helm get values my-notes
+USER-SUPPLIED VALUES:
+null
+@@@RC@@@ 0
+@@@CMD@@@ helm get values my-notes --all | head -20
+COMPUTED VALUES:
+autoscaling:
+  enabled: false
+  maxReplicas: 5
+  minReplicas: 1
+  targetCPUUtilizationPercentage: 70
+config:
+  environment: development
+  logLevel: debug
+  welcomeMessage: Notes App - development
+image:
+  pullPolicy: IfNotPresent
+  repository: nginx
+  tag: 1.27-alpine
+ingress:
+  enabled: false
+  host: notes.local
+replicaCount: 1
+resources:
+  limits:
+@@@RC@@@ 0
+@@@CMD@@@ helm get manifest my-notes | grep -E '^kind:|^  name:'
+kind: ConfigMap
+  name: my-notes-notes-app-config
+kind: Service
+  name: my-notes-notes-app
+kind: Deployment
+  name: my-notes-notes-app
+@@@RC@@@ 0
+### WHERE HELM KEEPS ITS STATE
+@@@CMD@@@ kubectl get secrets -l owner=helm --sort-by=.metadata.name | head -12
+NAME                             TYPE                 DATA   AGE
+sh.helm.release.v1.my-notes.v1   helm.sh/release.v1   1      4m13s
+sh.helm.release.v1.my-notes.v2   helm.sh/release.v1   1      3m51s
+sh.helm.release.v1.my-notes.v3   helm.sh/release.v1   1      3m31s
+sh.helm.release.v1.my-notes.v4   helm.sh/release.v1   1      3m4s
+sh.helm.release.v1.my-notes.v5   helm.sh/release.v1   1      2m52s
+sh.helm.release.v1.my-notes.v6   helm.sh/release.v1   1      116s
+sh.helm.release.v1.my-notes.v7   helm.sh/release.v1   1      115s
+sh.helm.release.v1.my-notes.v8   helm.sh/release.v1   1      70s
+sh.helm.release.v1.web.v1        helm.sh/release.v1   1      32s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get secret -l owner=helm,name=my-notes -o jsonpath='{.items[0].type}'; echo
+helm.sh/release.v1
+@@@RC@@@ 0
+### UNINSTALL
+@@@CMD@@@ helm uninstall web
+release "web" uninstalled
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods,svc -l app.kubernetes.io/instance=web
+NAME                             READY   STATUS        RESTARTS   AGE
+pod/web-nginx-6476798679-xqrh7   1/1     Terminating   0          31s
+@@@RC@@@ 0
+@@@CMD@@@ helm list
+NAME    	NAMESPACE	REVISION	UPDATED                             	STATUS  	CHART          	APP VERSION
+my-notes	default  	8       	2026-09-21 15:59:26.212768 +0530 IST	deployed	notes-app-0.1.0	1.27       
+@@@RC@@@ 0

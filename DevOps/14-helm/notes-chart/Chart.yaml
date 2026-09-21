@@ -1,6 +1,15 @@
 apiVersion: v2
-name: notes-chart
-description: A simple Notes application Helm chart
+name: notes-app
+description: A small notes web app used to learn Helm packaging, templating and releases
 type: application
+
+# version      = the version of THIS CHART. Bump it when the templates change.
+# appVersion   = the version of the APPLICATION inside. Independent of the above.
 version: 0.1.0
-appVersion: "1.0"
+appVersion: "1.27"
+
+keywords:
+  - notes
+  - demo
+maintainers:
+  - name: astro-dude

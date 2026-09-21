@@ -1,0 +1,17 @@
+### bypass the Service - hit the pod IP directly
+@@@CMD@@@ kubectl exec client -- curl -s --max-time 5 http://10.244.2.83
+payments ok
+@@@RC@@@ 0
+=> the POD is fine; the SERVICE is the broken part
+### THE FIX
+@@@CMD@@@ kubectl patch svc payments-svc -p '{"spec":{"selector":{"app":"payments"}}}'
+service/payments-svc patched
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get endpoints payments-svc
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME           ENDPOINTS                       AGE
+payments-svc   10.244.1.97:80,10.244.2.83:80   15s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec client -- curl -s http://payments-svc
+payments ok
+@@@RC@@@ 0

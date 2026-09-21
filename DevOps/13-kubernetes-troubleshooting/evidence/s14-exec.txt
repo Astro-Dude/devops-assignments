@@ -1,0 +1,30 @@
+### kubectl exec - inspecting a RUNNING container from the inside
+@@@CMD@@@ kubectl exec client -- sh -c 'hostname; id; echo ---; cat /etc/resolv.conf'
+sh: line 1: hostname: command not found
+uid=0 gid=0 groups=0
+---
+search default.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec client -- env | grep -i kubernetes | sort
+KUBERNETES_PORT=tcp://10.96.0.1:443
+KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+KUBERNETES_PORT_443_TCP_PORT=443
+KUBERNETES_PORT_443_TCP_PROTO=tcp
+KUBERNETES_SERVICE_HOST=10.96.0.1
+KUBERNETES_SERVICE_PORT=443
+KUBERNETES_SERVICE_PORT_HTTPS=443
+@@@RC@@@ 0
+### kubectl logs - the flags that matter
+@@@CMD@@@ kubectl logs -l app=broken-crash --tail=5 --prefix
+[pod/broken-crash-68ccc8b7d7-dkv9h/app] FATAL: DATABASE_URL is not set
+[pod/broken-crash-68ccc8b7d7-dkv9h/app] starting checkout-service...
+@@@RC@@@ 0
+@@@CMD@@@ kubectl logs -l app=broken-crash --previous --tail=5 2>&1 | head -3
+unable to retrieve container logs for containerd://dda9c6bbc57b89d21762741679607c244d6d5f941c694888f660fb8f196ce0da@@@RC@@@ 0
+@@@CMD@@@ kubectl logs -l app=broken-crash --since=2m --timestamps 2>&1 | tail -4
+2026-09-21T10:20:14.109934464Z FATAL: DATABASE_URL is not set
+2026-09-21T10:20:14.109934464Z starting checkout-service...
+@@@RC@@@ 0

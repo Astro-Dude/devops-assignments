@@ -1,13 +1,36 @@
+# Default values. Everything here is overridable with --set or -f.
 replicaCount: 1
 
 image:
   repository: nginx
-  tag: "1.24"
+  tag: "1.27-alpine"
+  pullPolicy: IfNotPresent
 
 service:
+  type: ClusterIP
   port: 80
-  nodePort: 30090
 
-app:
-  name: notes-app
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# Injected into a ConfigMap and served as the app's home page
+config:
   environment: development
+  logLevel: debug
+  welcomeMessage: "Notes App - development"
+
+# Optional extras, off by default
+ingress:
+  enabled: false
+  host: notes.local
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70

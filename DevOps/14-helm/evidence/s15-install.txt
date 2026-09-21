@@ -1,0 +1,49 @@
+### INSTALL (revision 1)
+@@@CMD@@@ helm install my-notes /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart --wait --timeout 5m
+NAME: my-notes
+LAST DEPLOYED: Mon Sep 21 15:56:23 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "my-notes".
+
+  Environment : development
+  Revision    : 1
+  Replicas    : 1
+
+Reach the app with:
+  kubectl port-forward svc/my-notes-notes-app 8088:80
+  curl http://localhost:8088
+@@@RC@@@ 0
+@@@CMD@@@ helm list
+NAME    	NAMESPACE	REVISION	UPDATED                             	STATUS  	CHART          	APP VERSION
+my-notes	default  	1       	2026-09-21 15:56:23.743782 +0530 IST	deployed	notes-app-0.1.0	1.27       
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get all -l app.kubernetes.io/instance=my-notes
+NAME                                      READY   STATUS    RESTARTS   AGE
+pod/my-notes-notes-app-66cd88d97b-snn86   1/1     Running   0          7s
+
+NAME                         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/my-notes-notes-app   ClusterIP   10.96.60.206   <none>        80/TCP    7s
+
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/my-notes-notes-app   1/1     1            1           7s
+
+NAME                                            DESIRED   CURRENT   READY   AGE
+replicaset.apps/my-notes-notes-app-66cd88d97b   1         1         1       7s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl port-forward svc/my-notes-notes-app 8088:80 >/dev/null 2>&1 & sleep 4; curl -s http://localhost:8088; kill %1
+<html>
+  <body>
+    <h1>Notes App - development</h1>
+    <p>release: my-notes</p>
+    <p>chart: notes-app-0.1.0</p>
+    <p>appVersion: 1.27</p>
+    <p>environment: development</p>
+    <p>revision: 1</p>
+  </body>
+</html>
+@@@RC@@@ 0

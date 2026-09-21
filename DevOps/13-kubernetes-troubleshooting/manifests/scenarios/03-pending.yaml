@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: broken-pending }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: broken-pending } }
+  template:
+    metadata: { labels: { app: broken-pending } }
+    spec:
+      nodeSelector:
+        disktype: ssd                 # FAULT: no node carries this label
+      containers:
+        - name: app
+          image: nginx:1.27-alpine
+          resources: { requests: { cpu: 10m, memory: 16Mi } }

@@ -1,25 +1,50 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-deploy
+  name: {{ include "notes-app.fullname" . }}
   labels:
-    app: {{ .Release.Name }}
-    environment: {{ .Values.app.environment }}
+    {{- include "notes-app.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      {{- include "notes-app.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}
+        {{- include "notes-app.selectorLabels" . | nindent 8 }}
+      annotations:
+        # Changing the ConfigMap changes this checksum, which changes the pod
+        # template, which forces a rollout. Without this, a config-only upgrade
+        # would update the ConfigMap and leave the old pods running.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
-        - name: notes
+        - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - containerPort: {{ .Values.service.port }}
+            - name: http
+              containerPort: 80
           envFrom:
             - configMapRef:
-                name: {{ .Release.Name }}-config
+                name: {{ include "notes-app.fullname" . }}-config
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+          readinessProbe:
+            httpGet: { path: /, port: http }
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: html
+          configMap:
+            name: {{ include "notes-app.fullname" . }}-config
+            items:
+              - key: index.html
+                path: index.html

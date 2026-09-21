@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: broken-image }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: broken-image } }
+  template:
+    metadata: { labels: { app: broken-image } }
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.27-alpine     # FAULT: no such tag

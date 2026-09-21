@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata: { name: broken-oom }
+spec:
+  restartPolicy: Always
+  containers:
+    - name: hungry
+      image: polinux/stress
+      command: ["stress"]
+      # FAULT: asks for 200M of memory with a 50Mi limit
+      args: ["--vm", "1", "--vm-bytes", "30M", "--vm-hang", "1"]
+      resources:
+        requests: { memory: 32Mi }
+        limits:   { memory: 50Mi }

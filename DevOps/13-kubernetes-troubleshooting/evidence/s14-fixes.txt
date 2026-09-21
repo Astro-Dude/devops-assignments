@@ -1,0 +1,31 @@
+### APPLYING ALL FIXES
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/13-kubernetes-troubleshooting/manifests/scenarios/01-FIXED.yaml
+deployment.apps/broken-image configured
+@@@RC@@@ 0
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/13-kubernetes-troubleshooting/manifests/scenarios/02-FIXED.yaml
+deployment.apps/broken-crash configured
+@@@RC@@@ 0
+--- fix 3: label a node so the nodeSelector can be satisfied ---
+@@@CMD@@@ kubectl label node devops-hw-worker disktype=ssd --overwrite
+node/devops-hw-worker labeled
+@@@RC@@@ 0
+@@@CMD@@@ kubectl delete pod broken-oom --ignore-not-found
+pod "broken-oom" deleted from default namespace
+@@@RC@@@ 0
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/13-kubernetes-troubleshooting/manifests/scenarios/04-FIXED.yaml
+pod/broken-oom created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -o wide
+NAME                              READY   STATUS    RESTARTS   AGE     IP            NODE                NOMINATED NODE   READINESS GATES
+broken-crash-7b6cc84c44-mxs96     1/1     Running   0          46s     10.244.1.98   devops-hw-worker    <none>           <none>
+broken-image-6fd5dcfcb6-v28xr     1/1     Running   0          46s     10.244.2.84   devops-hw-worker2   <none>           <none>
+broken-oom                        1/1     Running   0          45s     10.244.2.85   devops-hw-worker2   <none>           <none>
+broken-pending-68587d49d6-rfbm2   1/1     Running   0          3m38s   10.244.1.99   devops-hw-worker    <none>           <none>
+client                            1/1     Running   0          68m     10.244.1.70   devops-hw-worker    <none>           <none>
+payments-68c8d7799b-g66bm         1/1     Running   0          86s     10.244.2.83   devops-hw-worker2   <none>           <none>
+payments-68c8d7799b-qmggv         1/1     Running   0          86s     10.244.1.97   devops-hw-worker    <none>           <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl logs -l app=broken-crash --tail=3
+starting checkout-service...
+connected to postgres://db:5432/checkout
+@@@RC@@@ 0

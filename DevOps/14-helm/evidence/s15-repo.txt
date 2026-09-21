@@ -1,0 +1,60 @@
+### PACKAGING
+@@@CMD@@@ helm package /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart -d /private/tmp/claude-501/-Users-shauryaverma-SST/eef366f0-5428-4398-b8e9-8679df33ac44/scratchpad/k8s/helmwork
+Successfully packaged chart and saved it to: /private/tmp/claude-501/-Users-shauryaverma-SST/eef366f0-5428-4398-b8e9-8679df33ac44/scratchpad/k8s/helmwork/notes-app-0.1.0.tgz
+@@@RC@@@ 0
+@@@CMD@@@ ls -la /private/tmp/claude-501/-Users-shauryaverma-SST/eef366f0-5428-4398-b8e9-8679df33ac44/scratchpad/k8s/helmwork/*.tgz
+-rw-r--r--@ 1 shauryaverma  wheel  2512 Sep 21 15:59 /private/tmp/claude-501/-Users-shauryaverma-SST/eef366f0-5428-4398-b8e9-8679df33ac44/scratchpad/k8s/helmwork/notes-app-0.1.0.tgz
+@@@RC@@@ 0
+@@@CMD@@@ tar tzf /private/tmp/claude-501/-Users-shauryaverma-SST/eef366f0-5428-4398-b8e9-8679df33ac44/scratchpad/k8s/helmwork/notes-app-0.1.0.tgz
+notes-app/Chart.yaml
+notes-app/values.yaml
+notes-app/templates/NOTES.txt
+notes-app/templates/_helpers.tpl
+notes-app/templates/configmap.yaml
+notes-app/templates/deployment.yaml
+notes-app/templates/hpa.yaml
+notes-app/templates/service.yaml
+notes-app/values-prod.yaml
+@@@RC@@@ 0
+### USING A PUBLIC REPOSITORY
+@@@CMD@@@ helm repo add bitnami https://charts.bitnami.com/bitnami
+"bitnami" has been added to your repositories
+@@@RC@@@ 0
+@@@CMD@@@ helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "bitnami" chart repository
+Update Complete. ⎈Happy Helming!⎈
+@@@RC@@@ 0
+@@@CMD@@@ helm repo list
+NAME   	URL                               
+bitnami	https://charts.bitnami.com/bitnami
+@@@RC@@@ 0
+@@@CMD@@@ helm search repo bitnami/nginx --versions | head -5
+NAME                            	CHART VERSION	APP VERSION	DESCRIPTION                                       
+bitnami/nginx                   	25.1.14      	1.31.6     	NGINX Open Source is a web server that can be a...
+bitnami/nginx                   	25.1.13      	1.31.6     	NGINX Open Source is a web server that can be a...
+bitnami/nginx                   	25.1.12      	1.31.6     	NGINX Open Source is a web server that can be a...
+bitnami/nginx                   	25.1.11      	1.31.5     	NGINX Open Source is a web server that can be a...
+@@@RC@@@ 0
+@@@CMD@@@ helm show chart bitnami/nginx | head -20
+annotations:
+  fips: "true"
+  images: |
+    - name: git
+      version: 2.55.0
+      image: registry-1.docker.io/bitnami/git:latest
+    - name: nginx
+      version: 1.31.6
+      image: registry-1.docker.io/bitnami/nginx:latest
+    - name: nginx-exporter
+      version: 1.5.3
+      image: registry-1.docker.io/bitnami/nginx-exporter:latest
+  licenses: Apache-2.0
+  tanzuCategory: clusterUtility
+apiVersion: v2
+appVersion: 1.31.6
+dependencies:
+- name: common
+  repository: oci://registry-1.docker.io/bitnamicharts
+  tags:
+@@@RC@@@ 0

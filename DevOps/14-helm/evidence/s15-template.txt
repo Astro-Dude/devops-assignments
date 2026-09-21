@@ -1,0 +1,72 @@
+@@@CMD@@@ helm lint /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart
+==> Linting /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+@@@RC@@@ 0
+### helm template - render locally, no cluster involved
+@@@CMD@@@ helm template my-notes /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart | head -45
+---
+# Source: notes-app/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-notes-notes-app-config
+  labels:
+    app.kubernetes.io/name: notes-app
+    app.kubernetes.io/instance: my-notes
+    app.kubernetes.io/version: "1.27"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: notes-app-0.1.0
+    environment: development
+data:
+  ENVIRONMENT: "development"
+  LOG_LEVEL: "debug"
+  index.html: |
+    <html>
+      <body>
+        <h1>Notes App - development</h1>
+        <p>release: my-notes</p>
+        <p>chart: notes-app-0.1.0</p>
+        <p>appVersion: 1.27</p>
+        <p>environment: development</p>
+        <p>revision: 1</p>
+      </body>
+    </html>
+
+---
+# Source: notes-app/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-notes-notes-app
+  labels:
+    app.kubernetes.io/name: notes-app
+    app.kubernetes.io/instance: my-notes
+    app.kubernetes.io/version: "1.27"
+    app.kubernetes.io/managed-by: Helm
+    helm.sh/chart: notes-app-0.1.0
+    environment: development
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: notes-app
+@@@RC@@@ 0
+### the SAME chart with production values
+@@@CMD@@@ helm template my-notes /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart -f /Users/shauryaverma/SST/devops-assignments/DevOps/14-helm/notes-chart/values-prod.yaml | grep -E 'replicas:|environment:|kind:|averageUtilization|cpu:|memory:' | head -25
+kind: ConfigMap
+    environment: production
+        <p>environment: production</p>
+kind: Service
+    environment: production
+kind: Deployment
+    environment: production
+              cpu: 500m
+              memory: 256Mi
+              cpu: 50m
+              memory: 64Mi
+kind: HorizontalPodAutoscaler
+    environment: production
+    kind: Deployment
+          averageUtilization: 60
+@@@RC@@@ 0
