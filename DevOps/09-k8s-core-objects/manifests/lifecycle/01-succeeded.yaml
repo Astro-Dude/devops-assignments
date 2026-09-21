@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: phase-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: worker
+      image: busybox:1.36
+      command: ["sh", "-c", "echo 'work done'; exit 0"]

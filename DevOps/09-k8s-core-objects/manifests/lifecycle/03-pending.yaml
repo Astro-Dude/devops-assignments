@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: phase-pending
+spec:
+  containers:
+    - name: greedy
+      image: nginx:1.27-alpine
+      resources:
+        requests:
+          cpu: "500"
+          memory: 2000Gi

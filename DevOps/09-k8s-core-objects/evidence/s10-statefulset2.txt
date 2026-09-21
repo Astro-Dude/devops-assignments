@@ -1,0 +1,61 @@
+### STABLE IDENTITY
+@@@CMD@@@ kubectl get pod web-sts-1 -o jsonpath='{.metadata.name} {.status.podIP}'; echo
+web-sts-1 10.244.2.49
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec web-sts-1 -- cat /usr/share/nginx/html/index.html
+served by web-sts-1
+@@@RC@@@ 0
+@@@CMD@@@ kubectl delete pod web-sts-1
+pod "web-sts-1" deleted from default namespace
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pod web-sts-1 -o jsonpath='{.metadata.name} {.status.podIP}'; echo
+web-sts-1 10.244.2.50
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec web-sts-1 -- cat /usr/share/nginx/html/index.html
+served by web-sts-1
+@@@RC@@@ 0
+### PER-POD DNS THROUGH THE HEADLESS SERVICE
+@@@CMD@@@ kubectl exec dnsutil -- nslookup web-headless.default.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+
+Name:	web-headless.default.svc.cluster.local
+Address: 10.244.1.64
+Name:	web-headless.default.svc.cluster.local
+Address: 10.244.1.63
+Name:	web-headless.default.svc.cluster.local
+Address: 10.244.2.50
+
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec dnsutil -- nslookup web-sts-0.web-headless.default.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+Name:	web-sts-0.web-headless.default.svc.cluster.local
+Address: 10.244.1.63
+
+
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec dnsutil -- nslookup web-sts-2.web-headless.default.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+
+Name:	web-sts-2.web-headless.default.svc.cluster.local
+Address: 10.244.1.64
+
+@@@RC@@@ 0
+### ORDERED, REVERSE-ORDER SCALE DOWN
+08:56:44  web-sts-0(Running) web-sts-1(Running) web-sts-2(Terminating) 
+08:56:45  web-sts-0(Running) web-sts-1(Completed) 
+08:56:46  web-sts-0(Completed) 
+08:56:47  
+08:56:48  
+08:56:49  
+08:56:50  
+08:56:51  
+08:56:53  
+08:56:54  
+08:56:55  
+08:56:56  

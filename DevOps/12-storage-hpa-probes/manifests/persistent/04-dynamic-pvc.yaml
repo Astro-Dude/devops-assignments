@@ -1,0 +1,13 @@
+# DYNAMIC provisioning: no PV is created by hand. The StorageClass's provisioner
+# creates one on demand when this claim is first used by a pod.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamic-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard        # kind's default: rancher.io/local-path
+  resources:
+    requests:
+      storage: 1Gi

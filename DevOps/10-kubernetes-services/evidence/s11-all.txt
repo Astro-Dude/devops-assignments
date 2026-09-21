@@ -1,0 +1,25 @@
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/10-kubernetes-services/manifests/00-backend.yaml
+deployment.apps/web created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=web -o wide
+NAME                   READY   STATUS    RESTARTS   AGE   IP            NODE                NOMINATED NODE   READINESS GATES
+web-574764bdf8-5rsw2   1/1     Running   0          5s    10.244.1.68   devops-hw-worker    <none>           <none>
+web-574764bdf8-7h4wz   1/1     Running   0          5s    10.244.1.69   devops-hw-worker    <none>           <none>
+web-574764bdf8-9vm8g   1/1     Running   0          5s    10.244.2.52   devops-hw-worker2   <none>           <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/10-kubernetes-services/manifests/01-clusterip.yaml -f /Users/shauryaverma/SST/devops-assignments/DevOps/10-kubernetes-services/manifests/02-nodeport.yaml -f /Users/shauryaverma/SST/devops-assignments/DevOps/10-kubernetes-services/manifests/03-loadbalancer.yaml -f /Users/shauryaverma/SST/devops-assignments/DevOps/10-kubernetes-services/manifests/04-externalname.yaml -f /Users/shauryaverma/SST/devops-assignments/DevOps/10-kubernetes-services/manifests/05-headless.yaml
+service/web-clusterip created
+service/web-nodeport created
+service/web-lb created
+service/external-db created
+service/web-headless created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get svc -o wide
+NAME            TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)          AGE   SELECTOR
+external-db     ExternalName   <none>          www.google.com   <none>           21s   <none>
+kubernetes      ClusterIP      10.96.0.1       <none>           443/TCP          41m   <none>
+web-clusterip   ClusterIP      10.96.185.130   <none>           8080/TCP         21s   app=web
+web-headless    ClusterIP      None            <none>           80/TCP           21s   app=web
+web-lb          LoadBalancer   10.96.214.83    172.19.255.201   80:31716/TCP     21s   app=web
+web-nodeport    NodePort       10.96.138.211   <none>           8080:30080/TCP   21s   app=web
+@@@RC@@@ 0

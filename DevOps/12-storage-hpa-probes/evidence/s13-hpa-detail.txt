@@ -1,0 +1,61 @@
+@@@CMD@@@ kubectl get hpa php-apache
+NAME         REFERENCE               TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+php-apache   Deployment/php-apache   cpu: 71%/50%   1         10        10         6m17s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl describe hpa php-apache | sed -n '/^Metrics:/,/^Events:/p'
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  71% (142m) / 50%
+Min replicas:                                          1
+Max replicas:                                          10
+Behavior:
+  Scale Up:
+    Stabilization Window: 0 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Pods     Value: 4    Period: 15 seconds
+      - Type: Percent  Value: 100  Period: 15 seconds
+  Scale Down:
+    Stabilization Window: 60 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Percent  Value: 100  Period: 15 seconds
+Deployment pods:       10 current / 10 desired
+Conditions:
+  Type            Status  Reason            Message
+  ----            ------  ------            -------
+  AbleToScale     True    ReadyForNewScale  recommended size matches current size
+  ScalingActive   True    ValidMetricFound  the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  True    TooManyReplicas   the desired replica count is more than the maximum replica count
+  ScaledToZero    False   NotScaledToZero   the HPA controller did not scale the workload to zero
+Events:
+@@@RC@@@ 0
+@@@CMD@@@ kubectl describe hpa php-apache | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason                        Age                   From                       Message
+  ----     ------                        ----                  ----                       -------
+  Warning  FailedGetResourceMetric       6m2s (x2 over 6m18s)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  6m2s (x2 over 6m18s)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       5m47s                 horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  5m47s                 horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Normal   SuccessfulRescale             5m2s                  horizontal-pod-autoscaler  New size: 3; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             4m47s                 horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             4m32s                 horizontal-pod-autoscaler  New size: 8; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             4m2s                  horizontal-pod-autoscaler  New size: 10; reason: cpu resource utilization (percentage of request) above target
+@@@RC@@@ 0
+@@@CMD@@@ kubectl top pods -l run=php-apache
+NAME                          CPU(cores)   MEMORY(bytes)   
+php-apache-5899f79df5-4xsxq   115m         42Mi            
+php-apache-5899f79df5-65ptp   171m         49Mi            
+php-apache-5899f79df5-6826l   185m         42Mi            
+php-apache-5899f79df5-fh8tf   173m         42Mi            
+php-apache-5899f79df5-gt8sn   152m         46Mi            
+php-apache-5899f79df5-jhcww   138m         46Mi            
+php-apache-5899f79df5-k7qzj   119m         46Mi            
+php-apache-5899f79df5-ktgv6   121m         45Mi            
+php-apache-5899f79df5-pfhxm   93m          45Mi            
+php-apache-5899f79df5-xjcwp   154m         41Mi            
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy php-apache
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+php-apache   10/10   10           10          6m47s
+@@@RC@@@ 0

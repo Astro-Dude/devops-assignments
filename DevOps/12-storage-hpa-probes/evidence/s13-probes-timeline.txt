@@ -1,0 +1,30 @@
+  5s  readiness-demo   0/1 ContainerCreating  r=0 | liveness-demo    0/1 ContainerCreating  r=0 | startup-demo     0/1 ContainerCreating  r=0 | no-startup-demo  0/1 ContainerCreating  r=0 | ep=
+ 10s  readiness-demo   0/1 Running            r=0 | liveness-demo    1/1 Running            r=0 | startup-demo     0/1 Running            r=0 | no-startup-demo  1/1 Running            r=0 | ep=
+ 15s  readiness-demo   0/1 Running            r=0 | liveness-demo    1/1 Running            r=0 | startup-demo     0/1 Running            r=0 | no-startup-demo  1/1 Running            r=0 | ep=
+ 20s  readiness-demo   0/1 Running            r=0 | liveness-demo    1/1 Running            r=0 | startup-demo     0/1 Running            r=0 | no-startup-demo  1/1 Running            r=0 | ep=
+ 25s  readiness-demo   0/1 Running            r=0 | liveness-demo    1/1 Running            r=0 | startup-demo     0/1 Running            r=0 | no-startup-demo  1/1 Running            r=0 | ep=
+ 30s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=0 | startup-demo     0/1 Running            r=0 | no-startup-demo  1/1 Running            r=0 | ep=10.244.2.63
+ 35s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=0 | startup-demo     0/1 Running            r=0 | no-startup-demo  1/1 Running            r=0 | ep=10.244.2.63
+ 40s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=0 | startup-demo     0/1 Running            r=0 | no-startup-demo  1/1 Running            r=0 | ep=10.244.2.63
+ 45s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=1 | startup-demo     0/1 Running            r=0 | no-startup-demo  1/1 Running            r=1 | ep=10.244.2.63
+ 50s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=1 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=1 | ep=10.244.2.63
+ 55s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=1 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=1 | ep=10.244.2.63
+ 60s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=1 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=1 | ep=10.244.2.63
+ 65s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=1 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=1 | ep=10.244.2.63
+ 70s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=1 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=1 | ep=10.244.2.63
+ 75s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=1 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=1 | ep=10.244.2.63
+ 80s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=1 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=1 | ep=10.244.2.63
+ 85s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=2 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=2 | ep=10.244.2.63
+ 90s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=2 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=2 | ep=10.244.2.63
+ 95s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=2 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=2 | ep=10.244.2.63
+100s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=2 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=2 | ep=10.244.2.63
+105s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=2 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=2 | ep=10.244.2.63
+110s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=2 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=2 | ep=10.244.2.63
+115s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=2 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=2 | ep=10.244.2.63
+120s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=2 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=2 | ep=10.244.2.63
+125s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=3 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=3 | ep=10.244.2.63
+130s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=3 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=3 | ep=10.244.2.63
+135s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=3 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=3 | ep=10.244.2.63
+140s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=3 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=3 | ep=10.244.2.63
+145s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=3 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=3 | ep=10.244.2.63
+150s  readiness-demo   1/1 Running            r=0 | liveness-demo    1/1 Running            r=3 | startup-demo     1/1 Running            r=0 | no-startup-demo  1/1 Running            r=3 | ep=10.244.2.63

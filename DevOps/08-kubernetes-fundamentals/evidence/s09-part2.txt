@@ -1,0 +1,95 @@
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/08-kubernetes-fundamentals/manifests/first-pod.yaml
+pod/hello-pod created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pod hello-pod -o wide
+NAME        READY   STATUS              RESTARTS   AGE   IP       NODE               NOMINATED NODE   READINESS GATES
+hello-pod   0/1     ContainerCreating   0          0s    <none>   devops-hw-worker   <none>           <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pod hello-pod -o wide
+NAME        READY   STATUS              RESTARTS   AGE   IP       NODE               NOMINATED NODE   READINESS GATES
+hello-pod   0/1     ContainerCreating   0          8s    <none>   devops-hw-worker   <none>           <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl describe pod hello-pod | head -40
+Name:             hello-pod
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             devops-hw-worker/172.19.0.4
+Start Time:       Mon, 21 Sep 2026 14:04:14 +0530
+Labels:           app=hello
+Annotations:      <none>
+Status:           Pending
+IP:               
+IPs:              <none>
+Containers:
+  hello:
+    Container ID:   
+    Image:          nginx:1.27-alpine
+    Image ID:       
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Waiting
+      Reason:       ContainerCreating
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-k5ztc (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-k5ztc:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+@@@RC@@@ 0
+@@@CMD@@@ kubectl logs hello-pod --tail=5
+Error from server (BadRequest): container "hello" in pod "hello-pod" is waiting to start: ContainerCreating
+@@@RC@@@ 1
+@@@CMD@@@ kubectl exec hello-pod -- nginx -v
+error: unable to upgrade connection: container not found ("hello")
+@@@RC@@@ 1
+@@@CMD@@@ kubectl delete pod hello-pod
+pod "hello-pod" deleted from default namespace
+@@@RC@@@ 0
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/08-kubernetes-fundamentals/manifests/hello-deployment.yaml
+deployment.apps/hello-deploy created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl rollout status deployment/hello-deploy --timeout=120s
+Waiting for deployment "hello-deploy" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "hello-deploy" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "hello-deploy" rollout to finish: 2 of 3 updated replicas are available...
+deployment "hello-deploy" successfully rolled out
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy,rs,pods -l app=hello-deploy -o wide
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES              SELECTOR
+deployment.apps/hello-deploy   3/3     3            3           9s    hello        nginx:1.27-alpine   app=hello-deploy
+
+NAME                                      DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES              SELECTOR
+replicaset.apps/hello-deploy-699b74b567   3         3         3       9s    hello        nginx:1.27-alpine   app=hello-deploy,pod-template-hash=699b74b567
+
+NAME                                READY   STATUS    RESTARTS   AGE   IP           NODE                NOMINATED NODE   READINESS GATES
+pod/hello-deploy-699b74b567-7vn9n   1/1     Running   0          9s    10.244.2.4   devops-hw-worker2   <none>           <none>
+pod/hello-deploy-699b74b567-n9z5v   1/1     Running   0          9s    10.244.1.6   devops-hw-worker    <none>           <none>
+pod/hello-deploy-699b74b567-zz884   1/1     Running   0          9s    10.244.1.5   devops-hw-worker    <none>           <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/08-kubernetes-fundamentals/manifests/hello-service.yaml
+service/hello-svc created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get svc hello-svc -o wide
+NAME        TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE   SELECTOR
+hello-svc   NodePort   10.96.236.92   <none>        80:30080/TCP   0s    app=hello-deploy
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get endpoints hello-svc
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME        ENDPOINTS                                   AGE
+hello-svc   10.244.1.5:80,10.244.1.6:80,10.244.2.4:80   0s
+@@@RC@@@ 0

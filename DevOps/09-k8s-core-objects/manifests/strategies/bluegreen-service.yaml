@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-live
+spec:
+  type: NodePort
+  # The switch. Change track: blue -> green to cut all live traffic over at once.
+  selector:
+    app: myapp
+    track: blue
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080

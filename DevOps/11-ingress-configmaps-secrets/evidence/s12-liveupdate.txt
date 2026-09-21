@@ -1,0 +1,41 @@
+### BEFORE
+@@@CMD@@@ kubectl exec deploy/config-demo -- env | grep LOG_LEVEL
+LOG_LEVEL=INFO
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/config-demo -- cat /etc/app-config/LOG_LEVEL; echo
+INFO
+@@@RC@@@ 0
+### CHANGE THE CONFIGMAP (no pod restart)
+@@@CMD@@@ kubectl patch configmap app-config -p '{"data":{"LOG_LEVEL":"DEBUG"}}'
+configmap/app-config patched
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get configmap app-config -o jsonpath='{.data.LOG_LEVEL}'; echo
+DEBUG
+@@@RC@@@ 0
+@@@NOTE@@@ polling the mounted file until the kubelet syncs it
+  t+0s  volume=INFO
+  t+5s  volume=INFO
+  t+10s  volume=INFO
+  t+15s  volume=INFO
+  t+20s  volume=INFO
+  t+25s  volume=INFO
+  t+30s  volume=INFO
+  t+35s  volume=INFO
+  t+41s  volume=INFO
+  t+46s  volume=INFO
+  t+51s  volume=INFO
+  t+56s  volume=DEBUG
+### AFTER
+@@@CMD@@@ kubectl exec deploy/config-demo -- cat /etc/app-config/LOG_LEVEL; echo
+DEBUG
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/config-demo -- env | grep LOG_LEVEL
+LOG_LEVEL=INFO
+@@@RC@@@ 0
+### FORCING A PICKUP OF THE NEW ENV VAR
+@@@CMD@@@ kubectl rollout restart deploy/config-demo
+deployment.apps/config-demo restarted
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/config-demo -- env | grep LOG_LEVEL
+LOG_LEVEL=DEBUG
+@@@RC@@@ 0

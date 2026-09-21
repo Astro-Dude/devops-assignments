@@ -1,0 +1,36 @@
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/09-k8s-core-objects/manifests/core-objects/replicaset.yaml
+replicaset.apps/backend-rs created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=backend
+NAME               READY   STATUS    RESTARTS   AGE
+backend-rs-8whqt   1/1     Running   0          1s
+backend-rs-hsn8q   1/1     Running   0          1s
+backend-rs-wpbh4   1/1     Running   0          1s
+@@@RC@@@ 0
+@@@NOTE@@@ now creating a bare pod carrying the label app=backend
+pod/orphan-pod created
+@@@NOTE@@@ sampling every 1s
+08:45:02  backend-rs-8whqt   1/1   Running       0     1s|backend-rs-hsn8q   1/1   Running       0     1s|backend-rs-wpbh4   1/1   Running       0     1s|orphan-pod         0/1   Terminating   0     0s|
+08:45:03  backend-rs-8whqt   1/1   Running       0     2s|backend-rs-hsn8q   1/1   Running       0     2s|backend-rs-wpbh4   1/1   Running       0     2s|orphan-pod         0/1   Terminating   0     1s|
+08:45:04  backend-rs-8whqt   1/1   Running   0     3s|backend-rs-hsn8q   1/1   Running   0     3s|backend-rs-wpbh4   1/1   Running   0     3s|
+08:45:05  backend-rs-8whqt   1/1   Running   0     4s|backend-rs-hsn8q   1/1   Running   0     4s|backend-rs-wpbh4   1/1   Running   0     4s|
+08:45:06  backend-rs-8whqt   1/1   Running   0     5s|backend-rs-hsn8q   1/1   Running   0     5s|backend-rs-wpbh4   1/1   Running   0     5s|
+08:45:07  backend-rs-8whqt   1/1   Running   0     6s|backend-rs-hsn8q   1/1   Running   0     6s|backend-rs-wpbh4   1/1   Running   0     6s|
+08:45:08  backend-rs-8whqt   1/1   Running   0     7s|backend-rs-hsn8q   1/1   Running   0     7s|backend-rs-wpbh4   1/1   Running   0     7s|
+08:45:09  backend-rs-8whqt   1/1   Running   0     9s|backend-rs-hsn8q   1/1   Running   0     9s|backend-rs-wpbh4   1/1   Running   0     9s|
+08:45:11  backend-rs-8whqt   1/1   Running   0     10s|backend-rs-hsn8q   1/1   Running   0     10s|backend-rs-wpbh4   1/1   Running   0     10s|
+08:45:12  backend-rs-8whqt   1/1   Running   0     11s|backend-rs-hsn8q   1/1   Running   0     11s|backend-rs-wpbh4   1/1   Running   0     11s|
+08:45:13  backend-rs-8whqt   1/1   Running   0     12s|backend-rs-hsn8q   1/1   Running   0     12s|backend-rs-wpbh4   1/1   Running   0     12s|
+08:45:14  backend-rs-8whqt   1/1   Running   0     13s|backend-rs-hsn8q   1/1   Running   0     13s|backend-rs-wpbh4   1/1   Running   0     13s|
+@@@CMD@@@ kubectl describe rs backend-rs | sed -n '/^Events:/,$p'
+Events:
+  Type    Reason            Age   From                   Message
+  ----    ------            ----  ----                   -------
+  Normal  SuccessfulCreate  14s   replicaset-controller  Created pod: backend-rs-8whqt
+  Normal  SuccessfulCreate  14s   replicaset-controller  Created pod: backend-rs-hsn8q
+  Normal  SuccessfulCreate  14s   replicaset-controller  Created pod: backend-rs-wpbh4
+  Normal  SuccessfulDelete  13s   replicaset-controller  Deleted pod: orphan-pod
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pod orphan-pod
+Error from server (NotFound): pods "orphan-pod" not found
+@@@RC@@@ 1

@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken-selector
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend      # <-- the selector looks for app=frontend
+  template:
+    metadata:
+      labels:
+        app: frontend-v2 # <-- but the pods are labelled app=frontend-v2
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27-alpine

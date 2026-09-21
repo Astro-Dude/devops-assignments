@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  labels:
+    app: demo
+data:
+  # Simple key-value pairs, consumed as environment variables
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  APP_PORT: "5000"
+  DEFAULT_CURRENCY: "INR"
+  MAX_BOOKING_DAYS: "30"
+
+  # A whole file, consumed as a mounted volume
+  app.properties: |
+    server.name=yatri-booking
+    server.timeout=30
+    feature.new-checkout=enabled

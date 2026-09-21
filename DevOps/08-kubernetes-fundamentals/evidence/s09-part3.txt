@@ -1,0 +1,81 @@
+### NODEPORT ACCESS FROM HOST
+@@@CMD@@@ curl -s -o /dev/null -w 'HTTP %{http_code}\n' http://localhost:30080
+HTTP 200
+@@@RC@@@ 0
+@@@CMD@@@ curl -s http://localhost:30080 | head -5
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+@@@RC@@@ 0
+### SCALING
+@@@CMD@@@ kubectl scale deployment hello-deploy --replicas=5
+deployment.apps/hello-deploy scaled
+@@@RC@@@ 0
+@@@CMD@@@ kubectl rollout status deployment/hello-deploy --timeout=120s
+Waiting for deployment "hello-deploy" rollout to finish: 3 of 5 updated replicas are available...
+Waiting for deployment "hello-deploy" rollout to finish: 4 of 5 updated replicas are available...
+deployment "hello-deploy" successfully rolled out
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=hello-deploy -o wide
+NAME                            READY   STATUS    RESTARTS   AGE   IP           NODE                NOMINATED NODE   READINESS GATES
+hello-deploy-699b74b567-7vn9n   1/1     Running   0          35s   10.244.2.4   devops-hw-worker2   <none>           <none>
+hello-deploy-699b74b567-8f9w2   1/1     Running   0          1s    10.244.1.7   devops-hw-worker    <none>           <none>
+hello-deploy-699b74b567-9xlw2   1/1     Running   0          1s    10.244.2.6   devops-hw-worker2   <none>           <none>
+hello-deploy-699b74b567-n9z5v   1/1     Running   0          35s   10.244.1.6   devops-hw-worker    <none>           <none>
+hello-deploy-699b74b567-zz884   1/1     Running   0          35s   10.244.1.5   devops-hw-worker    <none>           <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl scale deployment hello-deploy --replicas=3
+deployment.apps/hello-deploy scaled
+@@@RC@@@ 0
+@@@CMD@@@ kubectl rollout status deployment/hello-deploy --timeout=120s
+deployment "hello-deploy" successfully rolled out
+@@@RC@@@ 0
+### SELF HEALING
+@@@NOTE@@@ victim pod = hello-deploy-699b74b567-7vn9n
+@@@CMD@@@ kubectl delete pod hello-deploy-699b74b567-7vn9n
+pod "hello-deploy-699b74b567-7vn9n" deleted from default namespace
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=hello-deploy
+NAME                            READY   STATUS      RESTARTS   AGE
+hello-deploy-699b74b567-2mckq   1/1     Running     0          0s
+hello-deploy-699b74b567-8f9w2   0/1     Completed   0          1s
+hello-deploy-699b74b567-9xlw2   1/1     Running     0          1s
+hello-deploy-699b74b567-zz884   1/1     Running     0          35s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=hello-deploy
+NAME                            READY   STATUS    RESTARTS   AGE
+hello-deploy-699b74b567-2mckq   1/1     Running   0          10s
+hello-deploy-699b74b567-9xlw2   1/1     Running   0          11s
+hello-deploy-699b74b567-zz884   1/1     Running   0          45s
+@@@RC@@@ 0
+### NAMESPACES
+@@@CMD@@@ kubectl get namespaces
+NAME                 STATUS   AGE
+default              Active   3m25s
+ingress-nginx        Active   3m8s
+kube-node-lease      Active   3m25s
+kube-public          Active   3m25s
+kube-system          Active   3m25s
+local-path-storage   Active   3m21s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl create namespace demo-ns
+namespace/demo-ns created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl run ns-demo --image=nginx:1.27-alpine -n demo-ns
+pod/ns-demo created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -n demo-ns
+NAME      READY   STATUS              RESTARTS   AGE
+ns-demo   0/1     ContainerCreating   0          0s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods
+NAME                            READY   STATUS    RESTARTS   AGE
+hello-deploy-699b74b567-2mckq   1/1     Running   0          10s
+hello-deploy-699b74b567-9xlw2   1/1     Running   0          11s
+hello-deploy-699b74b567-zz884   1/1     Running   0          45s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl delete namespace demo-ns
+namespace "demo-ns" deleted
+@@@RC@@@ 0

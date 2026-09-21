@@ -1,0 +1,27 @@
+# READINESS probe: "can this pod receive traffic right now?"
+# Failing readiness removes the pod from Service endpoints. It does NOT restart it.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: readiness-demo
+  labels: { app: readiness-demo }
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27-alpine
+      ports: [{ containerPort: 80 }]
+      command:
+        - /bin/sh
+        - -c
+        - |
+          echo "OK" > /usr/share/nginx/html/index.html
+          # /ready only appears after 20 seconds - simulating slow warm-up
+          (sleep 20; echo "READY" > /usr/share/nginx/html/ready) &
+          exec nginx -g "daemon off;"
+      readinessProbe:
+        httpGet:
+          path: /ready
+          port: 80
+        initialDelaySeconds: 2
+        periodSeconds: 3
+        failureThreshold: 1

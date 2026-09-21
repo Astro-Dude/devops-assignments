@@ -1,0 +1,31 @@
+### 2. NODEPORT
+@@@CMD@@@ kubectl get svc web-nodeport -o wide
+NAME           TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE   SELECTOR
+web-nodeport   NodePort   10.96.138.211   <none>        8080:30080/TCP   77s   app=web
+@@@RC@@@ 0
+--- from the host, via kind's port mapping to the control-plane node ---
+@@@CMD@@@ curl -s http://localhost:30080
+served by web-574764bdf8-9vm8g at 10.244.2.52
+@@@RC@@@ 0
+--- the SAME port answers on EVERY node, including nodes running no pod ---
+@@@CMD@@@ curl from inside devops-hw-control-plane -> http://172.19.0.3:30080
+served by web-574764bdf8-5rsw2 at 10.244.1.68
+@@@RC@@@ 0
+@@@CMD@@@ curl from inside devops-hw-worker -> http://172.19.0.4:30080
+served by web-574764bdf8-9vm8g at 10.244.2.52
+@@@RC@@@ 0
+@@@CMD@@@ curl from inside devops-hw-worker2 -> http://172.19.0.2:30080
+served by web-574764bdf8-7h4wz at 10.244.1.69
+@@@RC@@@ 0
+### 3. LOADBALANCER (MetalLB assigned a real external IP)
+@@@CMD@@@ kubectl get svc web-lb -o wide
+NAME     TYPE           CLUSTER-IP     EXTERNAL-IP      PORT(S)        AGE   SELECTOR
+web-lb   LoadBalancer   10.96.214.83   172.19.255.201   80:31716/TCP   78s   app=web
+@@@RC@@@ 0
+@@@NOTE@@@ external IP = 172.19.255.201
+@@@CMD@@@ curl http://172.19.255.201  (from a container on the kind network)
+served by web-574764bdf8-7h4wz at 10.244.1.69
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get svc web-lb -o jsonpath='{.spec.ports[0]}'; echo
+{"name":"http","nodePort":31716,"port":80,"protocol":"TCP","targetPort":80}
+@@@RC@@@ 0

@@ -1,0 +1,93 @@
+### THE BASE64 GOTCHA
+@@@CMD@@@ echo 'S3cr3t-P@ss' | base64
+UzNjcjN0LVBAc3MK
+@@@RC@@@ 0
+@@@CMD@@@ echo -n 'S3cr3t-P@ss' | base64
+UzNjcjN0LVBAc3M=
+@@@RC@@@ 0
+@@@CMD@@@ echo 'UzNjcjN0LVBAc3MK' | base64 -d | xxd | tail -1
+00000000: 5333 6372 3374 2d50 4073 730a            S3cr3t-P@ss.
+@@@RC@@@ 0
+@@@CMD@@@ echo 'UzNjcjN0LVBAc3M=' | base64 -d | xxd | tail -1
+00000000: 5333 6372 3374 2d50 4073 73              S3cr3t-P@ss
+@@@RC@@@ 0
+### CONFIGMAP
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/11-ingress-configmaps-secrets/manifests/01-configmap.yaml
+configmap/app-config created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get configmap app-config
+NAME         DATA   AGE
+app-config   6      0s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl describe configmap app-config
+Name:         app-config
+Namespace:    default
+Labels:       app=demo
+Annotations:  <none>
+
+Data
+====
+APP_PORT:
+----
+5000
+
+DEFAULT_CURRENCY:
+----
+INR
+
+ENVIRONMENT:
+----
+production
+
+LOG_LEVEL:
+----
+INFO
+
+MAX_BOOKING_DAYS:
+----
+30
+
+app.properties:
+----
+server.name=yatri-booking
+server.timeout=30
+feature.new-checkout=enabled
+
+
+
+BinaryData
+====
+
+Events:  <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get configmap app-config -o jsonpath='{.data.ENVIRONMENT}'; echo
+production
+@@@RC@@@ 0
+### SECRET
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/11-ingress-configmaps-secrets/manifests/02-secret.yaml
+secret/db-secret created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get secret db-secret
+NAME        TYPE     DATA   AGE
+db-secret   Opaque   2      0s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl describe secret db-secret
+Name:         db-secret
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  Opaque
+
+Data
+====
+DB_PASSWORD:  11 bytes
+DB_USER:      5 bytes
+@@@RC@@@ 0
+--- secrets are ENCODED, not ENCRYPTED: anyone with get access reads them ---
+@@@CMD@@@ kubectl get secret db-secret -o jsonpath='{.data.DB_PASSWORD}'; echo
+UzNjcjN0LVBAc3M=
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get secret db-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d; echo
+S3cr3t-P@ss
+@@@RC@@@ 0

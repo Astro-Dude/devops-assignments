@@ -1,0 +1,23 @@
+# The SAME slow container, but WITHOUT a startup probe. The liveness probe kills
+# it before it ever finishes booting - an infinite restart loop.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: no-startup-demo
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27-alpine
+      ports: [{ containerPort: 80 }]
+      command:
+        - /bin/sh
+        - -c
+        - |
+          sleep 40
+          echo "ALIVE" > /usr/share/nginx/html/healthz
+          exec nginx -g "daemon off;"
+      livenessProbe:
+        httpGet: { path: /healthz, port: 80 }
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 2

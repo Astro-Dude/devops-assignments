@@ -1,0 +1,46 @@
+### WHY SERVICES EXIST: pod IPs churn, the ClusterIP does not
+@@@CMD@@@ kubectl get svc web-clusterip -o jsonpath='{.spec.clusterIP}'; echo
+10.96.185.130
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=web -o jsonpath='{range .items[*]}{.metadata.name} {.status.podIP}{"\n"}{end}'
+web-574764bdf8-5rsw2 10.244.1.68
+web-574764bdf8-7h4wz 10.244.1.69
+web-574764bdf8-9vm8g 10.244.2.52
+@@@RC@@@ 0
+--- delete ALL the pods ---
+@@@CMD@@@ kubectl delete pod -l app=web
+pod "web-574764bdf8-5rsw2" deleted from default namespace
+pod "web-574764bdf8-7h4wz" deleted from default namespace
+pod "web-574764bdf8-9vm8g" deleted from default namespace
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=web -o jsonpath='{range .items[*]}{.metadata.name} {.status.podIP}{"\n"}{end}'
+web-574764bdf8-6xt8c 10.244.2.54
+web-574764bdf8-r49vz 10.244.1.71
+web-574764bdf8-stl4j 10.244.2.53
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get svc web-clusterip -o jsonpath='{.spec.clusterIP}'; echo
+10.96.185.130
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec client -- curl -s http://web-clusterip:8080
+served by web-574764bdf8-r49vz at 10.244.1.71
+@@@RC@@@ 0
+### THE FOUR PORTS
+@@@CMD@@@ kubectl get svc web-nodeport -o jsonpath='{.spec.ports[0]}'; echo
+{"name":"http","nodePort":30080,"port":8080,"protocol":"TCP","targetPort":80}
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy web -o jsonpath='{.spec.template.spec.containers[0].ports[0]}'; echo
+{"containerPort":80,"name":"http","protocol":"TCP"}
+@@@RC@@@ 0
+### TROUBLESHOOTING: wrong targetPort - service exists, endpoints exist, nothing works
+@@@CMD@@@ kubectl get svc broken-tp
+NAME        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+broken-tp   ClusterIP   10.96.151.191   <none>        80/TCP    6s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get endpointslice -l kubernetes.io/service-name=broken-tp -o custom-columns='ENDPOINTS:.endpoints[*].addresses,PORT:.ports[*].port'
+ENDPOINTS                                   PORT
+[10.244.2.53],[10.244.1.71],[10.244.2.54]   9999
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec client -- curl -s --max-time 5 http://broken-tp:80; echo "curl exit=0"
+command terminated with exit code 7
+curl exit=0
+@@@RC@@@ 0

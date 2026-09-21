@@ -1,0 +1,56 @@
+### EMPTYDIR - shared between containers in one pod
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/12-storage-hpa-probes/manifests/volumes/emptydir.yaml
+pod/emptydir-demo created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec emptydir-demo -c writer -- cat /shared/log.txt
+line 1
+line 2
+line 3
+line 4
+line 5
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec emptydir-demo -c reader -- cat /shared/log.txt
+line 1
+line 2
+line 3
+line 4
+line 5
+@@@RC@@@ 0
+--- survives a CONTAINER restart? kill the writer process ---
+@@@CMD@@@ kubectl exec emptydir-demo -c reader -- wc -l /shared/log.txt
+5 /shared/log.txt
+@@@RC@@@ 0
+--- does NOT survive POD deletion ---
+@@@CMD@@@ kubectl delete pod emptydir-demo
+pod "emptydir-demo" deleted from default namespace
+@@@RC@@@ 0
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/12-storage-hpa-probes/manifests/volumes/emptydir.yaml
+pod/emptydir-demo created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec emptydir-demo -c reader -- cat /shared/log.txt
+line 1
+line 2
+@@@RC@@@ 0
+### HOSTPATH
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/12-storage-hpa-probes/manifests/volumes/hostpath.yaml
+pod/hostpath-demo created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec hostpath-demo -- sh -c 'echo "written from inside the pod" > /host-data/from-pod.txt'
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec hostpath-demo -- cat /host-data/from-pod.txt
+written from inside the pod
+@@@RC@@@ 0
+--- and it is really on the NODE, visible from outside Kubernetes ---
+@@@CMD@@@ docker exec devops-hw-worker cat /tmp/k8s-hostpath-demo/from-pod.txt
+written from inside the pod
+@@@RC@@@ 0
+@@@CMD@@@ docker exec devops-hw-worker sh -c 'echo "written from the node" > /tmp/k8s-hostpath-demo/from-node.txt'
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec hostpath-demo -- ls -l /host-data
+total 8
+-rw-r--r--    1 root     root            22 Sep 21 09:24 from-node.txt
+-rw-r--r--    1 root     root            28 Sep 21 09:24 from-pod.txt
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec hostpath-demo -- cat /host-data/from-node.txt
+written from the node
+@@@RC@@@ 0

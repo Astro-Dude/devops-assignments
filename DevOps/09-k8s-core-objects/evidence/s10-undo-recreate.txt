@@ -1,0 +1,81 @@
+### CONFIRM v2 IS SERVING
+@@@CMD@@@ kubectl exec deploy/app-rolling -- cat /usr/share/nginx/html/index.html
+VERSION v2 | pod app-rolling-846f554989-pv4tn
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy app-rolling -o jsonpath='{.spec.template.spec.containers[0].image}'; echo
+nginx:1.27-alpine
+@@@RC@@@ 0
+### ROLLBACK
+@@@CMD@@@ kubectl rollout undo deploy/app-rolling
+Warning: resource deployments/app-rolling was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/app-rolling rolled back
+@@@RC@@@ 0
+@@@CMD@@@ kubectl rollout status deploy/app-rolling --timeout=180s
+Waiting for deployment "app-rolling" rollout to finish: 1 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 1 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 1 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 2 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 3 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 3 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 3 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 3 out of 4 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "app-rolling" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "app-rolling" rollout to finish: 1 old replicas are pending termination...
+deployment "app-rolling" successfully rolled out
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/app-rolling -- cat /usr/share/nginx/html/index.html
+VERSION v1 | pod app-rolling-c6b94689b-fl5l9
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy app-rolling -o jsonpath='{.spec.template.spec.containers[0].image}'; echo
+nginx:1.26-alpine
+@@@RC@@@ 0
+@@@CMD@@@ kubectl rollout history deploy/app-rolling
+deployment.apps/app-rolling 
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get rs -l app=app-rolling
+NAME                     DESIRED   CURRENT   READY   AGE
+app-rolling-846f554989   0         0         0       56s
+app-rolling-c6b94689b    4         4         4       74s
+@@@RC@@@ 0
+### RECREATE STRATEGY
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/09-k8s-core-objects/manifests/strategies/recreate-v1.yaml
+deployment.apps/app-recreate created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl rollout status deploy/app-recreate --timeout=180s
+Waiting for deployment "app-recreate" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "app-recreate" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "app-recreate" rollout to finish: 2 of 3 updated replicas are available...
+deployment "app-recreate" successfully rolled out
+@@@RC@@@ 0
+@@@NOTE@@@ applying recreate v2, sampling every 1s
+08:46:56  ready=  app-recreate-5bd8fb766d-6vrhv(v1,true) app-recreate-5bd8fb766d-m4lkw(v1,true) app-recreate-5bd8fb766d-wg2ch(v1,true) 
+08:46:57  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:46:58  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:46:59  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:00  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:01  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:02  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:03  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:04  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:05  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:07  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:08  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:09  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:10  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:11  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:12  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:13  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:14  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:15  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+08:47:16  ready=3  app-recreate-579755b97-5zm2q(v2,true) app-recreate-579755b97-68j2f(v2,true) app-recreate-579755b97-mrnqn(v2,true) 
+@@@CMD@@@ kubectl rollout status deploy/app-recreate --timeout=180s
+deployment "app-recreate" successfully rolled out
+@@@RC@@@ 0

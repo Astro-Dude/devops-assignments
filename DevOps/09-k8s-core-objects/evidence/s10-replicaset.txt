@@ -1,0 +1,40 @@
+### REPLICASET
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/09-k8s-core-objects/manifests/core-objects/replicaset.yaml
+replicaset.apps/backend-rs created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get rs backend-rs -o wide
+NAME         DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES              SELECTOR
+backend-rs   3         3         3       12s   backend      nginx:1.27-alpine   app=backend
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=backend --show-labels
+NAME               READY   STATUS    RESTARTS   AGE   LABELS
+backend-rs-2l454   1/1     Running   0          12s   app=backend
+backend-rs-mrcxk   1/1     Running   0          12s   app=backend
+backend-rs-nxxmh   1/1     Running   0          12s   app=backend
+@@@RC@@@ 0
+--- ownerReferences prove who owns the pods ---
+@@@CMD@@@ kubectl get pods -l app=backend -o jsonpath='{range .items[*]}{.metadata.name}{"  owner="}{.metadata.ownerReferences[0].kind}/{.metadata.ownerReferences[0].name}{"\n"}{end}'
+backend-rs-2l454  owner=ReplicaSet/backend-rs
+backend-rs-mrcxk  owner=ReplicaSet/backend-rs
+backend-rs-nxxmh  owner=ReplicaSet/backend-rs
+@@@RC@@@ 0
+--- the adoption trick: a bare pod wearing the matching label ---
+@@@CMD@@@ kubectl run orphan-pod --image=nginx:1.27-alpine --labels='app=backend'
+pod/orphan-pod created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=backend
+NAME               READY   STATUS    RESTARTS   AGE
+backend-rs-2l454   1/1     Running   0          22s
+backend-rs-mrcxk   1/1     Running   0          22s
+backend-rs-nxxmh   1/1     Running   0          22s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get rs backend-rs
+NAME         DESIRED   CURRENT   READY   AGE
+backend-rs   3         3         3       22s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl delete rs backend-rs
+replicaset.apps "backend-rs" deleted from default namespace
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=backend
+No resources found in default namespace.
+@@@RC@@@ 0

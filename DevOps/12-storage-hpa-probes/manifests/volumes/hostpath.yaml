@@ -1,0 +1,21 @@
+# hostPath: mounts a directory from the NODE's filesystem into the pod.
+# Powerful and dangerous - the pod can read/write the host. Tied to one node,
+# so it breaks as soon as the pod is rescheduled elsewhere.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-demo
+spec:
+  nodeName: devops-hw-worker      # pinned, because hostPath is node-specific
+  containers:
+    - name: app
+      image: busybox:1.36
+      command: ["sh", "-c", "while true; do sleep 30; done"]
+      volumeMounts:
+        - name: host-data
+          mountPath: /host-data
+  volumes:
+    - name: host-data
+      hostPath:
+        path: /tmp/k8s-hostpath-demo
+        type: DirectoryOrCreate

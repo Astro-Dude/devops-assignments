@@ -1,0 +1,8 @@
+  15s  targets=cpu:/55%/50%  replicas=10  actual_pods=10
+  30s  targets=cpu:/74%/50%  replicas=10  actual_pods=10
+  45s  targets=cpu:/16%/50%  replicas=10  actual_pods=10
+  60s  targets=cpu:/0%/50%  replicas=10  actual_pods=10
+  75s  targets=cpu:/1%/50%  replicas=10  actual_pods=10
+  90s  targets=cpu:/2%/50%  replicas=10  actual_pods=4
+ 105s  targets=cpu:/1%/50%  replicas=4  actual_pods=1
+--- back to 1 replica ---

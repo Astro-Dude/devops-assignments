@@ -1,0 +1,21 @@
+pod/client condition met
+### 1. CLUSTERIP - reachable only from inside the cluster
+@@@CMD@@@ kubectl exec client -- curl -s http://web-clusterip:8080
+served by web-574764bdf8-9vm8g at 10.244.2.52
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec client -- curl -s http://web-clusterip:8080
+served by web-574764bdf8-5rsw2 at 10.244.1.68
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec client -- curl -s http://web-clusterip:8080
+served by web-574764bdf8-9vm8g at 10.244.2.52
+@@@RC@@@ 0
+--- load balancing across all 3 pods ---
+@@@CMD@@@ kubectl exec client -- sh -c 'for i in $(seq 1 30); do curl -s http://web-clusterip:8080; done' | sort | uniq -c
+  12 served by web-574764bdf8-5rsw2 at 10.244.1.68
+   6 served by web-574764bdf8-7h4wz at 10.244.1.69
+  12 served by web-574764bdf8-9vm8g at 10.244.2.52
+@@@RC@@@ 0
+--- and from the HOST it is unreachable ---
+@@@CMD@@@ curl -s --max-time 5 http://10.96.185.130:8080; echo "curl exit=$?"
+curl exit=28
+@@@RC@@@ 0

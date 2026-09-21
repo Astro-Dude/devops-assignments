@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-green
+  labels:
+    app: myapp
+    track: green
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+      track: green
+  template:
+    metadata:
+      labels:
+        app: myapp
+        track: green
+        version: v2
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          command:
+            - /bin/sh
+            - -c
+            - 'echo "TRACK green | VERSION v2 | pod $(hostname)" > /usr/share/nginx/html/index.html && exec nginx -g "daemon off;"'
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+            initialDelaySeconds: 1
+            periodSeconds: 2
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }

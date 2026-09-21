@@ -1,0 +1,95 @@
+### 4. EXTERNALNAME - pure DNS CNAME, no proxying at all
+@@@CMD@@@ kubectl get svc external-db -o wide
+NAME          TYPE           CLUSTER-IP   EXTERNAL-IP      PORT(S)   AGE   SELECTOR
+external-db   ExternalName   <none>       www.google.com   <none>    93s   <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get endpoints external-db
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+Error from server (NotFound): endpoints "external-db" not found
+@@@RC@@@ 1
+@@@CMD@@@ kubectl exec client -- nslookup external-db.default.svc.cluster.local
+;; Got recursion not available from 10.96.0.10
+;; Got recursion not available from 10.96.0.10
+;; Got recursion not available from 10.96.0.10
+;; Got recursion not available from 10.96.0.10
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+external-db.default.svc.cluster.local	canonical name = www.google.com.
+Name:	www.google.com
+Address: 142.251.150.119
+Name:	www.google.com
+Address: 142.251.155.119
+Name:	www.google.com
+Address: 142.251.154.119
+Name:	www.google.com
+Address: 142.251.157.119
+Name:	www.google.com
+Address: 142.251.153.119
+Name:	www.google.com
+Address: 142.251.151.119
+Name:	www.google.com
+Address: 142.251.152.119
+Name:	www.google.com
+Address: 142.251.156.119
+
+@@@RC@@@ 0
+### 5. HEADLESS - DNS returns pod IPs, no virtual IP
+@@@CMD@@@ kubectl get svc web-headless -o wide
+NAME           TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+web-headless   ClusterIP   None         <none>        80/TCP    93s   app=web
+@@@RC@@@ 0
+--- headless: A record per pod ---
+@@@CMD@@@ kubectl exec client -- nslookup web-headless.default.svc.cluster.local
+;; Got recursion not available from 10.96.0.10
+;; Got recursion not available from 10.96.0.10
+;; Got recursion not available from 10.96.0.10
+;; Got recursion not available from 10.96.0.10
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+Name:	web-headless.default.svc.cluster.local
+Address: 10.244.2.52
+Name:	web-headless.default.svc.cluster.local
+Address: 10.244.1.69
+Name:	web-headless.default.svc.cluster.local
+Address: 10.244.1.68
+;; Got recursion not available from 10.96.0.10
+
+@@@RC@@@ 0
+--- normal ClusterIP: ONE virtual IP ---
+@@@CMD@@@ kubectl exec client -- nslookup web-clusterip.default.svc.cluster.local
+;; Got recursion not available from 10.96.0.10
+;; Got recursion not available from 10.96.0.10
+;; Got recursion not available from 10.96.0.10
+;; Got recursion not available from 10.96.0.10
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+Name:	web-clusterip.default.svc.cluster.local
+Address: 10.96.185.130
+;; Got recursion not available from 10.96.0.10
+
+@@@RC@@@ 0
+### DNS / FQDN
+@@@CMD@@@ kubectl exec client -- cat /etc/resolv.conf
+search default.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+@@@RC@@@ 0
+--- all four ways to name the same service ---
+@@@CMD@@@ kubectl exec client -- sh -c 'curl -s http://web-clusterip:8080 && curl -s http://web-clusterip.default:8080 && curl -s http://web-clusterip.default.svc:8080 && curl -s http://web-clusterip.default.svc.cluster.local:8080'
+served by web-574764bdf8-9vm8g at 10.244.2.52
+served by web-574764bdf8-9vm8g at 10.244.2.52
+served by web-574764bdf8-7h4wz at 10.244.1.69
+served by web-574764bdf8-7h4wz at 10.244.1.69
+@@@RC@@@ 0
+--- endpoints behind each selector-based service ---
+@@@CMD@@@ kubectl get endpointslice -o custom-columns='NAME:.metadata.name,SERVICE:.metadata.labels.kubernetes\.io/service-name,ENDPOINTS:.endpoints[*].addresses,PORTS:.ports[*].port'
+NAME                  SERVICE         ENDPOINTS                                   PORTS
+kubernetes            kubernetes      [172.19.0.3]                                6443
+web-clusterip-xbl8v   web-clusterip   [10.244.1.69],[10.244.2.52],[10.244.1.68]   80
+web-headless-jzz9z    web-headless    [10.244.1.69],[10.244.2.52],[10.244.1.68]   80
+web-lb-hwt6h          web-lb          [10.244.1.68],[10.244.1.69],[10.244.2.52]   80
+web-nodeport-2phxb    web-nodeport    [10.244.1.68],[10.244.1.69],[10.244.2.52]   80
+@@@RC@@@ 0

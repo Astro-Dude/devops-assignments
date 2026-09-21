@@ -1,0 +1,151 @@
+@@@CMD@@@ kind version
+kind v0.33.0 go1.27.1 darwin/arm64
+@@@RC@@@ 0
+@@@CMD@@@ kubectl version
+Client Version: v1.36.1
+Kustomize Version: v5.8.1
+Server Version: v1.37.0
+@@@RC@@@ 0
+@@@CMD@@@ kubectl cluster-info
+Kubernetes control plane is running at https://127.0.0.1:55599
+CoreDNS is running at https://127.0.0.1:55599/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get nodes -o wide
+NAME                      STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                       KERNEL-VERSION            CONTAINER-RUNTIME
+devops-hw-control-plane   Ready    control-plane   96s   v1.37.0   172.19.0.3    <none>        Debian GNU/Linux 13 (trixie)   7.0.12-linuxkit (arm64)   containerd://2.3.4
+devops-hw-worker          Ready    <none>          86s   v1.37.0   172.19.0.4    <none>        Debian GNU/Linux 13 (trixie)   7.0.12-linuxkit (arm64)   containerd://2.3.4
+devops-hw-worker2         Ready    <none>          86s   v1.37.0   172.19.0.2    <none>        Debian GNU/Linux 13 (trixie)   7.0.12-linuxkit (arm64)   containerd://2.3.4
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -n kube-system -o wide
+NAME                                              READY   STATUS    RESTARTS   AGE   IP           NODE                      NOMINATED NODE   READINESS GATES
+coredns-559f6c778d-9fvsj                          1/1     Running   0          87s   10.244.0.2   devops-hw-control-plane   <none>           <none>
+coredns-559f6c778d-n4s9v                          1/1     Running   0          87s   10.244.0.4   devops-hw-control-plane   <none>           <none>
+etcd-devops-hw-control-plane                      1/1     Running   0          94s   172.19.0.3   devops-hw-control-plane   <none>           <none>
+kindnet-2z74l                                     1/1     Running   0          87s   172.19.0.3   devops-hw-control-plane   <none>           <none>
+kindnet-l888k                                     1/1     Running   0          86s   172.19.0.4   devops-hw-worker          <none>           <none>
+kindnet-shssv                                     1/1     Running   0          86s   172.19.0.2   devops-hw-worker2         <none>           <none>
+kube-apiserver-devops-hw-control-plane            1/1     Running   0          94s   172.19.0.3   devops-hw-control-plane   <none>           <none>
+kube-controller-manager-devops-hw-control-plane   1/1     Running   0          94s   172.19.0.3   devops-hw-control-plane   <none>           <none>
+kube-proxy-4bzhg                                  1/1     Running   0          86s   172.19.0.2   devops-hw-worker2         <none>           <none>
+kube-proxy-gn2g8                                  1/1     Running   0          86s   172.19.0.4   devops-hw-worker          <none>           <none>
+kube-proxy-mk5dt                                  1/1     Running   0          87s   172.19.0.3   devops-hw-control-plane   <none>           <none>
+kube-scheduler-devops-hw-control-plane            1/1     Running   0          94s   172.19.0.3   devops-hw-control-plane   <none>           <none>
+metrics-server-84c99cb944-gz46w                   1/1     Running   0          66s   10.244.2.3   devops-hw-worker2         <none>           <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get componentstatuses
+Warning: v1 ComponentStatus is deprecated in v1.19+
+NAME                 STATUS    MESSAGE   ERROR
+controller-manager   Healthy   ok        
+scheduler            Healthy   ok        
+etcd-0               Healthy   ok        
+@@@RC@@@ 0
+@@@CMD@@@ docker ps --filter name=devops-hw --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
+NAMES                     IMAGE                  STATUS
+devops-hw-control-plane   kindest/node:v1.37.0   Up About a minute
+devops-hw-worker          kindest/node:v1.37.0   Up About a minute
+devops-hw-worker2         kindest/node:v1.37.0   Up About a minute
+@@@RC@@@ 0
+@@@CMD@@@ docker exec devops-hw-control-plane crictl ps --name kube-apiserver -o table
+CONTAINER           IMAGE               CREATED              STATE               NAME                ATTEMPT             POD ID              POD                                      NAMESPACE
+6346bdb423e2d       6003d52023b9d       About a minute ago   Running             kube-apiserver      0                   ddaf7eebc80b0       kube-apiserver-devops-hw-control-plane   kube-system
+@@@RC@@@ 0
+@@@CMD@@@ kubectl -n kube-system get pod -l component=etcd -o jsonpath='{.items[0].spec.containers[0].command}' | tr ',' '\n' | head -20
+["etcd"
+"--advertise-client-urls=https://172.19.0.3:2379"
+"--cert-file=/etc/kubernetes/pki/etcd/server.crt"
+"--client-cert-auth=true"
+"--data-dir=/var/lib/etcd"
+"--feature-gates=InitialCorruptCheck=true"
+"--initial-advertise-peer-urls=https://172.19.0.3:2380"
+"--initial-cluster=devops-hw-control-plane=https://172.19.0.3:2380"
+"--key-file=/etc/kubernetes/pki/etcd/server.key"
+"--listen-client-urls=https://127.0.0.1:2379
+https://172.19.0.3:2379"
+"--listen-metrics-urls=http://127.0.0.1:2381"
+"--listen-peer-urls=https://172.19.0.3:2380"
+"--name=devops-hw-control-plane"
+"--peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt"
+"--peer-client-cert-auth=true"
+"--peer-key-file=/etc/kubernetes/pki/etcd/peer.key"
+"--peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt"
+"--snapshot-count=10000"
+"--trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt"
+@@@RC@@@ 0
+@@@CMD@@@ kubectl api-resources --namespaced=true -o name | head -25
+bindings
+configmaps
+endpoints
+events
+limitranges
+persistentvolumeclaims
+pods
+podtemplates
+replicationcontrollers
+resourcequotas
+secrets
+serviceaccounts
+services
+controllerrevisions.apps
+daemonsets.apps
+deployments.apps
+replicasets.apps
+statefulsets.apps
+localsubjectaccessreviews.authorization.k8s.io
+horizontalpodautoscalers.autoscaling
+cronjobs.batch
+jobs.batch
+podcertificaterequests.certificates.k8s.io
+leases.coordination.k8s.io
+endpointslices.discovery.k8s.io
+@@@RC@@@ 0
+@@@CMD@@@ kubectl api-versions | head -20
+admissionregistration.k8s.io/v1
+apiextensions.k8s.io/v1
+apiregistration.k8s.io/v1
+apps/v1
+authentication.k8s.io/v1
+authorization.k8s.io/v1
+autoscaling/v1
+autoscaling/v2
+batch/v1
+certificates.k8s.io/v1
+coordination.k8s.io/v1
+discovery.k8s.io/v1
+events.k8s.io/v1
+flowcontrol.apiserver.k8s.io/v1
+metrics.k8s.io/v1beta1
+networking.k8s.io/v1
+node.k8s.io/v1
+policy/v1
+rbac.authorization.k8s.io/v1
+resource.k8s.io/v1
+@@@RC@@@ 0
+@@@CMD@@@ kubectl explain pod.spec.containers --recursive | head -25
+KIND:       Pod
+VERSION:    v1
+
+FIELD: containers <[]Container>
+
+
+DESCRIPTION:
+    List of containers belonging to the pod. Containers cannot currently be
+    added or removed. There must be at least one container in a Pod. Cannot be
+    updated.
+    A single application container that you want to run within a pod.
+    
+FIELDS:
+  args	<[]string>
+  command	<[]string>
+  env	<[]EnvVar>
+    name	<string> -required-
+    value	<string>
+    valueFrom	<EnvVarSource>
+      configMapKeyRef	<ConfigMapKeySelector>
+        key	<string> -required-
+        name	<string>
+        optional	<boolean>
+      fieldRef	<ObjectFieldSelector>
+        apiVersion	<string>
+@@@RC@@@ 0

@@ -1,0 +1,30 @@
+### DAEMONSET
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/09-k8s-core-objects/manifests/core-objects/daemonset.yaml
+daemonset.apps/node-logging-agent created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get ds node-logging-agent -o wide
+NAME                 DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE   CONTAINERS   IMAGES         SELECTOR
+node-logging-agent   2         2         2       2            2           <none>          2s    logger       busybox:1.36   app=node-logging-agent
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=node-logging-agent -o custom-columns='POD:.metadata.name,NODE:.spec.nodeName,STATUS:.status.phase'
+POD                        NODE                STATUS
+node-logging-agent-bjb6z   devops-hw-worker    Running
+node-logging-agent-flffr   devops-hw-worker2   Running
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get nodes --no-headers | wc -l
+       3
+@@@RC@@@ 0
+--- the control-plane node is skipped: why? ---
+@@@CMD@@@ kubectl get node devops-hw-control-plane -o jsonpath='{.spec.taints}'; echo
+[{"effect":"NoSchedule","key":"node-role.kubernetes.io/control-plane"}]
+@@@RC@@@ 0
+@@@CMD@@@ kubectl logs -l app=node-logging-agent --tail=2 --prefix
+[pod/node-logging-agent-bjb6z/logger] [08:55:57] collecting metrics on node devops-hw-worker
+[pod/node-logging-agent-flffr/logger] [08:55:57] collecting metrics on node devops-hw-worker2
+@@@RC@@@ 0
+--- compare with how kube-proxy (a real DaemonSet) is spread ---
+@@@CMD@@@ kubectl get ds -n kube-system
+NAME         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kindnet      3         3         3       3            3           kubernetes.io/os=linux   23m
+kube-proxy   3         3         3       3            3           kubernetes.io/os=linux   23m
+@@@RC@@@ 0

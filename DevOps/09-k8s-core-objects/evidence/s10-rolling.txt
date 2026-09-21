@@ -1,0 +1,52 @@
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/09-k8s-core-objects/manifests/strategies/rolling-v1.yaml
+deployment.apps/app-rolling created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl rollout status deploy/app-rolling --timeout=180s
+Waiting for deployment "app-rolling" rollout to finish: 0 of 4 updated replicas are available...
+Waiting for deployment "app-rolling" rollout to finish: 1 of 4 updated replicas are available...
+Waiting for deployment "app-rolling" rollout to finish: 2 of 4 updated replicas are available...
+Waiting for deployment "app-rolling" rollout to finish: 3 of 4 updated replicas are available...
+deployment "app-rolling" successfully rolled out
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get rs -l app=app-rolling
+NAME                    DESIRED   CURRENT   READY   AGE
+app-rolling-c6b94689b   4         4         4       18s
+@@@RC@@@ 0
+@@@NOTE@@@ applying v2 in background, sampling pod states every 1s
+08:45:57  app-rolling-846f554989-pv4tn(v2,ready=false) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-mmtzg(v1,ready=true) app-rolling-c6b94689b-q4b8l(v1,ready=true) app-rolling-c6b94689b-tmplb(v1,ready=true) 
+08:45:59  app-rolling-846f554989-pv4tn(v2,ready=false) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-mmtzg(v1,ready=true) app-rolling-c6b94689b-q4b8l(v1,ready=true) app-rolling-c6b94689b-tmplb(v1,ready=true) 
+08:46:00  app-rolling-846f554989-pv4tn(v2,ready=false) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-mmtzg(v1,ready=true) app-rolling-c6b94689b-q4b8l(v1,ready=true) app-rolling-c6b94689b-tmplb(v1,ready=true) 
+08:46:01  app-rolling-846f554989-95pg5(v2,ready=false) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-mmtzg(v1,ready=false) app-rolling-c6b94689b-q4b8l(v1,ready=true) app-rolling-c6b94689b-tmplb(v1,ready=true) 
+08:46:02  app-rolling-846f554989-95pg5(v2,ready=false) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-q4b8l(v1,ready=true) app-rolling-c6b94689b-tmplb(v1,ready=true) 
+08:46:03  app-rolling-846f554989-95pg5(v2,ready=false) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-q4b8l(v1,ready=true) app-rolling-c6b94689b-tmplb(v1,ready=true) 
+08:46:04  app-rolling-846f554989-4f8lt(v2,ready=false) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-q4b8l(v1,ready=false) app-rolling-c6b94689b-tmplb(v1,ready=true) 
+08:46:05  app-rolling-846f554989-4f8lt(v2,ready=false) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-tmplb(v1,ready=true) 
+08:46:06  app-rolling-846f554989-4f8lt(v2,ready=false) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-tmplb(v1,ready=true) 
+08:46:07  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=false) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=true) app-rolling-c6b94689b-tmplb(v1,ready=false) 
+08:46:08  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=false) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=true) 
+08:46:09  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=false) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=true) 
+08:46:10  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) app-rolling-c6b94689b-ffjmg(v1,ready=false) 
+08:46:11  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) 
+08:46:12  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) 
+08:46:13  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) 
+08:46:14  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) 
+08:46:16  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) 
+08:46:17  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) 
+08:46:18  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) 
+08:46:19  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) 
+08:46:20  app-rolling-846f554989-4f8lt(v2,ready=true) app-rolling-846f554989-8d65d(v2,ready=true) app-rolling-846f554989-95pg5(v2,ready=true) app-rolling-846f554989-pv4tn(v2,ready=true) 
+@@@CMD@@@ kubectl rollout status deploy/app-rolling --timeout=180s
+deployment "app-rolling" successfully rolled out
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get rs -l app=app-rolling
+NAME                     DESIRED   CURRENT   READY   AGE
+app-rolling-846f554989   4         4         4       24s
+app-rolling-c6b94689b    0         0         0       42s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl rollout history deploy/app-rolling
+deployment.apps/app-rolling 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+@@@RC@@@ 0

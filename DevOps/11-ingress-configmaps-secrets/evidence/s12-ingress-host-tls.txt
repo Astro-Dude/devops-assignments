@@ -1,0 +1,57 @@
+### HOST-BASED ROUTING
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/11-ingress-configmaps-secrets/manifests/06-ingress-host.yaml
+ingress.networking.k8s.io/host-ingress created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get ingress
+NAME           CLASS   HOSTS                           ADDRESS     PORTS   AGE
+host-ingress   nginx   www.shop.local,api.shop.local               80      12s
+path-ingress   nginx   shop.local                      localhost   80      45s
+@@@RC@@@ 0
+@@@CMD@@@ curl -s -H 'Host: www.shop.local' http://localhost:8080/
+<h1>FRONTEND</h1>
+@@@RC@@@ 0
+@@@CMD@@@ curl -s -H 'Host: api.shop.local' http://localhost:8080/
+<h1>BACKEND API</h1>
+@@@RC@@@ 0
+@@@CMD@@@ curl -s -o /dev/null -w 'HTTP %{http_code}\n' -H 'Host: unknown.shop.local' http://localhost:8080/
+HTTP 404
+@@@RC@@@ 0
+### TLS
+@@@CMD@@@ kubectl create secret tls shop-tls --cert=/private/tmp/claude-501/-Users-shauryaverma-SST/eef366f0-5428-4398-b8e9-8679df33ac44/scratchpad/k8s/tls.crt --key=/private/tmp/claude-501/-Users-shauryaverma-SST/eef366f0-5428-4398-b8e9-8679df33ac44/scratchpad/k8s/tls.key
+secret/shop-tls created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get secret shop-tls
+NAME       TYPE                DATA   AGE
+shop-tls   kubernetes.io/tls   2      0s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl describe secret shop-tls
+Name:         shop-tls
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+
+Type:  kubernetes.io/tls
+
+Data
+====
+tls.crt:  1245 bytes
+tls.key:  1704 bytes
+@@@RC@@@ 0
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/11-ingress-configmaps-secrets/manifests/07-ingress-tls.yaml
+ingress.networking.k8s.io/tls-ingress created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get ingress tls-ingress
+NAME          CLASS   HOSTS               ADDRESS   PORTS     AGE
+tls-ingress   nginx   secure.shop.local             80, 443   15s
+@@@RC@@@ 0
+@@@CMD@@@ curl -sk https://localhost:8443/ -H 'Host: secure.shop.local'
+<h1>FRONTEND</h1>
+@@@RC@@@ 0
+@@@CMD@@@ curl -sk -v https://localhost:8443/ -H 'Host: secure.shop.local' 2>&1 | grep -E 'subject:|issuer:|SSL connection|TLS' | head -6
+* (304) (OUT), TLS handshake, Client hello (1):
+* (304) (IN), TLS handshake, Server hello (2):
+* (304) (IN), TLS handshake, Unknown (8):
+* (304) (IN), TLS handshake, Certificate (11):
+* (304) (IN), TLS handshake, CERT verify (15):
+* (304) (IN), TLS handshake, Finished (20):
+@@@RC@@@ 0

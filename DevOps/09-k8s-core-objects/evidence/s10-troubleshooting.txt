@@ -1,0 +1,36 @@
+### FAILURE 1 - selector does not match the pod template
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/09-k8s-core-objects/manifests/troubleshooting/selector-mismatch.yaml
+The Deployment "broken-selector" is invalid: spec.template.metadata.labels: Invalid value: {"app":"frontend-v2"}: `selector` does not match template `labels`
+@@@RC@@@ 1
+### FAILURE 2 - Service selector matches nothing
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/09-k8s-core-objects/manifests/troubleshooting/service-no-endpoints.yaml
+deployment.apps/api created
+service/api-svc created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get deploy api
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE
+api    2/2     2            2           13s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get svc api-svc
+NAME      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+api-svc   ClusterIP   10.96.115.247   <none>        80/TCP    13s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get endpoints api-svc
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME      ENDPOINTS   AGE
+api-svc   <none>      13s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=api --show-labels
+NAME                   READY   STATUS    RESTARTS   AGE   LABELS
+api-787878dcdc-bggq5   1/1     Running   0          13s   app=api,pod-template-hash=787878dcdc
+api-787878dcdc-jc55x   1/1     Running   0          13s   app=api,pod-template-hash=787878dcdc
+@@@RC@@@ 0
+--- the fix ---
+@@@CMD@@@ kubectl patch svc api-svc -p '{"spec":{"selector":{"app":"api"}}}'
+service/api-svc patched
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get endpoints api-svc
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME      ENDPOINTS                       AGE
+api-svc   10.244.1.66:80,10.244.2.51:80   16s
+@@@RC@@@ 0

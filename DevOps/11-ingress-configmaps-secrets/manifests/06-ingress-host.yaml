@@ -1,0 +1,22 @@
+# HOST-BASED routing: different hostnames -> different services, same IP/port.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: host-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: www.shop.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: frontend-svc, port: { number: 80 } }
+    - host: api.shop.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: backend-svc, port: { number: 80 } }

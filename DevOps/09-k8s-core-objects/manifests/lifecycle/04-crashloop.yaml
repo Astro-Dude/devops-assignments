@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: phase-crashloop
+spec:
+  containers:
+    - name: crasher
+      image: busybox:1.36
+      command: ["sh", "-c", "echo 'starting up'; sleep 2; echo 'fatal: cannot reach database'; exit 1"]

@@ -1,0 +1,35 @@
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/09-k8s-core-objects/manifests/core-objects/statefulset.yaml
+service/web-headless created
+statefulset.apps/web-sts created
+@@@RC@@@ 0
+@@@NOTE@@@ sampling creation order every 1s
+08:56:09  web-sts-0(ContainerCreating) 
+08:56:10  web-sts-0(Running) web-sts-1(Running) web-sts-2(ContainerCreating) 
+08:56:11  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:12  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:13  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:14  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:15  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:16  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:17  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:18  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:19  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:20  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:21  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:22  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:23  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+08:56:24  web-sts-0(Running) web-sts-1(Running) web-sts-2(Running) 
+@@@CMD@@@ kubectl get sts web-sts -o wide
+NAME      READY   AGE   CONTAINERS   IMAGES
+web-sts   3/3     17s   web          nginx:1.27-alpine
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -l app=web-sts -o wide
+NAME        READY   STATUS    RESTARTS   AGE   IP            NODE                NOMINATED NODE   READINESS GATES
+web-sts-0   1/1     Running   0          17s   10.244.1.63   devops-hw-worker    <none>           <none>
+web-sts-1   1/1     Running   0          17s   10.244.2.49   devops-hw-worker2   <none>           <none>
+web-sts-2   1/1     Running   0          17s   10.244.1.64   devops-hw-worker    <none>           <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get svc web-headless
+NAME           TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+web-headless   ClusterIP   None         <none>        80/TCP    17s
+@@@RC@@@ 0

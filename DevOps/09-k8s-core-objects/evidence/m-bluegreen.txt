@@ -1,0 +1,2038 @@
+08:53:45.474 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002666
+08:53:45.488 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.002211
+08:53:45.501 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.002159
+08:53:45.516 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002618
+08:53:45.531 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002264
+08:53:45.544 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001421
+08:53:45.560 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001593
+08:53:45.573 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002151
+08:53:45.588 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002088
+08:53:45.601 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001851
+08:53:45.615 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001989
+08:53:45.628 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001554
+08:53:45.642 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001922
+08:53:45.656 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002356
+08:53:45.669 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001607
+08:53:45.684 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001449
+08:53:45.698 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001976
+08:53:45.710 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001174
+08:53:45.725 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001945
+08:53:45.740 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002053
+08:53:45.753 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001986
+08:53:45.766 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001743
+08:53:45.780 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001868
+08:53:45.795 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001585
+08:53:45.807 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001234
+08:53:45.820 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001655
+08:53:45.834 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001601
+08:53:45.847 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001695
+08:53:45.861 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001844
+08:53:45.874 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001191
+08:53:45.887 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001830
+08:53:45.900 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001297
+08:53:45.913 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001417
+08:53:45.927 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001603
+08:53:45.941 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001696
+08:53:45.955 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001859
+08:53:45.970 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001810
+08:53:45.983 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002026
+08:53:45.997 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001871
+08:53:46.010 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001520
+08:53:46.024 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001026
+08:53:46.037 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001806
+08:53:46.051 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001742
+08:53:46.065 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001650
+08:53:46.078 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001903
+08:53:46.095 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001834
+08:53:46.109 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001360
+08:53:46.124 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001309
+08:53:46.137 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001506
+08:53:46.153 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001789
+08:53:46.168 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001261
+08:53:46.181 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001166
+08:53:46.195 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001429
+08:53:46.208 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001228
+08:53:46.222 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001070
+08:53:46.235 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001221
+08:53:46.248 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001236
+08:53:46.261 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001028
+08:53:46.275 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001484
+08:53:46.289 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001058
+08:53:46.303 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001768
+08:53:46.320 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001270
+08:53:46.333 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001051
+08:53:46.346 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001036
+08:53:46.359 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001327
+08:53:46.372 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001018
+08:53:46.385 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001320
+08:53:46.401 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001189
+08:53:46.414 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001152
+08:53:46.427 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001064
+08:53:46.440 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001136
+08:53:46.453 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001140
+08:53:46.468 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001347
+08:53:46.481 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001142
+08:53:46.495 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001328
+08:53:46.511 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001340
+08:53:46.525 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001374
+08:53:46.538 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001493
+08:53:46.552 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001227
+08:53:46.565 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001252
+08:53:46.578 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001769
+08:53:46.593 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001632
+08:53:46.609 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.000944
+08:53:46.624 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001843
+08:53:46.637 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001772
+08:53:46.652 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001997
+08:53:46.664 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001097
+08:53:46.676 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.000877
+08:53:46.692 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001883
+08:53:46.707 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001423
+08:53:46.720 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001449
+08:53:46.735 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001611
+08:53:46.747 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001626
+08:53:46.762 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002067
+08:53:46.775 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001924
+08:53:46.788 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001855
+08:53:46.803 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001308
+08:53:46.816 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001548
+08:53:46.828 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001703
+08:53:46.840 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.000983
+08:53:46.853 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001629
+08:53:46.867 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001698
+08:53:46.881 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001830
+08:53:46.894 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001786
+08:53:46.908 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001526
+08:53:46.919 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001218
+08:53:46.933 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001583
+08:53:46.947 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001842
+08:53:46.961 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002035
+08:53:46.975 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001323
+08:53:46.988 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001278
+08:53:47.002 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001869
+08:53:47.015 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001881
+08:53:47.028 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001597
+08:53:47.041 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001277
+08:53:47.055 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001391
+08:53:47.069 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001345
+08:53:47.082 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001968
+08:53:47.094 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001279
+08:53:47.108 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002093
+08:53:47.122 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001821
+08:53:47.137 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002056
+08:53:47.150 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001364
+08:53:47.163 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001391
+08:53:47.177 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001386
+08:53:47.192 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001290
+08:53:47.205 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001174
+08:53:47.218 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001111
+08:53:47.231 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001169
+08:53:47.244 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001086
+08:53:47.261 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001367
+08:53:47.274 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001128
+08:53:47.287 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001083
+08:53:47.300 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001240
+08:53:47.313 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001332
+08:53:47.326 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001249
+08:53:47.339 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001223
+08:53:47.353 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001203
+08:53:47.366 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001221
+08:53:47.379 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001105
+08:53:47.391 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001026
+08:53:47.406 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001407
+08:53:47.419 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001275
+08:53:47.431 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001268
+08:53:47.444 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001360
+08:53:47.460 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001927
+08:53:47.473 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001674
+08:53:47.487 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001943
+08:53:47.499 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001451
+08:53:47.512 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001822
+08:53:47.526 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001438
+08:53:47.538 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001310
+08:53:47.551 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001256
+08:53:47.564 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001387
+08:53:47.577 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001722
+08:53:47.591 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.002344
+08:53:47.604 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002115
+08:53:47.617 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001349
+08:53:47.630 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001272
+08:53:47.641 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.000861
+08:53:47.655 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001480
+08:53:47.669 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.003171
+08:53:47.682 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001404
+08:53:47.696 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001585
+08:53:47.710 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001258
+08:53:47.723 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001513
+08:53:47.736 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001382
+08:53:47.748 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001241
+08:53:47.761 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001129
+08:53:47.773 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.000858
+08:53:47.786 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001711
+08:53:47.802 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001366
+08:53:47.816 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001821
+08:53:47.828 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001346
+08:53:47.844 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001758
+08:53:47.857 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001309
+08:53:47.871 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001814
+08:53:47.884 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001777
+08:53:47.899 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001771
+08:53:47.912 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001401
+08:53:47.927 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.000982
+08:53:47.940 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001378
+08:53:47.953 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001036
+08:53:47.966 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001835
+08:53:47.980 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001684
+08:53:47.995 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001753
+08:53:48.008 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001526
+08:53:48.022 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001808
+08:53:48.036 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001412
+08:53:48.049 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001996
+08:53:48.061 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001005
+08:53:48.075 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001699
+08:53:48.089 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001739
+08:53:48.103 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001701
+08:53:48.117 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001518
+08:53:48.128 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001101
+08:53:48.141 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001352
+08:53:48.155 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001339
+08:53:48.170 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001836
+08:53:48.185 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001249
+08:53:48.201 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001710
+08:53:48.215 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001282
+08:53:48.230 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001566
+08:53:48.244 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001453
+08:53:48.257 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001181
+08:53:48.271 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001727
+08:53:48.285 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001223
+08:53:48.298 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001134
+08:53:48.311 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001201
+08:53:48.324 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001399
+08:53:48.337 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001154
+08:53:48.350 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001736
+08:53:48.364 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.000993
+08:53:48.377 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001206
+08:53:48.389 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001032
+08:53:48.403 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001104
+08:53:48.419 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001605
+08:53:48.433 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.000915
+08:53:48.446 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001164
+08:53:48.460 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001165
+08:53:48.473 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001058
+08:53:48.485 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001252
+08:53:48.497 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001014
+08:53:48.511 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001300
+08:53:48.524 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001256
+08:53:48.537 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001126
+08:53:48.549 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001100
+08:53:48.563 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001333
+08:53:48.576 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001436
+08:53:48.591 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001827
+08:53:48.604 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001485
+08:53:48.617 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001527
+08:53:48.629 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001466
+08:53:48.643 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001016
+08:53:48.656 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001696
+08:53:48.669 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001662
+08:53:48.684 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001695
+08:53:48.697 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001772
+08:53:48.710 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001382
+08:53:48.725 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001236
+08:53:48.738 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001229
+08:53:48.754 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001619
+08:53:48.769 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001279
+08:53:48.784 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001069
+08:53:48.800 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001508
+08:53:48.813 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001182
+08:53:48.827 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001339
+08:53:48.839 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.000992
+08:53:48.852 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.000964
+08:53:48.866 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001073
+08:53:48.881 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001349
+08:53:48.894 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001067
+08:53:48.907 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001241
+08:53:48.921 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001393
+08:53:48.936 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001898
+08:53:48.950 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001170
+08:53:48.964 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001779
+08:53:48.976 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001594
+08:53:48.991 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001769
+08:53:49.005 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001622
+08:53:49.018 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001901
+08:53:49.032 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001551
+08:53:49.046 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001490
+08:53:49.061 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001320
+08:53:49.077 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001384
+08:53:49.092 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001704
+08:53:49.108 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002241
+08:53:49.123 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002203
+08:53:49.136 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001620
+08:53:49.149 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001340
+08:53:49.161 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001559
+08:53:49.173 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.000916
+08:53:49.187 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002044
+08:53:49.202 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002227
+08:53:49.216 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001924
+08:53:49.230 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001203
+08:53:49.245 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001196
+08:53:49.259 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001230
+08:53:49.273 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001527
+08:53:49.287 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001224
+08:53:49.300 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001302
+08:53:49.314 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001772
+08:53:49.328 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001442
+08:53:49.341 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001914
+08:53:49.360 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.006549
+08:53:49.374 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001297
+08:53:49.387 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001192
+08:53:49.401 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001264
+08:53:49.414 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001238
+08:53:49.427 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001112
+08:53:49.439 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001235
+08:53:49.453 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001407
+08:53:49.466 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001490
+08:53:49.480 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001650
+08:53:49.493 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001346
+08:53:49.508 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001450
+08:53:49.521 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001390
+08:53:49.534 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001448
+08:53:49.547 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001602
+08:53:49.560 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001189
+08:53:49.575 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001741
+08:53:49.589 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001787
+08:53:49.603 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.000865
+08:53:49.636 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.003434
+08:53:49.653 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001305
+08:53:49.666 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001408
+08:53:49.679 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001397
+08:53:49.693 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001284
+08:53:49.707 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001450
+08:53:49.720 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001199
+08:53:49.734 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000994
+08:53:49.747 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001148
+08:53:49.760 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001200
+08:53:49.773 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001376
+08:53:49.788 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001135
+08:53:49.801 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001238
+08:53:49.813 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001221
+08:53:49.826 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001244
+08:53:49.839 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001030
+08:53:49.851 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001162
+08:53:49.864 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001185
+08:53:49.888 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001646
+08:53:49.901 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001188
+08:53:49.915 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001670
+08:53:49.928 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001231
+08:53:49.941 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001439
+08:53:49.956 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001820
+08:53:49.970 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001669
+08:53:49.983 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001454
+08:53:49.998 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.002535
+08:53:50.011 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.002121
+08:53:50.024 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001150
+08:53:50.038 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001287
+08:53:50.051 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001449
+08:53:50.066 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001455
+08:53:50.079 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001297
+08:53:50.093 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001139
+08:53:50.106 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001235
+08:53:50.118 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001416
+08:53:50.135 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001398
+08:53:50.151 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001393
+08:53:50.165 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001715
+08:53:50.178 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001296
+08:53:50.193 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001855
+08:53:50.205 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001549
+08:53:50.217 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001317
+08:53:50.231 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001184
+08:53:50.243 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001149
+08:53:50.256 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001194
+08:53:50.269 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001077
+08:53:50.283 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001186
+08:53:50.296 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001446
+08:53:50.309 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001298
+08:53:50.323 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001719
+08:53:50.336 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001642
+08:53:50.351 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001758
+08:53:50.365 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001724
+08:53:50.377 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001028
+08:53:50.389 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.000992
+08:53:50.402 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001579
+08:53:50.415 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001739
+08:53:50.428 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001606
+08:53:50.441 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001584
+08:53:50.456 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001777
+08:53:50.470 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001714
+08:53:50.485 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001911
+08:53:50.499 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001393
+08:53:50.513 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001363
+08:53:50.528 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001838
+08:53:50.540 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001212
+08:53:50.553 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001367
+08:53:50.565 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001553
+08:53:50.578 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001527
+08:53:50.594 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001890
+08:53:50.607 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001267
+08:53:50.620 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001386
+08:53:50.633 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001618
+08:53:50.649 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001993
+08:53:50.661 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001567
+08:53:50.675 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001294
+08:53:50.689 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001259
+08:53:50.702 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001665
+08:53:50.715 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001727
+08:53:50.728 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001419
+08:53:50.741 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001337
+08:53:50.755 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001318
+08:53:50.768 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001565
+08:53:50.781 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001201
+08:53:50.796 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001696
+08:53:50.808 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001157
+08:53:50.821 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001493
+08:53:50.837 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001470
+08:53:50.853 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001699
+08:53:50.867 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001588
+08:53:50.883 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001740
+08:53:50.895 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001413
+08:53:50.909 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001736
+08:53:50.924 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.002734
+08:53:50.936 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001195
+08:53:50.949 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001462
+08:53:50.962 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001692
+08:53:50.975 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001514
+08:53:50.988 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001550
+08:53:51.002 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001701
+08:53:51.016 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001722
+08:53:51.029 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001494
+08:53:51.043 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001405
+08:53:51.056 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001249
+08:53:51.068 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001305
+08:53:51.085 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001759
+08:53:51.098 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001395
+08:53:51.110 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001623
+08:53:51.126 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001961
+08:53:51.139 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001694
+08:53:51.153 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001755
+08:53:51.167 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001270
+08:53:51.182 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.002328
+08:53:51.195 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001468
+08:53:51.208 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001685
+08:53:51.223 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001375
+08:53:51.237 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001289
+08:53:51.254 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001148
+08:53:51.269 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001102
+08:53:51.282 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.000994
+08:53:51.294 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001055
+08:53:51.306 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001134
+08:53:51.318 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001079
+08:53:51.331 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001682
+08:53:51.344 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001514
+08:53:51.360 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001787
+08:53:51.375 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001781
+08:53:51.389 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001504
+08:53:51.401 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000989
+08:53:51.416 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001975
+08:53:51.430 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001964
+08:53:51.445 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001899
+08:53:51.458 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.002090
+08:53:51.471 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001686
+08:53:51.486 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001728
+08:53:51.498 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001370
+08:53:51.512 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001864
+08:53:51.527 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001873
+08:53:51.540 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001235
+08:53:51.553 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001109
+08:53:51.571 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001875
+08:53:51.585 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001797
+08:53:51.599 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000987
+08:53:51.615 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001828
+08:53:51.629 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001802
+08:53:51.643 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001466
+08:53:51.658 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.002149
+08:53:51.670 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001047
+08:53:51.684 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001849
+08:53:51.697 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001251
+08:53:51.711 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.002073
+08:53:51.725 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001943
+08:53:51.741 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001612
+08:53:51.754 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001123
+08:53:51.768 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001485
+08:53:51.783 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001311
+08:53:51.798 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001144
+08:53:51.812 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001427
+08:53:51.827 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001305
+08:53:51.841 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001022
+08:53:51.855 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001380
+08:53:51.869 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001202
+08:53:51.882 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001378
+08:53:51.895 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001416
+08:53:51.908 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001810
+08:53:51.921 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001521
+08:53:51.934 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001891
+08:53:51.950 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001588
+08:53:51.963 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001180
+08:53:51.978 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001054
+08:53:51.992 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001593
+08:53:52.005 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001712
+08:53:52.018 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001221
+08:53:52.032 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001850
+08:53:52.046 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001528
+08:53:52.060 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001779
+08:53:52.074 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001728
+08:53:52.087 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001640
+08:53:52.099 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001519
+08:53:52.112 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001152
+08:53:52.124 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001360
+08:53:52.138 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001690
+08:53:52.151 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001325
+08:53:52.164 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001398
+08:53:52.178 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001688
+08:53:52.191 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001624
+08:53:52.204 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001277
+08:53:52.217 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001156
+08:53:52.229 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001132
+08:53:52.243 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001124
+08:53:52.256 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001243
+08:53:52.269 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.000986
+08:53:52.282 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001146
+08:53:52.296 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001139
+08:53:52.309 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001158
+08:53:52.322 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001107
+08:53:52.335 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001107
+08:53:52.349 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001165
+08:53:52.361 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.000985
+08:53:52.374 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000951
+08:53:52.387 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001292
+08:53:52.400 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001037
+08:53:52.412 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000966
+08:53:52.425 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001196
+08:53:52.438 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001475
+08:53:52.451 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001870
+08:53:52.465 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001558
+08:53:52.478 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001714
+08:53:52.491 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001419
+08:53:52.505 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001108
+08:53:52.519 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001773
+08:53:52.533 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001669
+08:53:52.546 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001237
+08:53:52.559 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001451
+08:53:52.571 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001718
+08:53:52.584 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001118
+08:53:52.596 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001050
+08:53:52.608 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001255
+08:53:52.620 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001684
+08:53:52.637 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.002069
+08:53:52.651 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.002408
+08:53:52.665 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001462
+08:53:52.679 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001817
+08:53:52.693 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001866
+08:53:52.706 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001746
+08:53:52.719 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001518
+08:53:52.732 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001524
+08:53:52.744 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001072
+08:53:52.758 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001206
+08:53:52.769 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001083
+08:53:52.781 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001210
+08:53:52.794 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001512
+08:53:52.807 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000864
+08:53:52.820 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001857
+08:53:52.833 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001448
+08:53:52.846 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001974
+08:53:52.859 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001449
+08:53:52.875 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001851
+08:53:52.889 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001735
+08:53:52.901 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001429
+08:53:52.914 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001391
+08:53:52.927 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001274
+08:53:52.939 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001632
+08:53:52.952 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.000993
+08:53:52.965 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001665
+08:53:52.977 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.000876
+08:53:52.991 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001026
+08:53:53.006 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001962
+08:53:53.019 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001786
+08:53:53.031 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001028
+08:53:53.045 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001794
+08:53:53.059 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001255
+08:53:53.071 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001143
+08:53:53.084 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001368
+08:53:53.099 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001569
+08:53:53.111 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001295
+08:53:53.131 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001808
+08:53:53.147 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001192
+08:53:53.160 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001285
+08:53:53.174 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001707
+08:53:53.186 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000898
+08:53:53.199 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001202
+08:53:53.211 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001097
+08:53:53.224 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001159
+08:53:53.238 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001192
+08:53:53.251 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001152
+08:53:53.265 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001110
+08:53:53.278 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000990
+08:53:53.291 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001062
+08:53:53.305 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001189
+08:53:53.318 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001429
+08:53:53.331 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001116
+08:53:53.345 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001246
+08:53:53.358 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001240
+08:53:53.370 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001170
+08:53:53.382 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001234
+08:53:53.394 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001020
+08:53:53.407 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001054
+08:53:53.420 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001199
+08:53:53.434 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001066
+08:53:53.448 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001225
+08:53:53.461 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001141
+08:53:53.473 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001142
+08:53:53.486 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001022
+08:53:53.498 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001145
+08:53:53.512 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001029
+08:53:53.525 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001129
+08:53:53.538 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001157
+08:53:53.551 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001074
+08:53:53.563 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.000971
+08:53:53.575 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001062
+08:53:53.588 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001250
+08:53:53.600 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001071
+08:53:53.613 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000960
+08:53:53.625 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.000892
+08:53:53.638 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001087
+08:53:53.651 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001155
+08:53:53.664 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001124
+08:53:53.677 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.000943
+08:53:53.689 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001192
+08:53:53.702 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001109
+08:53:53.716 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001246
+08:53:53.731 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001584
+08:53:53.749 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001158
+08:53:53.768 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001589
+08:53:53.782 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001218
+08:53:53.795 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001208
+08:53:53.808 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000975
+08:53:53.821 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001308
+08:53:53.834 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001272
+08:53:53.848 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001291
+08:53:53.861 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001165
+08:53:53.874 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001168
+08:53:53.888 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001265
+08:53:53.902 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001237
+08:53:53.915 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001221
+08:53:53.928 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001195
+08:53:53.941 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001286
+08:53:53.956 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001238
+08:53:53.969 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001123
+08:53:53.981 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001260
+08:53:53.995 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001244
+08:53:54.009 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001058
+08:53:54.022 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001124
+08:53:54.035 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001072
+08:53:54.048 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001284
+08:53:54.061 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001075
+08:53:54.075 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001239
+08:53:54.089 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001114
+08:53:54.102 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001126
+08:53:54.117 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001265
+08:53:54.130 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001076
+08:53:54.144 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001180
+08:53:54.157 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001212
+08:53:54.169 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001088
+08:53:54.181 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001134
+08:53:54.195 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001227
+08:53:54.208 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001037
+08:53:54.222 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001212
+08:53:54.236 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001169
+08:53:54.250 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001268
+08:53:54.264 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001071
+08:53:54.278 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001007
+08:53:54.292 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001296
+08:53:54.305 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001116
+08:53:54.319 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001051
+08:53:54.332 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001263
+08:53:54.347 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001374
+08:53:54.362 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001285
+08:53:54.375 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001148
+08:53:54.388 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001126
+08:53:54.403 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001275
+08:53:54.417 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001091
+08:53:54.430 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001231
+08:53:54.445 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001249
+08:53:54.459 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001055
+08:53:54.472 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001029
+08:53:54.487 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001286
+08:53:54.502 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001279
+08:53:54.516 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001134
+08:53:54.530 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001099
+08:53:54.545 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001233
+08:53:54.558 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000986
+08:53:54.572 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001247
+08:53:54.586 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001274
+08:53:54.599 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001214
+08:53:54.613 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001139
+08:53:54.626 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001184
+08:53:54.641 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001300
+08:53:54.655 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001262
+08:53:54.668 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001104
+08:53:54.682 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001095
+08:53:54.696 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001254
+08:53:54.710 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.000963
+08:53:54.723 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001294
+08:53:54.737 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001199
+08:53:54.750 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001272
+08:53:54.763 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001030
+08:53:54.776 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001128
+08:53:54.790 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001060
+08:53:54.803 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001134
+08:53:54.817 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001210
+08:53:54.830 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001129
+08:53:54.844 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001216
+08:53:54.858 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001063
+08:53:54.870 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001076
+08:53:54.884 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001212
+08:53:54.898 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001332
+08:53:54.911 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001242
+08:53:54.925 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001221
+08:53:54.937 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000969
+08:53:54.952 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001452
+08:53:54.965 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001075
+08:53:54.979 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001123
+08:53:54.993 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001192
+08:53:55.006 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001199
+08:53:55.021 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001459
+08:53:55.036 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001241
+08:53:55.050 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001119
+08:53:55.064 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001088
+08:53:55.079 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001241
+08:53:55.095 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001435
+08:53:55.109 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001284
+08:53:55.125 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001392
+08:53:55.139 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001003
+08:53:55.154 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001069
+08:53:55.169 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001276
+08:53:55.183 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001180
+08:53:55.198 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001216
+08:53:55.211 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001083
+08:53:55.227 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001436
+08:53:55.241 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.000998
+08:53:55.255 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001049
+08:53:55.270 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001123
+08:53:55.284 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001140
+08:53:55.299 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001108
+08:53:55.314 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001107
+08:53:55.328 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001126
+08:53:55.342 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001104
+08:53:55.355 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001163
+08:53:55.369 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001257
+08:53:55.383 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.000984
+08:53:55.398 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001256
+08:53:55.412 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001089
+08:53:55.428 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001434
+08:53:55.443 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001286
+08:53:55.458 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001289
+08:53:55.473 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001228
+08:53:55.487 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.000903
+08:53:55.502 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001159
+08:53:55.518 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001115
+08:53:55.532 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001100
+08:53:55.547 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001252
+08:53:55.565 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001285
+08:53:55.581 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001147
+08:53:55.600 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-pvpnj
+|200|0.001443
+08:53:55.676 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001717
+08:53:55.694 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001517
+08:53:55.711 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001328
+08:53:55.727 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001351
+08:53:55.743 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-mcfdv
+|200|0.001510
+08:53:55.758 rc=0 TRACK green | VERSION v2 | pod app-green-5cf85b9497-kfm97
+|200|0.001347
+08:53:55.773 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001412
+08:53:55.788 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001617
+08:53:55.802 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001143
+08:53:55.817 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001238
+08:53:55.833 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001460
+08:53:55.849 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001444
+08:53:55.864 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001396
+08:53:55.882 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001506
+08:53:55.898 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001556
+08:53:55.915 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001325
+08:53:55.931 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001349
+08:53:55.947 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001547
+08:53:55.963 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001390
+08:53:55.979 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001086
+08:53:55.996 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001262
+08:53:56.011 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001303
+08:53:56.027 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001231
+08:53:56.043 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001343
+08:53:56.059 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001472
+08:53:56.075 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001404
+08:53:56.089 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.000964
+08:53:56.105 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001238
+08:53:56.124 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001538
+08:53:56.144 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001686
+08:53:56.178 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001857
+08:53:56.203 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002228
+08:53:56.219 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001372
+08:53:56.236 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001313
+08:53:56.251 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001272
+08:53:56.266 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001086
+08:53:56.283 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001211
+08:53:56.299 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001311
+08:53:56.313 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001123
+08:53:56.329 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001381
+08:53:56.345 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001426
+08:53:56.360 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001238
+08:53:56.376 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001129
+08:53:56.390 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001123
+08:53:56.404 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001138
+08:53:56.423 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001440
+08:53:56.438 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001194
+08:53:56.453 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001334
+08:53:56.468 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001444
+08:53:56.483 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001102
+08:53:56.499 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001035
+08:53:56.521 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001312
+08:53:56.536 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001145
+08:53:56.550 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001272
+08:53:56.566 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001246
+08:53:56.581 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001190
+08:53:56.596 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.000984
+08:53:56.611 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001130
+08:53:56.625 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001077
+08:53:56.640 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001199
+08:53:56.660 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001418
+08:53:56.675 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001223
+08:53:56.689 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001100
+08:53:56.704 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001304
+08:53:56.720 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001328
+08:53:56.735 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001222
+08:53:56.749 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001152
+08:53:56.764 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001070
+08:53:56.778 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001277
+08:53:56.797 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.003903
+08:53:56.812 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001229
+08:53:56.827 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001573
+08:53:56.842 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001441
+08:53:56.857 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001296
+08:53:56.872 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001375
+08:53:56.888 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001309
+08:53:56.902 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001288
+08:53:56.918 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001386
+08:53:56.932 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001003
+08:53:56.945 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001084
+08:53:56.962 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001345
+08:53:56.976 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001192
+08:53:56.991 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001303
+08:53:57.006 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001332
+08:53:57.019 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001061
+08:53:57.034 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001248
+08:53:57.049 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001051
+08:53:57.063 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001185
+08:53:57.079 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001334
+08:53:57.094 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.000932
+08:53:57.108 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001380
+08:53:57.124 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001290
+08:53:57.139 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001570
+08:53:57.155 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001691
+08:53:57.170 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001271
+08:53:57.185 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001148
+08:53:57.200 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001317
+08:53:57.216 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001377
+08:53:57.244 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001534
+08:53:57.274 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001368
+08:53:57.312 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001845
+08:53:57.329 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001543
+08:53:57.346 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001493
+08:53:57.373 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001424
+08:53:57.390 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001472
+08:53:57.408 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001360
+08:53:57.424 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001265
+08:53:57.441 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001348
+08:53:57.456 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001296
+08:53:57.472 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001184
+08:53:57.506 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001940
+08:53:57.544 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001791
+08:53:57.560 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001609
+08:53:57.577 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001316
+08:53:57.593 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001344
+08:53:57.609 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001331
+08:53:57.624 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001313
+08:53:57.640 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001358
+08:53:57.654 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001298
+08:53:57.671 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001284
+08:53:57.687 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001710
+08:53:57.703 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001205
+08:53:57.719 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001444
+08:53:57.735 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001167
+08:53:57.754 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001656
+08:53:57.774 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001413
+08:53:57.789 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001324
+08:53:57.804 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001160
+08:53:57.819 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001304
+08:53:57.835 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001444
+08:53:57.850 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001442
+08:53:57.866 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001390
+08:53:57.881 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001151
+08:53:57.897 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001320
+08:53:57.911 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001096
+08:53:57.929 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001390
+08:53:57.955 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001854
+08:53:57.975 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001654
+08:53:57.990 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001295
+08:53:58.004 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001465
+08:53:58.019 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001119
+08:53:58.034 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001275
+08:53:58.049 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001315
+08:53:58.065 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001288
+08:53:58.080 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001228
+08:53:58.095 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001133
+08:53:58.111 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001175
+08:53:58.134 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001721
+08:53:58.181 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002189
+08:53:58.208 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001677
+08:53:58.236 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001841
+08:53:58.292 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002492
+08:53:58.322 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002550
+08:53:58.344 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001435
+08:53:58.362 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001395
+08:53:58.380 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001418
+08:53:58.403 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001596
+08:53:58.424 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001828
+08:53:58.444 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001695
+08:53:58.464 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001544
+08:53:58.485 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001607
+08:53:58.506 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001685
+08:53:58.523 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001384
+08:53:58.542 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001344
+08:53:58.574 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.002040
+08:53:58.617 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001885
+08:53:58.652 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001927
+08:53:58.674 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001746
+08:53:58.694 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001847
+08:53:58.713 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002034
+08:53:58.734 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001383
+08:53:58.760 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001804
+08:53:58.786 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001932
+08:53:58.805 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001540
+08:53:58.822 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001413
+08:53:58.838 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001322
+08:53:58.854 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001471
+08:53:58.869 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001177
+08:53:58.887 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001625
+08:53:58.909 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002145
+08:53:58.930 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001675
+08:53:58.946 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001446
+08:53:58.970 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001406
+08:53:58.987 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001662
+08:53:59.007 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001345
+08:53:59.030 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001570
+08:53:59.083 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.002029
+08:53:59.137 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002973
+08:53:59.159 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001505
+08:53:59.182 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001651
+08:53:59.201 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001812
+08:53:59.238 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002216
+08:53:59.255 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001501
+08:53:59.280 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001361
+08:53:59.298 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001446
+08:53:59.316 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001442
+08:53:59.331 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001337
+08:53:59.346 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001426
+08:53:59.361 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001367
+08:53:59.379 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001452
+08:53:59.396 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001857
+08:53:59.411 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001877
+08:53:59.427 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001610
+08:53:59.444 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001238
+08:53:59.460 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001261
+08:53:59.479 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001261
+08:53:59.494 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001292
+08:53:59.509 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001640
+08:53:59.530 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001449
+08:53:59.567 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002211
+08:53:59.600 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.002621
+08:53:59.616 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001537
+08:53:59.633 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.002561
+08:53:59.676 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.002316
+08:53:59.698 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002038
+08:53:59.716 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001474
+08:53:59.732 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001621
+08:53:59.748 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001608
+08:53:59.765 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001548
+08:53:59.782 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001458
+08:53:59.800 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001534
+08:53:59.817 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001387
+08:53:59.834 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001490
+08:53:59.853 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001518
+08:53:59.869 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001458
+08:53:59.885 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001291
+08:53:59.900 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001146
+08:53:59.921 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001386
+08:53:59.938 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001427
+08:53:59.952 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001210
+08:53:59.966 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001432
+08:53:59.985 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001901
+08:54:00.001 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001565
+08:54:00.017 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001721
+08:54:00.038 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001502
+08:54:00.055 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001667
+08:54:00.070 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001435
+08:54:00.096 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.002179
+08:54:00.112 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001468
+08:54:00.131 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001525
+08:54:00.147 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001322
+08:54:00.162 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001475
+08:54:00.180 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001897
+08:54:00.197 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001475
+08:54:00.215 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001291
+08:54:00.235 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001670
+08:54:00.252 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001698
+08:54:00.267 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001213
+08:54:00.282 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001305
+08:54:00.297 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001318
+08:54:00.313 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001466
+08:54:00.329 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001569
+08:54:00.343 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001141
+08:54:00.357 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001243
+08:54:00.372 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001199
+08:54:00.386 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001404
+08:54:00.405 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001806
+08:54:00.422 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001622
+08:54:00.439 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001435
+08:54:00.455 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001359
+08:54:00.469 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001239
+08:54:00.484 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001300
+08:54:00.498 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001244
+08:54:00.514 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001288
+08:54:00.530 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001088
+08:54:00.546 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001257
+08:54:00.562 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001360
+08:54:00.577 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001254
+08:54:00.592 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001299
+08:54:00.607 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001351
+08:54:00.622 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001254
+08:54:00.637 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001227
+08:54:00.652 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001198
+08:54:00.668 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001448
+08:54:00.683 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001385
+08:54:00.698 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001326
+08:54:00.714 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-vz8dh
+|200|0.001362
+08:54:00.729 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-fqzqp
+|200|0.001234
+08:54:00.743 rc=0 TRACK blue | VERSION v1 | pod app-blue-7d4bc8b9c4-bsx8g
+|200|0.001308

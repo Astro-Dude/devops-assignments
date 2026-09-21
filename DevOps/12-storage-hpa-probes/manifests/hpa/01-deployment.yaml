@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php-apache
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { run: php-apache }
+  template:
+    metadata:
+      labels: { run: php-apache }
+    spec:
+      containers:
+        - name: php-apache
+          image: registry.k8s.io/hpa-example
+          ports: [{ containerPort: 80 }]
+          resources:
+            # The HPA computes utilisation as a PERCENTAGE OF THE REQUEST.
+            # Without a cpu request there is no denominator and the HPA cannot work.
+            requests:
+              cpu: 200m
+            limits:
+              cpu: 500m
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: php-apache
+spec:
+  selector: { run: php-apache }
+  ports: [{ port: 80, targetPort: 80 }]

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-blue
+  labels:
+    app: myapp
+    track: blue
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp
+      track: blue
+  template:
+    metadata:
+      labels:
+        app: myapp
+        track: blue
+        version: v1
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.26-alpine
+          ports:
+            - containerPort: 80
+          command:
+            - /bin/sh
+            - -c
+            - 'echo "TRACK blue | VERSION v1 | pod $(hostname)" > /usr/share/nginx/html/index.html && exec nginx -g "daemon off;"'
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+            initialDelaySeconds: 1
+            periodSeconds: 2
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }

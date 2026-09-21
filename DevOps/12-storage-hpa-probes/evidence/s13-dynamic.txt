@@ -1,0 +1,52 @@
+### DYNAMIC PROVISIONING
+@@@CMD@@@ kubectl get storageclass
+NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  53m
+@@@RC@@@ 0
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/12-storage-hpa-probes/manifests/persistent/04-dynamic-pvc.yaml
+persistentvolumeclaim/dynamic-pvc created
+@@@RC@@@ 0
+--- still Pending: the class uses WaitForFirstConsumer ---
+@@@CMD@@@ kubectl get pvc dynamic-pvc
+NAME          STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+dynamic-pvc   Pending                                      standard       <unset>                 6s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl describe pvc dynamic-pvc | sed -n '/^Events:/,$p'
+Events:
+  Type    Reason                Age              From                         Message
+  ----    ------                ----             ----                         -------
+  Normal  WaitForFirstConsumer  0s (x2 over 6s)  persistentvolume-controller  waiting for first consumer to be created before binding
+@@@RC@@@ 0
+--- now create a pod that USES it ---
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/12-storage-hpa-probes/manifests/persistent/05-dynamic-deploy.yaml
+deployment.apps/dynamic-storage created
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pvc dynamic-pvc
+NAME          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+dynamic-pvc   Bound    pvc-aa7f8795-8a90-4708-9d4b-d3988f54aa8c   1Gi        RWO            standard       <unset>                 11s
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pv
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                 STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+manual-pv                                  1Gi        RWO            Retain           Bound    default/manual-pvc    manual         <unset>                          64s
+pvc-aa7f8795-8a90-4708-9d4b-d3988f54aa8c   1Gi        RWO            Delete           Bound    default/dynamic-pvc   standard       <unset>                          2s
+@@@RC@@@ 0
+--- a PV was created automatically; nobody wrote that YAML ---
+@@@CMD@@@ kubectl get pv -o custom-columns='NAME:.metadata.name,CLAIM:.spec.claimRef.name,SC:.spec.storageClassName,RECLAIM:.spec.persistentVolumeReclaimPolicy,PATH:.spec.local.path'
+NAME                                       CLAIM         SC         RECLAIM   PATH
+manual-pv                                  manual-pvc    manual     Retain    <none>
+pvc-aa7f8795-8a90-4708-9d4b-d3988f54aa8c   dynamic-pvc   standard   Delete    <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/dynamic-storage -- sh -c 'echo dynamic-data > /data/file.txt'
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/dynamic-storage -- cat /data/file.txt
+dynamic-data
+@@@RC@@@ 0
+@@@CMD@@@ kubectl describe pvc dynamic-pvc | sed -n '/^Events:/,$p'
+Events:
+  Type    Reason                 Age               From                                                                                                Message
+  ----    ------                 ----              ----                                                                                                -------
+  Normal  WaitForFirstConsumer   5s (x2 over 11s)  persistentvolume-controller                                                                         waiting for first consumer to be created before binding
+  Normal  ExternalProvisioning   5s                persistentvolume-controller                                                                         Waiting for a volume to be created either by the external provisioner 'rancher.io/local-path' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+  Normal  Provisioning           5s                rancher.io/local-path_local-path-provisioner-75f7fc7dc5-pl9n4_7e8e0948-3f93-4dda-ac63-948517c1afc9  External provisioner is provisioning volume for claim "default/dynamic-pvc"
+  Normal  ProvisioningSucceeded  2s                rancher.io/local-path_local-path-provisioner-75f7fc7dc5-pl9n4_7e8e0948-3f93-4dda-ac63-948517c1afc9  Successfully provisioned volume pvc-aa7f8795-8a90-4708-9d4b-d3988f54aa8c
+@@@RC@@@ 0

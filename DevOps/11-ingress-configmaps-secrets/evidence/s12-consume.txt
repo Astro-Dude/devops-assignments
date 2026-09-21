@@ -1,0 +1,55 @@
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/11-ingress-configmaps-secrets/manifests/03-app.yaml
+deployment.apps/config-demo created
+@@@RC@@@ 0
+### CONSUMED AS ENVIRONMENT VARIABLES
+@@@CMD@@@ kubectl exec deploy/config-demo -- env | grep -E 'ENVIRONMENT|LOG_LEVEL|DB_USER|DB_PASSWORD' | sort
+DB_PASSWORD=S3cr3t-P@ss
+DB_USER=admin
+ENVIRONMENT=production
+LOG_LEVEL=INFO
+@@@RC@@@ 0
+### CONSUMED AS MOUNTED VOLUMES
+@@@CMD@@@ kubectl exec deploy/config-demo -- ls -l /etc/app-config
+total 0
+lrwxrwxrwx    1 root     root            15 Sep 21 09:17 APP_PORT -> ..data/APP_PORT
+lrwxrwxrwx    1 root     root            23 Sep 21 09:17 DEFAULT_CURRENCY -> ..data/DEFAULT_CURRENCY
+lrwxrwxrwx    1 root     root            18 Sep 21 09:17 ENVIRONMENT -> ..data/ENVIRONMENT
+lrwxrwxrwx    1 root     root            16 Sep 21 09:17 LOG_LEVEL -> ..data/LOG_LEVEL
+lrwxrwxrwx    1 root     root            23 Sep 21 09:17 MAX_BOOKING_DAYS -> ..data/MAX_BOOKING_DAYS
+lrwxrwxrwx    1 root     root            21 Sep 21 09:17 app.properties -> ..data/app.properties
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/config-demo -- cat /etc/app-config/app.properties
+server.name=yatri-booking
+server.timeout=30
+feature.new-checkout=enabled
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/config-demo -- cat /etc/app-config/ENVIRONMENT; echo
+production
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/config-demo -- ls -l /etc/app-secret
+total 0
+lrwxrwxrwx    1 root     root            18 Sep 21 09:17 DB_PASSWORD -> ..data/DB_PASSWORD
+lrwxrwxrwx    1 root     root            14 Sep 21 09:17 DB_USER -> ..data/DB_USER
+@@@RC@@@ 0
+@@@CMD@@@ kubectl exec deploy/config-demo -- cat /etc/app-secret/DB_PASSWORD; echo
+S3cr3t-P@ss
+@@@RC@@@ 0
+--- note the volume is a symlink farm into ..data (that is how atomic updates work) ---
+@@@CMD@@@ kubectl exec deploy/config-demo -- ls -la /etc/app-config
+total 12
+drwxrwxrwx    3 root     root          4096 Sep 21 09:17 .
+drwxr-xr-x    1 root     root          4096 Sep 21 09:17 ..
+drwxr-xr-x    2 root     root          4096 Sep 21 09:17 ..2026_09_21_09_17_55.1090508565
+lrwxrwxrwx    1 root     root            32 Sep 21 09:17 ..data -> ..2026_09_21_09_17_55.1090508565
+lrwxrwxrwx    1 root     root            15 Sep 21 09:17 APP_PORT -> ..data/APP_PORT
+lrwxrwxrwx    1 root     root            23 Sep 21 09:17 DEFAULT_CURRENCY -> ..data/DEFAULT_CURRENCY
+lrwxrwxrwx    1 root     root            18 Sep 21 09:17 ENVIRONMENT -> ..data/ENVIRONMENT
+lrwxrwxrwx    1 root     root            16 Sep 21 09:17 LOG_LEVEL -> ..data/LOG_LEVEL
+lrwxrwxrwx    1 root     root            23 Sep 21 09:17 MAX_BOOKING_DAYS -> ..data/MAX_BOOKING_DAYS
+lrwxrwxrwx    1 root     root            21 Sep 21 09:17 app.properties -> ..data/app.properties
+@@@RC@@@ 0
+--- secret volumes are tmpfs: never written to disk on the node ---
+@@@CMD@@@ kubectl exec deploy/config-demo -- df -h /etc/app-secret
+Filesystem                Size      Used Available Use% Mounted on
+tmpfs                    15.6G      8.0K     15.6G   0% /etc/app-secret
+@@@RC@@@ 0

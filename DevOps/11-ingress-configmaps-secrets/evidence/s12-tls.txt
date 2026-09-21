@@ -1,0 +1,21 @@
+### WRONG WAY: -H 'Host:' does not set TLS SNI
+@@@CMD@@@ curl -skv https://localhost:8443/ -H 'Host: secure.shop.local' 2>&1 | grep -E 'subject:|issuer:' 
+*  subject: O=Acme Co; CN=Kubernetes Ingress Controller Fake Certificate
+*  issuer: O=Acme Co; CN=Kubernetes Ingress Controller Fake Certificate
+@@@RC@@@ 0
+### RIGHT WAY: --resolve makes curl connect AS secure.shop.local, so SNI is correct
+@@@CMD@@@ curl -skv --resolve secure.shop.local:8443:127.0.0.1 https://secure.shop.local:8443/ 2>&1 | grep -E 'subject:|issuer:|expire date:'
+*  subject: CN=secure.shop.local; O=devops-homework
+*  expire date: Sep 21 09:20:14 2027 GMT
+*  issuer: CN=secure.shop.local; O=devops-homework
+@@@RC@@@ 0
+@@@CMD@@@ curl -sk --resolve secure.shop.local:8443:127.0.0.1 https://secure.shop.local:8443/
+<h1>FRONTEND</h1>
+@@@RC@@@ 0
+### full validation WITHOUT -k, trusting our own CA file
+@@@CMD@@@ curl -s --resolve secure.shop.local:8443:127.0.0.1 --cacert /k8s/tls.crt https://secure.shop.local:8443/
+@@@RC@@@ 77
+### and without the CA, validation correctly FAILS
+@@@CMD@@@ curl -s --resolve secure.shop.local:8443:127.0.0.1 https://secure.shop.local:8443/ ; echo "curl exit=$?"
+curl exit=60
+@@@RC@@@ 0

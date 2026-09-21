@@ -1,0 +1,27 @@
+# LIVENESS probe: "is this container still healthy?"
+# Failing liveness RESTARTS the container.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: liveness-demo
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27-alpine
+      ports: [{ containerPort: 80 }]
+      command:
+        - /bin/sh
+        - -c
+        - |
+          echo "OK" > /usr/share/nginx/html/index.html
+          echo "ALIVE" > /usr/share/nginx/html/healthz
+          # after 30s the health endpoint disappears - simulating a deadlock
+          (sleep 30; rm -f /usr/share/nginx/html/healthz) &
+          exec nginx -g "daemon off;"
+      livenessProbe:
+        httpGet:
+          path: /healthz
+          port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 2

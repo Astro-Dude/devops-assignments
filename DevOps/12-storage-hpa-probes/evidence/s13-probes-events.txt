@@ -1,0 +1,60 @@
+### FINAL STATE
+@@@CMD@@@ kubectl get pods readiness-demo liveness-demo startup-demo no-startup-demo
+NAME              READY   STATUS    RESTARTS     AGE
+readiness-demo    1/1     Running   0            2m50s
+liveness-demo     1/1     Running   4 (9s ago)   2m50s
+startup-demo      1/1     Running   0            2m50s
+no-startup-demo   1/1     Running   4 (9s ago)   2m50s
+@@@RC@@@ 0
+### LIVENESS FAILURE EVENTS
+@@@CMD@@@ kubectl describe pod liveness-demo | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason     Age                 From               Message
+  ----     ------     ----                ----               -------
+  Normal   Scheduled  2m49s               default-scheduler  Successfully assigned default/liveness-demo to devops-hw-worker
+  Normal   Pulled     9s (x5 over 2m49s)  kubelet            spec.containers{web}: Container image "nginx:1.27-alpine" already present on machine and can be accessed by the pod
+  Normal   Created    9s (x5 over 2m49s)  kubelet            spec.containers{web}: Container created
+  Normal   Started    9s (x5 over 2m49s)  kubelet            spec.containers{web}: Container started
+  Warning  Unhealthy  9s (x8 over 2m14s)  kubelet            spec.containers{web}: Liveness probe failed: HTTP probe failed with statuscode: 404
+  Normal   Killing    9s (x4 over 2m9s)   kubelet            spec.containers{web}: Container web failed liveness probe, will be restarted
+@@@RC@@@ 0
+### NO-STARTUP-PROBE: same slow container, killed before it can boot
+@@@CMD@@@ kubectl describe pod no-startup-demo | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason     Age                  From               Message
+  ----     ------     ----                 ----               -------
+  Normal   Scheduled  2m49s                default-scheduler  Successfully assigned default/no-startup-demo to devops-hw-worker
+  Normal   Killing    39s (x4 over 2m39s)  kubelet            spec.containers{web}: Container web failed liveness probe, will be restarted
+  Normal   Pulled     9s (x5 over 2m49s)   kubelet            spec.containers{web}: Container image "nginx:1.27-alpine" already present on machine and can be accessed by the pod
+  Normal   Created    9s (x5 over 2m49s)   kubelet            spec.containers{web}: Container created
+  Normal   Started    9s (x5 over 2m49s)   kubelet            spec.containers{web}: Container started
+  Warning  Unhealthy  4s (x9 over 2m44s)   kubelet            spec.containers{web}: Liveness probe failed: Get "http://10.244.1.79:80/healthz": dial tcp 10.244.1.79:80: connect: connection refused
+@@@RC@@@ 0
+### STARTUP PROBE PROTECTED THE IDENTICAL CONTAINER
+@@@CMD@@@ kubectl describe pod startup-demo | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason     Age                   From               Message
+  ----     ------     ----                  ----               -------
+  Normal   Scheduled  2m49s                 default-scheduler  Successfully assigned default/startup-demo to devops-hw-worker2
+  Normal   Pulled     2m49s                 kubelet            spec.containers{web}: Container image "nginx:1.27-alpine" already present on machine and can be accessed by the pod
+  Normal   Created    2m49s                 kubelet            spec.containers{web}: Container created
+  Normal   Started    2m49s                 kubelet            spec.containers{web}: Container started
+  Warning  Unhealthy  2m9s (x8 over 2m44s)  kubelet            spec.containers{web}: Startup probe failed: Get "http://10.244.2.64:80/healthz": dial tcp 10.244.2.64:80: connect: connection refused
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pod startup-demo -o jsonpath='restartCount={.status.containerStatuses[0].restartCount}'; echo
+restartCount=0
+@@@RC@@@ 0
+### READINESS: never restarted, only removed from endpoints
+@@@CMD@@@ kubectl get pod readiness-demo -o jsonpath='restartCount={.status.containerStatuses[0].restartCount} ready={.status.containerStatuses[0].ready}'; echo
+restartCount=0 ready=true
+@@@RC@@@ 0
+@@@CMD@@@ kubectl describe pod readiness-demo | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason     Age                    From               Message
+  ----     ------     ----                   ----               -------
+  Normal   Scheduled  2m50s                  default-scheduler  Successfully assigned default/readiness-demo to devops-hw-worker2
+  Normal   Pulled     2m50s                  kubelet            spec.containers{web}: Container image "nginx:1.27-alpine" already present on machine and can be accessed by the pod
+  Normal   Created    2m50s                  kubelet            spec.containers{web}: Container created
+  Normal   Started    2m50s                  kubelet            spec.containers{web}: Container started
+  Warning  Unhealthy  2m31s (x6 over 2m46s)  kubelet            spec.containers{web}: Readiness probe failed: HTTP probe failed with statuscode: 404
+@@@RC@@@ 0

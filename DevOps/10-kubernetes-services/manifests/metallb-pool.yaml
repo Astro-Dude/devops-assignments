@@ -1,0 +1,22 @@
+# MetalLB gives a bare-metal cluster the thing a cloud provider would normally
+# supply: something that actually answers a LoadBalancer Service's request for
+# an external IP. The pool below is carved out of the Docker network that the
+# kind nodes already live on (172.19.0.0/16), well above the addresses Docker
+# hands out to containers, so the two never collide.
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: kind-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 172.19.255.200-172.19.255.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: kind-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - kind-pool

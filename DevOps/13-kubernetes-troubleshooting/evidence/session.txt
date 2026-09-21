@@ -1,0 +1,928 @@
+$ kubectl --context kind-devops-hw -n assignment13 create namespace assignment13
+namespace/assignment13 created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/mini-project/deployment.yaml -f manifests/mini-project/service.yaml -f manifests/client.yaml
+deployment.apps/troubleshooting-app created
+service/troubleshooting-service created
+pod/client created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 rollout status deployment/troubleshooting-app --timeout=180s
+Waiting for deployment "troubleshooting-app" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "troubleshooting-app" rollout to finish: 1 of 2 updated replicas are available...
+deployment "troubleshooting-app" successfully rolled out
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 wait --for=condition=Ready pod/client --timeout=120s
+pod/client condition met
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pods,svc -o wide
+NAME                                       READY   STATUS    RESTARTS   AGE   IP            NODE                NOMINATED NODE   READINESS GATES
+pod/client                                 1/1     Running   0          27s   10.244.2.72   devops-hw-worker2   <none>           <none>
+pod/troubleshooting-app-59d4957864-j744h   1/1     Running   0          27s   10.244.1.87   devops-hw-worker    <none>           <none>
+pod/troubleshooting-app-59d4957864-kfz9q   1/1     Running   0          27s   10.244.2.71   devops-hw-worker2   <none>           <none>
+
+NAME                              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+service/troubleshooting-service   ClusterIP   10.96.235.104   <none>        80/TCP    27s   app=troubleshooting-app
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 exec deploy/troubleshooting-app -- curl -s -o /dev/null -w "HTTP %{http_code}\n" localhost
+HTTP 200
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 logs deploy/troubleshooting-app --tail=8
+Found 2 pods, using pod/troubleshooting-app-59d4957864-kfz9q
+2026/09/21 09:43:02 [notice] 1#1: start worker process 41
+2026/09/21 09:43:02 [notice] 1#1: start worker process 42
+2026/09/21 09:43:02 [notice] 1#1: start worker process 43
+2026/09/21 09:43:02 [notice] 1#1: start worker process 44
+2026/09/21 09:43:02 [notice] 1#1: start worker process 45
+2026/09/21 09:43:02 [notice] 1#1: start worker process 46
+2026/09/21 09:43:02 [notice] 1#1: start worker process 47
+127.0.0.1 - - [21/Sep/2026:09:43:05 +0000] "GET / HTTP/1.1" 200 615 "-" "curl/7.88.1" "-"
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/06-crashloopbackoff/broken-pod.yaml
+pod/crash-demo created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ContainerCreating[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/06-crashloopbackoff/broken-pod.yaml
+pod/crash-demo unchanged
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get events --field-selector involvedObject.name=crash-demo
+LAST SEEN   TYPE      REASON      OBJECT           MESSAGE
+2m19s       Normal    Scheduled   pod/crash-demo   Successfully assigned assignment13/crash-demo to devops-hw-worker
+41s         Normal    Pulled      pod/crash-demo   Container image "busybox:1.36" already present on machine and can be accessed by the pod
+41s         Normal    Created     pod/crash-demo   Container created
+41s         Normal    Started     pod/crash-demo   Container started
+41s         Warning   BackOff     pod/crash-demo   Back-off restarting failed container app in pod crash-demo_assignment13(7ff25f15-65b0-457f-8d5a-622a5a75a56a)
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Pod","metadata":{"annotations":{},"name":"crash-demo","namespace":"assignment13"},"spec":{"containers":[{"command":["sh","-c","echo \"Application starting...\"\necho \"Something went wrong!\"\nexit 1\n"],"image":"busybox:1.36","name":"app"}]}}
+  creationTimestamp: "2026-09-21T09:43:05Z"
+  generation: 1
+  name: crash-demo
+  namespace: assignment13
+  resourceVersion: "13115"
+  uid: 7ff25f15-65b0-457f-8d5a-622a5a75a56a
+spec:
+  containers:
+  - command:
+    - sh
+    - -c
+    - |
+      echo "Application starting..."
+      echo "Something went wrong!"
+      exit 1
+    image: busybox:1.36
+    imagePullPolicy: IfNotPresent
+    name: app
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-6bg86
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: devops-hw-worker
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-6bg86
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2026-09-21T09:43:06Z"
+    observedGeneration: 1
+    status: "True"
+    type: PodReadyToStartContainers
+  - lastProbeTime: null
+    lastTransitionTime: "2026-09-21T09:43:05Z"
+    observedGeneration: 1
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2026-09-21T09:44:44Z"
+    message: 'containers with unready status: [app]'
+    observedGeneration: 1
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2026-09-21T09:44:44Z"
+    message: 'containers with unready status: [app]'
+    observedGeneration: 1
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2026-09-21T09:43:05Z"
+    observedGeneration: 1
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: containerd://b75b15e4e9eab3eafe595267e8ba6f4de094cf464651bc71aecbd8aa5e719d18
+    image: docker.io/library/busybox:1.36
+    imageID: docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    lastState:
+      terminated:
+        containerID: containerd://3958bf1b1bf4376d627baf2b45114f8bf4da91636722e994640b045641d8162b
+        exitCode: 1
+        finishedAt: "2026-09-21T09:43:45Z"
+        reason: Error
+        startedAt: "2026-09-21T09:43:45Z"
+    name: app
+    ready: false
+    resources: {}
+    restartCount: 4
+    started: false
+    state:
+      terminated:
+        containerID: containerd://b75b15e4e9eab3eafe595267e8ba6f4de094cf464651bc71aecbd8aa5e719d18
+        exitCode: 1
+        finishedAt: "2026-09-21T09:44:44Z"
+        reason: Error
+        startedAt: "2026-09-21T09:44:44Z"
+    user:
+      linux:
+        gid: 0
+        supplementalGroups:
+        - 0
+        - 10
+        uid: 0
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-6bg86
+      readOnly: true
+      recursiveReadOnly: Disabled
+  hostIP: 172.19.0.4
+  hostIPs:
+  - ip: 172.19.0.4
+  observedGeneration: 1
+  phase: Running
+  podIP: 10.244.1.88
+  podIPs:
+  - ip: 10.244.1.88
+  qosClass: BestEffort
+  resources: {}
+  startTime: "2026-09-21T09:43:05Z"
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo -o wide
+NAME         READY   STATUS   RESTARTS       AGE     IP            NODE               NOMINATED NODE   READINESS GATES
+crash-demo   0/1     Error    4 (100s ago)   2m20s   10.244.1.88   devops-hw-worker   <none>           <none>
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 describe pod crash-demo
+Name:             crash-demo
+Namespace:        assignment13
+Priority:         0
+Service Account:  default
+Node:             devops-hw-worker/172.19.0.4
+Start Time:       Mon, 21 Sep 2026 15:13:05 +0530
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               10.244.1.88
+IPs:
+  IP:  10.244.1.88
+Containers:
+  app:
+    Container ID:  containerd://b75b15e4e9eab3eafe595267e8ba6f4de094cf464651bc71aecbd8aa5e719d18
+    Image:         busybox:1.36
+    Image ID:      docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      echo "Application starting..."
+      echo "Something went wrong!"
+      exit 1
+      
+    State:          Terminated
+      Reason:       Error
+      Exit Code:    1
+      Started:      Mon, 21 Sep 2026 15:14:44 +0530
+      Finished:     Mon, 21 Sep 2026 15:14:44 +0530
+    Last State:     Terminated
+      Reason:       Error
+      Exit Code:    1
+      Started:      Mon, 21 Sep 2026 15:13:45 +0530
+      Finished:     Mon, 21 Sep 2026 15:13:45 +0530
+    Ready:          False
+    Restart Count:  4
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-6bg86 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-6bg86:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age                  From               Message
+  ----     ------     ----                 ----               -------
+  Normal   Scheduled  2m19s                default-scheduler  Successfully assigned assignment13/crash-demo to devops-hw-worker
+  Normal   Pulled     41s (x5 over 2m19s)  kubelet            spec.containers{app}: Container image "busybox:1.36" already present on machine and can be accessed by the pod
+  Normal   Created    41s (x5 over 2m19s)  kubelet            spec.containers{app}: Container created
+  Normal   Started    41s (x5 over 2m19s)  kubelet            spec.containers{app}: Container started
+  Warning  BackOff    41s (x4 over 2m17s)  kubelet            spec.containers{app}: Back-off restarting failed container app in pod crash-demo_assignment13(7ff25f15-65b0-457f-8d5a-622a5a75a56a)
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 logs crash-demo --previous
+unable to retrieve container logs for containerd://3958bf1b1bf4376d627baf2b45114f8bf4da91636722e994640b045641d8162b[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 delete pod crash-demo --wait=true
+pod "crash-demo" deleted from assignment13 namespace
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/06-crashloopbackoff/fixed-pod.yaml
+pod/crash-demo created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 wait --for=condition=Ready pod/crash-demo --timeout=180s
+pod/crash-demo condition met
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod crash-demo
+NAME         READY   STATUS    RESTARTS   AGE
+crash-demo   1/1     Running   0          0s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/07-imagepullbackoff/broken-pod.yaml
+pod/image-demo created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ContainerCreating[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ImagePullBackOff[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo -o wide
+NAME         READY   STATUS             RESTARTS   AGE   IP            NODE               NOMINATED NODE   READINESS GATES
+image-demo   0/1     ImagePullBackOff   0          17s   10.244.1.92   devops-hw-worker   <none>           <none>
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 describe pod image-demo
+Name:             image-demo
+Namespace:        assignment13
+Priority:         0
+Service Account:  default
+Node:             devops-hw-worker/172.19.0.4
+Start Time:       Mon, 21 Sep 2026 15:15:26 +0530
+Labels:           <none>
+Annotations:      <none>
+Status:           Pending
+IP:               10.244.1.92
+IPs:
+  IP:  10.244.1.92
+Containers:
+  app:
+    Container ID:   
+    Image:          nginx:this-image-does-not-exist
+    Image ID:       
+    Port:           <none>
+    Host Port:      <none>
+    State:          Waiting
+      Reason:       ImagePullBackOff
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-kl7m9 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-kl7m9:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age               From               Message
+  ----     ------     ----              ----               -------
+  Normal   Scheduled  16s               default-scheduler  Successfully assigned assignment13/image-demo to devops-hw-worker
+  Warning  Failed     15s               kubelet            spec.containers{app}: Failed to pull image "nginx:this-image-does-not-exist": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:this-image-does-not-exist": failed to resolve reference "docker.io/library/nginx:this-image-does-not-exist": docker.io/library/nginx:this-image-does-not-exist: not found
+  Warning  Failed     15s               kubelet            spec.containers{app}: Error: ErrImagePull
+  Normal   BackOff    15s               kubelet            spec.containers{app}: Back-off pulling image "nginx:this-image-does-not-exist"
+  Warning  Failed     15s               kubelet            spec.containers{app}: Error: ImagePullBackOff
+  Normal   Pulling    2s (x2 over 17s)  kubelet            spec.containers{app}: Pulling image "nginx:this-image-does-not-exist"
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 delete pod image-demo --wait=true
+pod "image-demo" deleted from assignment13 namespace
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/07-imagepullbackoff/fixed-pod.yaml
+pod/image-demo created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 wait --for=condition=Ready pod/image-demo --timeout=180s
+pod/image-demo condition met
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod image-demo
+NAME         READY   STATUS    RESTARTS   AGE
+image-demo   1/1     Running   0          1s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/08-pending-pods/broken-pod.yaml
+pod/pending-demo created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod pending-demo -o wide
+NAME           READY   STATUS    RESTARTS   AGE   IP       NODE     NOMINATED NODE   READINESS GATES
+pending-demo   0/1     Pending   0          3s    <none>   <none>   <none>           <none>
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 describe pod pending-demo
+Name:             pending-demo
+Namespace:        assignment13
+Priority:         0
+Service Account:  default
+Node:             <none>
+Labels:           <none>
+Annotations:      <none>
+Status:           Pending
+IP:               
+IPs:              <none>
+Containers:
+  nginx:
+    Image:        nginx:1.27
+    Port:         <none>
+    Host Port:    <none>
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-2km2d (ro)
+Conditions:
+  Type           Status
+  PodScheduled   False 
+Volumes:
+  kube-api-access-2km2d:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              kubernetes.io/hostname=node-that-does-not-exist
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason            Age   From               Message
+  ----     ------            ----  ----               -------
+  Warning  FailedScheduling  3s    default-scheduler  0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 node(s) didn't match Pod's node affinity/selector. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 delete pod pending-demo --wait=true
+pod "pending-demo" deleted from assignment13 namespace
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/08-pending-pods/fixed-pod.yaml
+pod/pending-demo created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 wait --for=condition=Ready pod/pending-demo --timeout=180s
+pod/pending-demo condition met
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod pending-demo
+NAME           READY   STATUS    RESTARTS   AGE
+pending-demo   1/1     Running   0          1s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/mini-project/broken-pod.yaml
+pod/project-broken-pod created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ContainerCreating[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ContainerCreating[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ErrImagePull[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o jsonpath='{.status.containerStatuses[0].state.waiting.reason}'
+ImagePullBackOff[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod -o wide
+NAME                 READY   STATUS             RESTARTS   AGE   IP            NODE               NOMINATED NODE   READINESS GATES
+project-broken-pod   0/1     ImagePullBackOff   0          16s   10.244.1.94   devops-hw-worker   <none>           <none>
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 describe pod project-broken-pod
+Name:             project-broken-pod
+Namespace:        assignment13
+Priority:         0
+Service Account:  default
+Node:             devops-hw-worker/172.19.0.4
+Start Time:       Mon, 21 Sep 2026 15:15:50 +0530
+Labels:           <none>
+Annotations:      <none>
+Status:           Pending
+IP:               10.244.1.94
+IPs:
+  IP:  10.244.1.94
+Containers:
+  app:
+    Container ID:   
+    Image:          nginx:this-tag-does-not-exist
+    Image ID:       
+    Port:           <none>
+    Host Port:      <none>
+    State:          Waiting
+      Reason:       ImagePullBackOff
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-lwxn6 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-lwxn6:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age               From               Message
+  ----     ------     ----              ----               -------
+  Normal   Scheduled  16s               default-scheduler  Successfully assigned assignment13/project-broken-pod to devops-hw-worker
+  Warning  Failed     14s               kubelet            spec.containers{app}: Failed to pull image "nginx:this-tag-does-not-exist": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:this-tag-does-not-exist": failed to resolve reference "docker.io/library/nginx:this-tag-does-not-exist": docker.io/library/nginx:this-tag-does-not-exist: not found
+  Warning  Failed     14s               kubelet            spec.containers{app}: Error: ErrImagePull
+  Normal   BackOff    14s               kubelet            spec.containers{app}: Back-off pulling image "nginx:this-tag-does-not-exist"
+  Warning  Failed     14s               kubelet            spec.containers{app}: Error: ImagePullBackOff
+  Normal   Pulling    0s (x2 over 16s)  kubelet            spec.containers{app}: Pulling image "nginx:this-tag-does-not-exist"
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 delete pod project-broken-pod --wait=true
+pod "project-broken-pod" deleted from assignment13 namespace
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/mini-project/fixed-pod.yaml
+pod/project-broken-pod created
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 wait --for=condition=Ready pod/project-broken-pod --timeout=180s
+pod/project-broken-pod condition met
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pod project-broken-pod
+NAME                 READY   STATUS    RESTARTS   AGE
+project-broken-pod   1/1     Running   0          1s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/mini-project/broken-service.yaml
+service/troubleshooting-service configured
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pods --show-labels
+NAME                                   READY   STATUS    RESTARTS   AGE     LABELS
+client                                 1/1     Running   0          3m36s   <none>
+crash-demo                             1/1     Running   0          48s     <none>
+image-demo                             1/1     Running   0          29s     <none>
+pending-demo                           1/1     Running   0          25s     <none>
+project-broken-pod                     1/1     Running   0          4s      <none>
+troubleshooting-app-59d4957864-j744h   1/1     Running   0          3m36s   app=troubleshooting-app,pod-template-hash=59d4957864
+troubleshooting-app-59d4957864-kfz9q   1/1     Running   0          3m36s   app=troubleshooting-app,pod-template-hash=59d4957864
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 describe svc troubleshooting-service
+Name:                     troubleshooting-service
+Namespace:                assignment13
+Labels:                   <none>
+Annotations:              <none>
+Selector:                 app=wrong-app
+Type:                     ClusterIP
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.96.235.104
+IPs:                      10.96.235.104
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+Endpoints:                
+Session Affinity:         None
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get endpointslices -l kubernetes.io/service-name=troubleshooting-service -o yaml
+apiVersion: v1
+items:
+- addressType: IPv4
+  apiVersion: discovery.k8s.io/v1
+  endpoints: null
+  kind: EndpointSlice
+  metadata:
+    creationTimestamp: "2026-09-21T09:42:38Z"
+    generateName: troubleshooting-service-
+    generation: 4
+    labels:
+      endpointslice.kubernetes.io/managed-by: endpointslice-controller.k8s.io
+      kubernetes.io/service-name: troubleshooting-service
+    name: troubleshooting-service-8wqx9
+    namespace: assignment13
+    ownerReferences:
+    - apiVersion: v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Service
+      name: troubleshooting-service
+      uid: da4f89f9-11ae-4025-be42-d5a22e56f1fa
+    resourceVersion: "13642"
+    uid: ab959767-515a-4b2d-9711-58e96f013743
+  ports: null
+kind: List
+metadata:
+  resourceVersion: ""
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 exec client -- nslookup troubleshooting-service.assignment13.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+
+Name:	troubleshooting-service.assignment13.svc.cluster.local
+Address: 10.96.235.104
+
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 exec client -- wget -T 3 -q -O- http://troubleshooting-service
+wget: can't connect to remote host (10.96.235.104): Connection refused
+command terminated with exit code 1
+[exit 1]
+
+$ kubectl --context kind-devops-hw -n assignment13 apply -f manifests/mini-project/service.yaml
+service/troubleshooting-service configured
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get endpointslices -l kubernetes.io/service-name=troubleshooting-service
+NAME                            ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+troubleshooting-service-8wqx9   IPv4          80      10.244.1.87,10.244.2.71   3m40s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 exec client -- wget -T 5 -q -O- http://troubleshooting-service
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 exec client -- nslookup missing-service.assignment13.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+** server can't find missing-service.assignment13.svc.cluster.local: NXDOMAIN
+
+** server can't find missing-service.assignment13.svc.cluster.local: NXDOMAIN
+
+command terminated with exit code 1
+[exit 1]
+
+$ kubectl --context kind-devops-hw -n assignment13 get events --field-selector type=Warning --sort-by=.lastTimestamp
+LAST SEEN   TYPE      REASON             OBJECT                   MESSAGE
+32s         Warning   FailedScheduling   pod/pending-demo         0/3 nodes are available: 1 node(s) had untolerated taint(s), 2 node(s) didn't match Pod's node affinity/selector. preemption: 0/3 nodes are available: 3 Preemption is not helpful for scheduling.
+95s         Warning   BackOff            pod/crash-demo           Back-off restarting failed container app in pod crash-demo_assignment13(7ff25f15-65b0-457f-8d5a-622a5a75a56a)
+51s         Warning   Failed             pod/image-demo           Error: ImagePullBackOff
+35s         Warning   Failed             pod/image-demo           Failed to pull image "nginx:this-image-does-not-exist": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:this-image-does-not-exist": failed to resolve reference "docker.io/library/nginx:this-image-does-not-exist": docker.io/library/nginx:this-image-does-not-exist: not found
+35s         Warning   Failed             pod/image-demo           Error: ErrImagePull
+27s         Warning   Failed             pod/project-broken-pod   Error: ImagePullBackOff
+10s         Warning   Failed             pod/project-broken-pod   Failed to pull image "nginx:this-tag-does-not-exist": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:this-tag-does-not-exist": failed to resolve reference "docker.io/library/nginx:this-tag-does-not-exist": docker.io/library/nginx:this-tag-does-not-exist: not found
+10s         Warning   Failed             pod/project-broken-pod   Error: ErrImagePull
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 get pods,svc
+NAME                                       READY   STATUS    RESTARTS   AGE
+pod/client                                 1/1     Running   0          3m41s
+pod/crash-demo                             1/1     Running   0          53s
+pod/image-demo                             1/1     Running   0          34s
+pod/pending-demo                           1/1     Running   0          30s
+pod/project-broken-pod                     1/1     Running   0          9s
+pod/troubleshooting-app-59d4957864-j744h   1/1     Running   0          3m41s
+pod/troubleshooting-app-59d4957864-kfz9q   1/1     Running   0          3m41s
+
+NAME                              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/troubleshooting-service   ClusterIP   10.96.235.104   <none>        80/TCP    3m41s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment13 delete namespace assignment13 --wait=true
+Warning: deleting cluster-scoped resources, not scoped to the provided namespace
+namespace "assignment13" deleted
+[exit 0]
+

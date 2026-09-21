@@ -1,0 +1,28 @@
+# STARTUP probe: protects a SLOW-starting container from the liveness probe.
+# While the startup probe is running, liveness and readiness are disabled.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: startup-demo
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27-alpine
+      ports: [{ containerPort: 80 }]
+      command:
+        - /bin/sh
+        - -c
+        - |
+          # deliberately slow boot: 40 seconds before anything is served
+          sleep 40
+          echo "STARTED" > /usr/share/nginx/html/index.html
+          echo "ALIVE"   > /usr/share/nginx/html/healthz
+          exec nginx -g "daemon off;"
+      startupProbe:
+        httpGet: { path: /healthz, port: 80 }
+        periodSeconds: 5
+        failureThreshold: 20        # allows up to 100s to start
+      livenessProbe:
+        httpGet: { path: /healthz, port: 80 }
+        periodSeconds: 5
+        failureThreshold: 2         # would have killed it at ~10s without startupProbe

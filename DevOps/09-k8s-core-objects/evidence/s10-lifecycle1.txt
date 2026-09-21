@@ -1,0 +1,30 @@
+@@@CMD@@@ kubectl apply -f /Users/shauryaverma/SST/devops-assignments/DevOps/09-k8s-core-objects/manifests/lifecycle/
+pod/phase-succeeded created
+pod/phase-failed created
+pod/phase-pending created
+pod/phase-crashloop created
+pod/phase-imagepull created
+pod/init-demo created
+pod/sidecar-demo created
+@@@RC@@@ 0
+@@@NOTE@@@ letting phases settle for 75s
+@@@CMD@@@ kubectl get pods -o wide
+NAME              READY   STATUS         RESTARTS      AGE   IP            NODE                NOMINATED NODE   READINESS GATES
+init-demo         1/1     Running        0             75s   10.244.1.11   devops-hw-worker    <none>           <none>
+phase-crashloop   0/1     Error          3 (51s ago)   75s   10.244.1.10   devops-hw-worker    <none>           <none>
+phase-failed      0/1     Error          0             75s   10.244.2.7    devops-hw-worker2   <none>           <none>
+phase-imagepull   0/1     ErrImagePull   0             75s   10.244.2.8    devops-hw-worker2   <none>           <none>
+phase-pending     0/1     Pending        0             75s   <none>        <none>              <none>           <none>
+phase-succeeded   0/1     Completed      0             75s   10.244.1.9    devops-hw-worker    <none>           <none>
+sidecar-demo      2/2     Running        0             75s   10.244.2.9    devops-hw-worker2   <none>           <none>
+@@@RC@@@ 0
+@@@CMD@@@ kubectl get pods -o custom-columns='NAME:.metadata.name,PHASE:.status.phase,REASON:.status.containerStatuses[0].state.waiting.reason,EXIT:.status.containerStatuses[0].state.terminated.exitCode,RESTARTS:.status.containerStatuses[0].restartCount'
+NAME              PHASE       REASON         EXIT     RESTARTS
+init-demo         Running     <none>         <none>   0
+phase-crashloop   Running     <none>         1        3
+phase-failed      Failed      <none>         7        0
+phase-imagepull   Pending     ErrImagePull   <none>   0
+phase-pending     Pending     <none>         <none>   <none>
+phase-succeeded   Succeeded   <none>         0        0
+sidecar-demo      Running     <none>         <none>   0
+@@@RC@@@ 0

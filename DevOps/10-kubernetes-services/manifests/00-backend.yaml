@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    app: web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+              name: http
+          command:
+            - /bin/sh
+            - -c
+            - 'echo "served by $(hostname) at $(hostname -i)" > /usr/share/nginx/html/index.html && exec nginx -g "daemon off;"'
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+            initialDelaySeconds: 1
+            periodSeconds: 2
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }

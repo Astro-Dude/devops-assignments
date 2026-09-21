@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: static-storage-pod
+spec:
+  nodeName: devops-hw-worker
+  containers:
+    - name: app
+      image: busybox:1.36
+      command: ["sh", "-c", "while true; do sleep 30; done"]
+      volumeMounts:
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: manual-pvc

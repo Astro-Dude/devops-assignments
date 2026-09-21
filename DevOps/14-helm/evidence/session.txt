@@ -1,0 +1,378 @@
+$ helm version --short
+v4.3.0+gbec5b06
+[exit 0]
+
+$ helm lint notes-chart
+==> Linting notes-chart
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+[exit 0]
+
+$ helm lint notes-chart -f notes-chart/values-prod.yaml
+==> Linting notes-chart
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+[exit 0]
+
+$ helm template notes-dev notes-chart
+---
+# Source: notes-chart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notes-dev-config
+data:
+  APP_NAME: "notes-app"
+  ENVIRONMENT: "development"
+
+---
+# Source: notes-chart/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: notes-dev-svc
+spec:
+  type: NodePort
+  selector:
+    app: notes-dev
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30090
+
+---
+# Source: notes-chart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-dev-deploy
+  labels:
+    app: notes-dev
+    environment: development
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notes-dev
+  template:
+    metadata:
+      labels:
+        app: notes-dev
+    spec:
+      containers:
+        - name: notes
+          image: "nginx:1.24"
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: notes-dev-config
+[exit 0]
+
+$ helm template notes-dev notes-chart -f notes-chart/values-prod.yaml
+---
+# Source: notes-chart/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: notes-dev-config
+data:
+  APP_NAME: "notes-app"
+  ENVIRONMENT: "production"
+
+---
+# Source: notes-chart/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: notes-dev-svc
+spec:
+  type: NodePort
+  selector:
+    app: notes-dev
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30090
+
+---
+# Source: notes-chart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notes-dev-deploy
+  labels:
+    app: notes-dev
+    environment: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: notes-dev
+  template:
+    metadata:
+      labels:
+        app: notes-dev
+    spec:
+      containers:
+        - name: notes
+          image: "nginx:1.25"
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: notes-dev-config
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 install notes-dev notes-chart --create-namespace --wait --timeout 240s
+NAME: notes-dev
+LAST DEPLOYED: Mon Sep 21 15:13:03 2026
+NAMESPACE: assignment14
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods,svc,configmaps
+NAME                                    READY   STATUS    RESTARTS   AGE
+pod/notes-dev-deploy-74956bd987-29hwf   1/1     Running   0          72s
+
+NAME                    TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/notes-dev-svc   NodePort   10.96.178.174   <none>        80:30090/TCP   72s
+
+NAME                         DATA   AGE
+configmap/kube-root-ca.crt   1      72s
+configmap/notes-dev-config   2      72s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 exec deploy/notes-dev-deploy -- printenv APP_NAME ENVIRONMENT
+notes-app
+development
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 exec deploy/notes-dev-deploy -- curl -s -o /dev/null -w "HTTP %{http_code}\n" http://notes-dev-svc
+HTTP 200
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 upgrade notes-dev notes-chart -f notes-chart/values-prod.yaml --wait --timeout 240s
+Release "notes-dev" has been upgraded. Happy Helming!
+NAME: notes-dev
+LAST DEPLOYED: Mon Sep 21 15:14:15 2026
+NAMESPACE: assignment14
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods -o wide
+NAME                                READY   STATUS      RESTARTS   AGE   IP            NODE                NOMINATED NODE   READINESS GATES
+notes-dev-deploy-74956bd987-9l2b6   0/1     Completed   0          45s   10.244.1.89   devops-hw-worker    <none>           <none>
+notes-dev-deploy-74956bd987-gtxhb   0/1     Completed   0          45s   10.244.2.74   devops-hw-worker2   <none>           <none>
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running     0          0s    10.244.2.76   devops-hw-worker2   <none>           <none>
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running     0          22s   10.244.1.90   devops-hw-worker    <none>           <none>
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running     0          45s   10.244.2.75   devops-hw-worker2   <none>           <none>
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 exec deploy/notes-dev-deploy -- printenv APP_NAME ENVIRONMENT
+notes-app
+production
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 get values notes-dev
+USER-SUPPLIED VALUES:
+app:
+  environment: production
+  name: notes-app
+image:
+  repository: nginx
+  tag: "1.25"
+replicaCount: 3
+service:
+  nodePort: 30090
+  port: 80
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 history notes-dev
+REVISION	UPDATED                 	STATUS    	CHART            	APP VERSION	DESCRIPTION     
+1       	Mon Sep 21 15:13:03 2026	superseded	notes-chart-0.1.0	1.0        	Install complete
+2       	Mon Sep 21 15:14:15 2026	deployed  	notes-chart-0.1.0	1.0        	Upgrade complete
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 upgrade notes-dev notes-chart -f notes-chart/values-prod.yaml --set image.tag=broken-tag-does-not-exist
+Release "notes-dev" has been upgraded. Happy Helming!
+NAME: notes-dev
+LAST DEPLOYED: Mon Sep 21 15:15:01 2026
+NAMESPACE: assignment14
+STATUS: deployed
+REVISION: 3
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS              RESTARTS   AGE
+notes-dev-deploy-74956bd987-9l2b6   0/1     Completed           0          46s
+notes-dev-deploy-74956bd987-gtxhb   0/1     Completed           0          46s
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     ContainerCreating   0          0s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running             0          1s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running             0          23s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running             0          46s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS              RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     ContainerCreating   0          2s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running             0          3s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running             0          25s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running             0          48s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS         RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     ErrImagePull   0          4s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running        0          5s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running        0          27s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running        0          50s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS         RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     ErrImagePull   0          6s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running        0          7s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running        0          29s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running        0          52s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS         RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     ErrImagePull   0          8s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running        0          9s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running        0          31s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running        0          54s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS         RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     ErrImagePull   0          10s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running        0          11s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running        0          33s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running        0          56s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS         RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     ErrImagePull   0          12s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running        0          13s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running        0          35s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running        0          58s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS         RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     ErrImagePull   0          14s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running        0          15s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running        0          37s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running        0          60s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS             RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     ImagePullBackOff   0          16s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running            0          17s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running            0          39s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running            0          62s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get events --field-selector type=Warning --sort-by=.lastTimestamp
+LAST SEEN   TYPE      REASON   OBJECT                                  MESSAGE
+2m6s        Warning   Failed   pod/notes-dev-deploy-74956bd987-29hwf   Failed to pull image "nginx:1.24": failed to pull and unpack image "docker.io/library/nginx:1.24": failed to resolve reference "docker.io/library/nginx:1.24": failed to do request: Head "https://registry-1.docker.io/v2/library/nginx/manifests/1.24": dial tcp: lookup registry-1.docker.io on 192.168.65.254:53: server misbehaving
+2m6s        Warning   Failed   pod/notes-dev-deploy-74956bd987-29hwf   Error: ErrImagePull
+2m5s        Warning   Failed   pod/notes-dev-deploy-74956bd987-29hwf   Error: ImagePullBackOff
+14s         Warning   Failed   pod/notes-dev-deploy-79b4dbdffd-vfz7m   Failed to pull image "nginx:broken-tag-does-not-exist": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:broken-tag-does-not-exist": failed to resolve reference "docker.io/library/nginx:broken-tag-does-not-exist": docker.io/library/nginx:broken-tag-does-not-exist: not found
+14s         Warning   Failed   pod/notes-dev-deploy-79b4dbdffd-vfz7m   Error: ErrImagePull
+13s         Warning   Failed   pod/notes-dev-deploy-79b4dbdffd-vfz7m   Error: ImagePullBackOff
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 history notes-dev
+REVISION	UPDATED                 	STATUS    	CHART            	APP VERSION	DESCRIPTION     
+1       	Mon Sep 21 15:13:03 2026	superseded	notes-chart-0.1.0	1.0        	Install complete
+2       	Mon Sep 21 15:14:15 2026	superseded	notes-chart-0.1.0	1.0        	Upgrade complete
+3       	Mon Sep 21 15:15:01 2026	deployed  	notes-chart-0.1.0	1.0        	Upgrade complete
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 rollback notes-dev 2 --wait --timeout 180s
+Rollback was a success! Happy Helming!
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS        RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-vfz7m   0/1     Terminating   0          17s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running       0          18s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running       0          40s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running       0          63s
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 history notes-dev
+REVISION	UPDATED                 	STATUS    	CHART            	APP VERSION	DESCRIPTION     
+1       	Mon Sep 21 15:13:03 2026	superseded	notes-chart-0.1.0	1.0        	Install complete
+2       	Mon Sep 21 15:14:15 2026	superseded	notes-chart-0.1.0	1.0        	Upgrade complete
+3       	Mon Sep 21 15:15:01 2026	superseded	notes-chart-0.1.0	1.0        	Upgrade complete
+4       	Mon Sep 21 15:15:18 2026	deployed  	notes-chart-0.1.0	1.0        	Rollback to 2   
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 upgrade notes-dev notes-chart -f notes-chart/values-prod.yaml --set image.tag=broken-tag-does-not-exist --rollback-on-failure --timeout 35s
+level=WARN msg="upgrade failed" name=notes-dev error="resource Deployment/assignment14/notes-dev-deploy not ready. status: InProgress, message: Updated: 1/3\ncontext deadline exceeded"
+Error: UPGRADE FAILED: release notes-dev failed, and has been rolled back due to rollback-on-failure being set: resource Deployment/assignment14/notes-dev-deploy not ready. status: InProgress, message: Updated: 1/3
+context deadline exceeded
+[exit 1]
+
+$ helm --kube-context kind-devops-hw -n assignment14 history notes-dev
+REVISION	UPDATED                 	STATUS    	CHART            	APP VERSION	DESCRIPTION                                                                                                                       
+1       	Mon Sep 21 15:13:03 2026	superseded	notes-chart-0.1.0	1.0        	Install complete                                                                                                                  
+2       	Mon Sep 21 15:14:15 2026	superseded	notes-chart-0.1.0	1.0        	Upgrade complete                                                                                                                  
+3       	Mon Sep 21 15:15:01 2026	superseded	notes-chart-0.1.0	1.0        	Upgrade complete                                                                                                                  
+4       	Mon Sep 21 15:15:18 2026	superseded	notes-chart-0.1.0	1.0        	Rollback to 2                                                                                                                     
+5       	Mon Sep 21 15:15:18 2026	failed    	notes-chart-0.1.0	1.0        	Upgrade "notes-dev" failed: resource Deployment/assignment14/notes-dev-deploy not ready. status: InProgress, message: Updated: ...
+6       	Mon Sep 21 15:15:53 2026	deployed  	notes-chart-0.1.0	1.0        	Rollback to 4                                                                                                                     
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 rollout status deployment/notes-dev-deploy --timeout=120s
+deployment "notes-dev-deploy" successfully rolled out
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get pods
+NAME                                READY   STATUS        RESTARTS   AGE
+notes-dev-deploy-79b4dbdffd-tlwnm   0/1     Terminating   0          36s
+notes-dev-deploy-bbcc464b4-cvf8m    1/1     Running       0          54s
+notes-dev-deploy-bbcc464b4-hnhpq    1/1     Running       0          76s
+notes-dev-deploy-bbcc464b4-xzlfm    1/1     Running       0          99s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 exec deploy/notes-dev-deploy -- curl -s -o /dev/null -w "HTTP %{http_code}\n" http://notes-dev-svc
+HTTP 200
+[exit 0]
+
+$ helm --kube-context kind-devops-hw -n assignment14 uninstall notes-dev --wait --timeout 120s
+release "notes-dev" uninstalled
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 get deploy,svc,configmaps,pods
+NAME                         DATA   AGE
+configmap/kube-root-ca.crt   1      2m51s
+
+NAME                                    READY   STATUS        RESTARTS   AGE
+pod/notes-dev-deploy-79b4dbdffd-tlwnm   0/1     Terminating   0          36s
+pod/notes-dev-deploy-bbcc464b4-cvf8m    0/1     Completed     0          54s
+pod/notes-dev-deploy-bbcc464b4-hnhpq    0/1     Completed     0          76s
+pod/notes-dev-deploy-bbcc464b4-xzlfm    0/1     Completed     0          99s
+[exit 0]
+
+$ kubectl --context kind-devops-hw -n assignment14 delete namespace assignment14 --wait=true
+Warning: deleting cluster-scoped resources, not scoped to the provided namespace
+namespace "assignment14" deleted
+[exit 0]
+

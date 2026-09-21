@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-deploy
+  labels:
+    app: hello-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello-deploy
+  template:
+    metadata:
+      labels:
+        app: hello-deploy
+    spec:
+      containers:
+        - name: hello
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi

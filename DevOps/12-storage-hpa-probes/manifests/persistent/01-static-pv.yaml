@@ -1,0 +1,15 @@
+# STATIC provisioning: an administrator creates the PV by hand, ahead of time.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: manual-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain   # keep the data after the PVC is deleted
+  storageClassName: manual                # NOT the default class
+  hostPath:
+    path: /tmp/k8s-manual-pv
+    type: DirectoryOrCreate
