@@ -1,0 +1,25 @@
+$ helm lint helm/tickethub -f helm/tickethub/values-dev.yaml
+==> Linting helm/tickethub
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+
+$ helm upgrade --install tickethub helm/tickethub -n tickethub-helm --create-namespace -f helm/tickethub/values-dev.yaml --set image.backend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set image.frontend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set ingress.host=helm.tickethub.localtest.me --wait --timeout 5m
+Release "tickethub" does not exist. Installing it now.
+NAME: tickethub
+LAST DEPLOYED: Wed Oct  7 19:48:23 2026
+NAMESPACE: tickethub-helm
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+NOTES:
+TicketHub 1.0.0 deployed as release "tickethub" in namespace "tickethub-helm".
+
+  backend image : ghcr.io/astro-dude/s21-tickethub-backend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  frontend image: ghcr.io/astro-dude/s21-tickethub-frontend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  URL           : http://helm.tickethub.localtest.me/   (kind: add :28080)
+
+Check it:
+  kubectl -n tickethub-helm get pods,svc,ingress,hpa,pvc
+  helm test tickethub -n tickethub-helm
+

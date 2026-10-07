@@ -55,6 +55,9 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 2
+          lifecycle:
+            preStop:
+              sleep: {seconds: 5}   # drain: let ingress-nginx drop this endpoint first
           securityContext: *csc
           resources: *res
           volumeMounts:

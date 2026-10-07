@@ -1,0 +1,127 @@
+$ kubectl -n tickethub-helm get pods,svc,ingress,hpa,pvc,networkpolicy,servicemonitor,prometheusrule
+NAME                                      READY   STATUS    RESTARTS   AGE
+pod/tickethub-backend-76669cd84c-b67ls    1/1     Running   0          35s
+pod/tickethub-frontend-5cc6cfcb57-fffzb   1/1     Running   0          35s
+pod/tickethub-postgres-6c7cb8894f-sfx69   1/1     Running   0          35s
+
+NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/tickethub-backend    ClusterIP   10.96.203.27    <none>        8000/TCP   35s
+service/tickethub-frontend   ClusterIP   10.96.164.108   <none>        80/TCP     35s
+service/tickethub-postgres   ClusterIP   10.96.189.166   <none>        5432/TCP   35s
+
+NAME                                  CLASS   HOSTS                         ADDRESS     PORTS   AGE
+ingress.networking.k8s.io/tickethub   nginx   helm.tickethub.localtest.me   localhost   80      35s
+
+NAME                                                    REFERENCE                      TARGETS                                     MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/tickethub-backend   Deployment/tickethub-backend   cpu: <unknown>/70%, memory: <unknown>/85%   1         3         1          35s
+
+NAME                                            STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/tickethub-postgres-data   Bound    pvc-80111814-e189-4be3-8ac3-ca038f60d032   1Gi        RWO            standard       <unset>                 35s
+
+NAME                                                 POD-SELECTOR                                                                     AGE
+networkpolicy.networking.k8s.io/tickethub-postgres   app.kubernetes.io/instance=tickethub,app.kubernetes.io/name=tickethub-postgres   35s
+
+NAME                                                     AGE
+servicemonitor.monitoring.coreos.com/tickethub-backend   35s
+
+NAME                                                    AGE
+prometheusrule.monitoring.coreos.com/tickethub-alerts   35s
+
+$ helm list -n tickethub-helm
+NAME     	NAMESPACE     	REVISION	UPDATED                             	STATUS  	CHART          	APP VERSION
+tickethub	tickethub-helm	1       	2026-10-07 19:48:23.060608 +0530 IST	deployed	tickethub-1.0.1	1.0.0      
+
+$ helm test tickethub -n tickethub-helm --logs
+NAME: tickethub
+LAST DEPLOYED: Wed Oct  7 19:48:23 2026
+NAMESPACE: tickethub-helm
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE:     tickethub-smoke-test
+Last Started:   Wed Oct  7 19:48:58 2026
+Last Completed: Wed Oct  7 19:49:00 2026
+Phase:          Succeeded
+
+POD LOGS: tickethub-smoke-test (smoke)
+{"status":"READY"}{"total":0,"open":0,"in_progress":0,"resolved":0,"closed":0,"urgent_open":0}ok
+
+
+$ curl -s http://helm.tickethub.localtest.me:28080/api/info
+{"service":"TicketHub API","version":"c9ba4c7","environment":"dev","pod":"tickethub-backend-76669cd84c-b67ls","default_team":"L1 Support"}
+$ kubectl -n tickethub-helm get secret tickethub-db -o jsonpath='{.data}' | jq 'map_values(length)'   # chart-generated password, only lengths shown
+{
+  "DB_PASSWORD": 32,
+  "DB_USER": 12
+}
+
+################ upgrade: new config value -> checksum/config annotation changes -> pods roll
+$ helm upgrade tickethub helm/tickethub -n tickethub-helm -f helm/tickethub/values-dev.yaml --set image.backend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set image.frontend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set ingress.host=helm.tickethub.localtest.me --set config.defaultTeam=Service-Desk-L2 --wait --timeout 5m
+Release "tickethub" has been upgraded. Happy Helming!
+NAME: tickethub
+LAST DEPLOYED: Wed Oct  7 19:49:01 2026
+NAMESPACE: tickethub-helm
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+NOTES:
+TicketHub 1.0.0 deployed as release "tickethub" in namespace "tickethub-helm".
+
+  backend image : ghcr.io/astro-dude/s21-tickethub-backend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  frontend image: ghcr.io/astro-dude/s21-tickethub-frontend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  URL           : http://helm.tickethub.localtest.me/   (kind: add :28080)
+
+Check it:
+  kubectl -n tickethub-helm get pods,svc,ingress,hpa,pvc
+  helm test tickethub -n tickethub-helm
+
+$ curl -s http://helm.tickethub.localtest.me:28080/api/info
+<html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+
+################ bad upgrade: tag that does not exist -> --wait times out -> release FAILED
+$ helm upgrade tickethub helm/tickethub -n tickethub-helm -f helm/tickethub/values-dev.yaml --set image.backend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set image.frontend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set ingress.host=helm.tickethub.localtest.me --set config.defaultTeam=Service-Desk-L2 --set image.backend.tag=does-not-exist --wait --timeout 60s
+level=WARN msg="upgrade failed" name=tickethub error="resource Deployment/tickethub-helm/tickethub-backend not ready. status: InProgress, message: Pending termination: 1\ncontext deadline exceeded"
+Error: UPGRADE FAILED: resource Deployment/tickethub-helm/tickethub-backend not ready. status: InProgress, message: Pending termination: 1
+context deadline exceeded
+
+$ kubectl -n tickethub-helm get pods
+NAME                                  READY   STATUS              RESTARTS   AGE
+tickethub-backend-5c9f7bb675-sz9f9    0/1     Init:ErrImagePull   0          60s
+tickethub-backend-78dbbb7457-7hkmm    1/1     Running             0          67s
+tickethub-frontend-5cc6cfcb57-fffzb   1/1     Running             0          105s
+tickethub-postgres-6c7cb8894f-sfx69   1/1     Running             0          105s
+tickethub-smoke-test                  0/1     Completed           0          70s
+
+$ helm history tickethub -n tickethub-helm
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION                                                                                                                                    
+1       	Wed Oct  7 19:48:23 2026	superseded	tickethub-1.0.1	1.0.0      	Install complete                                                                                                                               
+2       	Wed Oct  7 19:49:01 2026	deployed  	tickethub-1.0.1	1.0.0      	Upgrade complete                                                                                                                               
+3       	Wed Oct  7 19:49:08 2026	failed    	tickethub-1.0.1	1.0.0      	Upgrade "tickethub" failed: resource Deployment/tickethub-helm/tickethub-backend not ready. status: InProgress, message: Pending termination...
+
+################ rollback to the last good revision
+$ helm rollback tickethub 2 -n tickethub-helm --wait
+Rollback was a success! Happy Helming!
+
+$ helm history tickethub -n tickethub-helm
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION                                                                                                                                    
+1       	Wed Oct  7 19:48:23 2026	superseded	tickethub-1.0.1	1.0.0      	Install complete                                                                                                                               
+2       	Wed Oct  7 19:49:01 2026	superseded	tickethub-1.0.1	1.0.0      	Upgrade complete                                                                                                                               
+3       	Wed Oct  7 19:49:08 2026	failed    	tickethub-1.0.1	1.0.0      	Upgrade "tickethub" failed: resource Deployment/tickethub-helm/tickethub-backend not ready. status: InProgress, message: Pending termination...
+4       	Wed Oct  7 19:50:08 2026	deployed  	tickethub-1.0.1	1.0.0      	Rollback to 2                                                                                                                                  
+
+$ kubectl -n tickethub-helm get pods
+NAME                                  READY   STATUS        RESTARTS   AGE
+tickethub-backend-5c9f7bb675-sz9f9    0/1     Terminating   0          61s
+tickethub-backend-78dbbb7457-7hkmm    1/1     Running       0          68s
+tickethub-frontend-5cc6cfcb57-fffzb   1/1     Running       0          106s
+tickethub-postgres-6c7cb8894f-sfx69   1/1     Running       0          106s
+tickethub-smoke-test                  0/1     Completed     0          71s
+
+$ curl -s http://helm.tickethub.localtest.me:28080/api/info
+{"service":"TicketHub API","version":"c9ba4c7","environment":"dev","pod":"tickethub-backend-78dbbb7457-7hkmm","default_team":"Service-Desk-L2"}

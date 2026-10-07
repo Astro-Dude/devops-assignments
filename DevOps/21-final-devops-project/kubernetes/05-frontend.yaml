@@ -33,6 +33,9 @@ spec:
           readinessProbe:
             httpGet: {path: /nginx-health, port: http}
             periodSeconds: 5
+          lifecycle:
+            preStop:
+              sleep: {seconds: 5}
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

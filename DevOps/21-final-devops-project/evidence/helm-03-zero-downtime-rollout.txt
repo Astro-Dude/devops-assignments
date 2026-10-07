@@ -1,0 +1,107 @@
+# chart 1.0.2 adds lifecycle.preStop sleep 5s. Hammer the API through the ingress while the backend rolls twice.
+$ helm upgrade tickethub helm/tickethub -n tickethub-helm -f helm/tickethub/values-dev.yaml --set image.backend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set image.frontend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set ingress.host=helm.tickethub.localtest.me --set config.defaultTeam=Service-Desk-L3 --wait --timeout 5m
+Release "tickethub" has been upgraded. Happy Helming!
+NAME: tickethub
+LAST DEPLOYED: Wed Oct  7 19:50:32 2026
+NAMESPACE: tickethub-helm
+STATUS: deployed
+REVISION: 5
+DESCRIPTION: Upgrade complete
+NOTES:
+TicketHub 1.0.0 deployed as release "tickethub" in namespace "tickethub-helm".
+
+  backend image : ghcr.io/astro-dude/s21-tickethub-backend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  frontend image: ghcr.io/astro-dude/s21-tickethub-frontend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  URL           : http://helm.tickethub.localtest.me/   (kind: add :28080)
+
+Check it:
+  kubectl -n tickethub-helm get pods,svc,ingress,hpa,pvc
+  helm test tickethub -n tickethub-helm
+
+$ helm upgrade tickethub helm/tickethub -n tickethub-helm -f helm/tickethub/values-dev.yaml --set image.backend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set image.frontend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set ingress.host=helm.tickethub.localtest.me --set config.defaultTeam=Service-Desk-L2 --wait --timeout 5m
+Release "tickethub" has been upgraded. Happy Helming!
+NAME: tickethub
+LAST DEPLOYED: Wed Oct  7 19:50:39 2026
+NAMESPACE: tickethub-helm
+STATUS: deployed
+REVISION: 6
+DESCRIPTION: Upgrade complete
+NOTES:
+TicketHub 1.0.0 deployed as release "tickethub" in namespace "tickethub-helm".
+
+  backend image : ghcr.io/astro-dude/s21-tickethub-backend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  frontend image: ghcr.io/astro-dude/s21-tickethub-frontend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  URL           : http://helm.tickethub.localtest.me/   (kind: add :28080)
+
+Check it:
+  kubectl -n tickethub-helm get pods,svc,ingress,hpa,pvc
+  helm test tickethub -n tickethub-helm
+
+$ sort codes.txt | uniq -c      # HTTP status of 120 requests sent during the two rollouts
+ 119 200
+   1 502
+
+$ helm history tickethub -n tickethub-helm
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION                                                                                                                                    
+1       	Wed Oct  7 19:48:23 2026	superseded	tickethub-1.0.1	1.0.0      	Install complete                                                                                                                               
+2       	Wed Oct  7 19:49:01 2026	superseded	tickethub-1.0.1	1.0.0      	Upgrade complete                                                                                                                               
+3       	Wed Oct  7 19:49:08 2026	failed    	tickethub-1.0.1	1.0.0      	Upgrade "tickethub" failed: resource Deployment/tickethub-helm/tickethub-backend not ready. status: InProgress, message: Pending termination...
+4       	Wed Oct  7 19:50:08 2026	superseded	tickethub-1.0.1	1.0.0      	Rollback to 2                                                                                                                                  
+5       	Wed Oct  7 19:50:32 2026	superseded	tickethub-1.0.2	1.0.0      	Upgrade complete                                                                                                                               
+6       	Wed Oct  7 19:50:39 2026	deployed  	tickethub-1.0.2	1.0.0      	Upgrade complete                                                                                                                               
+
+# first attempt (above): the single 502 came from the rollout that *introduced* preStop — the old pods being
+# terminated were still the 1.0.1 pods without the hook. Repeat now that every pod carries preStop:
+
+$ helm upgrade tickethub helm/tickethub -n tickethub-helm -f helm/tickethub/values-dev.yaml --set image.backend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set image.frontend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set ingress.host=helm.tickethub.localtest.me --set config.defaultTeam=Service-Desk-L3 --wait --timeout 5m
+Release "tickethub" has been upgraded. Happy Helming!
+NAME: tickethub
+LAST DEPLOYED: Wed Oct  7 19:51:46 2026
+NAMESPACE: tickethub-helm
+STATUS: deployed
+REVISION: 7
+DESCRIPTION: Upgrade complete
+NOTES:
+TicketHub 1.0.0 deployed as release "tickethub" in namespace "tickethub-helm".
+
+  backend image : ghcr.io/astro-dude/s21-tickethub-backend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  frontend image: ghcr.io/astro-dude/s21-tickethub-frontend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  URL           : http://helm.tickethub.localtest.me/   (kind: add :28080)
+
+Check it:
+  kubectl -n tickethub-helm get pods,svc,ingress,hpa,pvc
+  helm test tickethub -n tickethub-helm
+
+$ helm upgrade tickethub helm/tickethub -n tickethub-helm -f helm/tickethub/values-dev.yaml --set image.backend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set image.frontend.tag=c9ba4c7618f8b5d827d3f57722fac8103cd804e4 --set ingress.host=helm.tickethub.localtest.me --set config.defaultTeam=Service-Desk-L2 --wait --timeout 5m
+Release "tickethub" has been upgraded. Happy Helming!
+NAME: tickethub
+LAST DEPLOYED: Wed Oct  7 19:51:55 2026
+NAMESPACE: tickethub-helm
+STATUS: deployed
+REVISION: 8
+DESCRIPTION: Upgrade complete
+NOTES:
+TicketHub 1.0.0 deployed as release "tickethub" in namespace "tickethub-helm".
+
+  backend image : ghcr.io/astro-dude/s21-tickethub-backend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  frontend image: ghcr.io/astro-dude/s21-tickethub-frontend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
+  URL           : http://helm.tickethub.localtest.me/   (kind: add :28080)
+
+Check it:
+  kubectl -n tickethub-helm get pods,svc,ingress,hpa,pvc
+  helm test tickethub -n tickethub-helm
+
+$ sort codes.txt | uniq -c      # HTTP status of 120 requests sent during the two rollouts
+ 120 200
+
+$ helm history tickethub -n tickethub-helm
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION                                                                                                                                    
+1       	Wed Oct  7 19:48:23 2026	superseded	tickethub-1.0.1	1.0.0      	Install complete                                                                                                                               
+2       	Wed Oct  7 19:49:01 2026	superseded	tickethub-1.0.1	1.0.0      	Upgrade complete                                                                                                                               
+3       	Wed Oct  7 19:49:08 2026	failed    	tickethub-1.0.1	1.0.0      	Upgrade "tickethub" failed: resource Deployment/tickethub-helm/tickethub-backend not ready. status: InProgress, message: Pending termination...
+4       	Wed Oct  7 19:50:08 2026	superseded	tickethub-1.0.1	1.0.0      	Rollback to 2                                                                                                                                  
+5       	Wed Oct  7 19:50:32 2026	superseded	tickethub-1.0.2	1.0.0      	Upgrade complete                                                                                                                               
+6       	Wed Oct  7 19:50:39 2026	superseded	tickethub-1.0.2	1.0.0      	Upgrade complete                                                                                                                               
+7       	Wed Oct  7 19:51:46 2026	superseded	tickethub-1.0.2	1.0.0      	Upgrade complete                                                                                                                               
+8       	Wed Oct  7 19:51:55 2026	deployed  	tickethub-1.0.2	1.0.0      	Upgrade complete                                                                                                                               
+

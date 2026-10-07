@@ -67,6 +67,11 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 2
+          # keep serving for a few seconds after removal from the Service endpoints, so
+          # ingress-nginx stops routing here before the process exits (no 502s on rollout)
+          lifecycle:
+            preStop:
+              sleep: {seconds: 5}
           {{- include "tickethub.containerSecurity" . | nindent 10 }}
           resources: {{- toYaml .Values.backend.resources | nindent 12 }}
           volumeMounts:
