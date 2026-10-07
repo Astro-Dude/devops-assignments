@@ -1,0 +1,6 @@
+#!/bin/bash
+# Rendered by Terraform templatefile(); runs once on first boot (cloud-init).
+set -euxo pipefail
+dnf install -y nginx
+aws s3 cp "s3://${bucket}/site/index.html" /usr/share/nginx/html/index.html --region "${region}"
+systemctl enable --now nginx

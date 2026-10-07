@@ -1,0 +1,120 @@
+$ terraform plan -no-color -detailed-exitcode
+random_id.bucket_suffix: Refreshing state... [id=_Rbt]
+data.aws_ami.al2023: Reading...
+aws_iam_role.web: Refreshing state... [id=s19-web-ec2-role]
+aws_vpc.main: Refreshing state... [id=vpc-81867c303e3b227ec]
+aws_s3_bucket.assets: Refreshing state... [id=s19-web-assets-fd16ed]
+data.aws_ami.al2023: Read complete after 0s [id=ami-0884624fc54d115f3]
+aws_iam_instance_profile.web: Refreshing state... [id=s19-web-ec2-profile]
+aws_security_group.web: Refreshing state... [id=sg-0865ba1db15857b76]
+aws_route_table.private: Refreshing state... [id=rtb-ad741b5b85b22158c]
+aws_subnet.private["b"]: Refreshing state... [id=subnet-009573264804cc716]
+aws_internet_gateway.main: Refreshing state... [id=igw-70e6dacf2c7f672ca]
+aws_subnet.public["a"]: Refreshing state... [id=subnet-1af7252bc7cb1b341]
+aws_subnet.public["b"]: Refreshing state... [id=subnet-b85df48409da6c95b]
+aws_subnet.private["a"]: Refreshing state... [id=subnet-6946e3334833dc6af]
+aws_vpc_security_group_ingress_rule.web_https: Refreshing state... [id=sgr-36b4f2b65967ea5b5]
+aws_vpc_security_group_ingress_rule.web_ssh: Refreshing state... [id=sgr-b1a301dad802530f9]
+aws_vpc_security_group_ingress_rule.web_http: Refreshing state... [id=sgr-ed75b07385895926d]
+aws_vpc_security_group_egress_rule.web_all_out: Refreshing state... [id=sgr-328894294b6ef8827]
+aws_route_table.public: Refreshing state... [id=rtb-a9d5ee78ce91c0a74]
+aws_route_table_association.private["b"]: Refreshing state... [id=rtbassoc-8ebefb1d5c1fe033b]
+aws_route_table_association.private["a"]: Refreshing state... [id=rtbassoc-b83a47cf036ddad9c]
+aws_route_table_association.public["b"]: Refreshing state... [id=rtbassoc-27d64c65207073c6a]
+aws_route_table_association.public["a"]: Refreshing state... [id=rtbassoc-2ef2d1ac237e74774]
+aws_s3_bucket_server_side_encryption_configuration.assets: Refreshing state... [id=s19-web-assets-fd16ed]
+aws_iam_role_policy.web_read_assets: Refreshing state... [id=s19-web-ec2-role:read-site-assets]
+aws_s3_bucket_versioning.assets: Refreshing state... [id=s19-web-assets-fd16ed]
+aws_s3_bucket_public_access_block.assets: Refreshing state... [id=s19-web-assets-fd16ed]
+aws_instance.web: Refreshing state... [id=i-8698d0daf5dddb969]
+aws_s3_object.index: Refreshing state... [id=s19-web-assets-fd16ed/site/index.html]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # aws_s3_bucket.assets will be updated in-place
+  ~ resource "aws_s3_bucket" "assets" {
+        id                          = "s19-web-assets-fd16ed"
+      ~ tags                        = {
+          + "Name" = "s19-web-assets"
+        }
+      ~ tags_all                    = {
+          + "ManagedBy" = "Terraform"
+          + "Name"      = "s19-web-assets"
+          + "Owner"     = "shaurya-verma-24bcs10151"
+          + "Project"   = "s19-web"
+          + "Session"   = "19"
+        }
+        # (14 unchanged attributes hidden)
+
+        # (3 unchanged blocks hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
+[exit code: 2]
+$ terraform apply -no-color -auto-approve
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # aws_s3_bucket.assets will be updated in-place
+  ~ resource "aws_s3_bucket" "assets" {
+        id                          = "s19-web-assets-fd16ed"
+      ~ tags                        = {
+          + "Name" = "s19-web-assets"
+        }
+      ~ tags_all                    = {
+          + "ManagedBy" = "Terraform"
+          + "Name"      = "s19-web-assets"
+          + "Owner"     = "shaurya-verma-24bcs10151"
+          + "Project"   = "s19-web"
+          + "Session"   = "19"
+        }
+        # (14 unchanged attributes hidden)
+
+        # (3 unchanged blocks hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+aws_s3_bucket.assets: Modifying... [id=s19-web-assets-fd16ed]
+aws_s3_bucket.assets: Modifications complete after 0s [id=s19-web-assets-fd16ed]
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+ami_used = "ami-0884624fc54d115f3 (al2023-ami-2023.12.20260727.0-kernel-6.1-x86_64)"
+bucket_name = "s19-web-assets-fd16ed"
+instance_id = "i-8698d0daf5dddb969"
+instance_private_ip = "10.20.1.4"
+instance_public_ip = "54.214.30.109"
+private_subnet_ids = {
+  "a" = "subnet-6946e3334833dc6af"
+  "b" = "subnet-009573264804cc716"
+}
+public_subnet_ids = {
+  "a" = "subnet-1af7252bc7cb1b341"
+  "b" = "subnet-b85df48409da6c95b"
+}
+security_group_id = "sg-0865ba1db15857b76"
+vpc_id = "vpc-81867c303e3b227ec"
+web_url = "http://54.214.30.109/"
+
+$ terraform plan -no-color -detailed-exitcode
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
+[exit code: 0]

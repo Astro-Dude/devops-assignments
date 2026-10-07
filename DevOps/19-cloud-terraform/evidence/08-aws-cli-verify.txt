@@ -1,0 +1,166 @@
+# VPC
+$ aws ec2 describe-vpcs --vpc-ids vpc-81867c303e3b227ec --query Vpcs[].{VpcId:VpcId,Cidr:CidrBlock,State:State,Name:Tags[?Key==`Name`]|[0].Value}
+[
+    {
+        "VpcId": "vpc-81867c303e3b227ec",
+        "Cidr": "10.20.0.0/16",
+        "State": "available",
+        "Name": "s19-web-vpc"
+    }
+]
+
+# Subnets
+$ aws ec2 describe-subnets --filters Name=vpc-id,Values=vpc-81867c303e3b227ec --query sort_by(Subnets,&CidrBlock)[].[Tags[?Key==`Name`]|[0].Value,SubnetId,CidrBlock,AvailabilityZone,MapPublicIpOnLaunch] --output table
+--------------------------------------------------------------------------------------------
+|                                      DescribeSubnets                                     |
++-------------------+----------------------------+----------------+--------------+---------+
+|  s19-web-public-a |  subnet-1af7252bc7cb1b341  |  10.20.1.0/24  |  ap-south-1a |  True   |
+|  s19-web-private-a|  subnet-6946e3334833dc6af  |  10.20.11.0/24 |  ap-south-1a |  False  |
+|  s19-web-private-b|  subnet-009573264804cc716  |  10.20.12.0/24 |  ap-south-1b |  False  |
+|  s19-web-public-b |  subnet-b85df48409da6c95b  |  10.20.2.0/24  |  ap-south-1b |  True   |
++-------------------+----------------------------+----------------+--------------+---------+
+
+# Internet gateway attachment
+$ aws ec2 describe-internet-gateways --filters Name=attachment.vpc-id,Values=vpc-81867c303e3b227ec --query InternetGateways[].{IGW:InternetGatewayId,AttachedTo:Attachments[0].VpcId,State:Attachments[0].State}
+[
+    {
+        "IGW": "igw-70e6dacf2c7f672ca",
+        "AttachedTo": "vpc-81867c303e3b227ec",
+        "State": "available"
+    }
+]
+
+# Route tables (main table of the VPC omitted)
+$ aws ec2 describe-route-tables --filters Name=vpc-id,Values=vpc-81867c303e3b227ec Name=tag:Project,Values=s19-web --query RouteTables[].{Name:Tags[?Key==`Name`]|[0].Value,Routes:Routes[].join(` -> `,[DestinationCidrBlock,GatewayId]),Subnets:Associations[].SubnetId}
+[
+    {
+        "Name": "s19-web-private-rt",
+        "Routes": [
+            "10.20.0.0/16-> local"
+        ],
+        "Subnets": [
+            "subnet-6946e3334833dc6af",
+            "subnet-009573264804cc716"
+        ]
+    },
+    {
+        "Name": "s19-web-public-rt",
+        "Routes": [
+            "10.20.0.0/16-> local",
+            "0.0.0.0/0-> igw-70e6dacf2c7f672ca"
+        ],
+        "Subnets": [
+            "subnet-b85df48409da6c95b",
+            "subnet-1af7252bc7cb1b341"
+        ]
+    }
+]
+
+# Security group rules
+$ aws ec2 describe-security-group-rules --filters Name=group-id,Values=sg-0865ba1db15857b76 --query SecurityGroupRules[].[IsEgress,IpProtocol,FromPort,ToPort,CidrIpv4,Description] --output table
+--------------------------------------------------------------------------------------
+|                             DescribeSecurityGroupRules                             |
++-------+------+------+------+------------------+------------------------------------+
+|  True |  -1  |  -1  |  -1  |  0.0.0.0/0       |  All outbound                      |
+|  False|  tcp |  22  |  22  |  203.0.113.10/32 |  SSH from the admin address only   |
+|  False|  tcp |  80  |  80  |  0.0.0.0/0       |  HTTP from anywhere                |
+|  False|  tcp |  443 |  443 |  0.0.0.0/0       |  HTTPS from anywhere               |
++-------+------+------+------+------------------+------------------------------------+
+
+# EC2 instance
+$ aws ec2 describe-instances --instance-ids i-8698d0daf5dddb969 --query Reservations[0].Instances[0].{Id:InstanceId,State:State.Name,Type:InstanceType,AMI:ImageId,Subnet:SubnetId,PrivateIp:PrivateIpAddress,PublicIp:PublicIpAddress,SGs:SecurityGroups[].GroupId,Profile:IamInstanceProfile.Arn,IMDS:MetadataOptions.HttpTokens}
+{
+    "Id": "i-8698d0daf5dddb969",
+    "State": "running",
+    "Type": "t3.micro",
+    "AMI": "ami-0884624fc54d115f3",
+    "Subnet": "subnet-1af7252bc7cb1b341",
+    "PrivateIp": "10.20.1.4",
+    "PublicIp": "54.214.30.109",
+    "SGs": [
+        "sg-0865ba1db15857b76"
+    ],
+    "Profile": "arn:aws:iam::123456789012:instance-profile/s19-web-ec2-profile",
+    "IMDS": "required"
+}
+
+$ aws ec2 describe-volumes --filters Name=attachment.instance-id,Values=i-8698d0daf5dddb969 --query Volumes[].[VolumeId,Size,VolumeType,Encrypted,Attachments[0].Device] --output table
+-------------------------------------------------------------
+|                      DescribeVolumes                      |
++------------------------+-----+------+-------+-------------+
+|  vol-6260eed306e112bfa |  10 |  gp3 |  True |  /dev/xvda  |
++------------------------+-----+------+-------+-------------+
+
+$ aws ec2 describe-instance-attribute --instance-id i-8698d0daf5dddb969 --attribute userData --query UserData.Value --output text | base64 -d
+#!/bin/bash
+# Rendered by Terraform templatefile(); runs once on first boot (cloud-init).
+set -euxo pipefail
+dnf install -y nginx
+aws s3 cp "s3://s19-web-assets-fd16ed/site/index.html" /usr/share/nginx/html/index.html --region "ap-south-1"
+systemctl enable --now nginx
+
+# IAM role behind the instance profile
+$ aws iam get-instance-profile --instance-profile-name s19-web-ec2-profile --query InstanceProfile.Roles[].RoleName
+[
+    "s19-web-ec2-role"
+]
+
+$ aws iam get-role-policy --role-name s19-web-ec2-role --policy-name read-site-assets --query PolicyDocument
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:s3:::s19-web-assets-fd16ed"
+        },
+        {
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:s3:::s19-web-assets-fd16ed/*"
+        }
+    ]
+}
+
+# S3 bucket and object
+$ aws s3 ls
+2026-10-07 19:58:55 s19-web-assets-fd16ed
+
+$ aws s3api get-bucket-versioning --bucket s19-web-assets-fd16ed
+{
+    "Status": "Enabled"
+}
+
+$ aws s3api get-bucket-encryption --bucket s19-web-assets-fd16ed --query ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault
+{
+    "SSEAlgorithm": "AES256"
+}
+
+$ aws s3api get-public-access-block --bucket s19-web-assets-fd16ed
+{
+    "PublicAccessBlockConfiguration": {
+        "BlockPublicAcls": true,
+        "IgnorePublicAcls": true,
+        "BlockPublicPolicy": true,
+        "RestrictPublicBuckets": true
+    }
+}
+
+$ aws s3 ls s3://s19-web-assets-fd16ed --recursive
+2026-10-07 19:58:55        279 site/index.html
+
+$ aws s3 cp s3://s19-web-assets-fd16ed/site/index.html -
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>s19-web</title></head>
+<body>
+  <h1>Session 19 - Terraform in action</h1>
+  <p>Served by nginx on EC2, page stored in S3, network built by Terraform.</p>
+  <p>Owner: shaurya-verma-24bcs10151</p>
+</body>
+</html>
+

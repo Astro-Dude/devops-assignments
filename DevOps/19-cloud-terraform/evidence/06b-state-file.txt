@@ -1,0 +1,45 @@
+$ ls -l terraform.tfstate*
+-rw-r--r--@ 53099 terraform.tfstate
+-rw-r--r--@ 50364 terraform.tfstate.backup
+
+$ jq '{version, terraform_version, serial, lineage, resources: (.resources|length), outputs: (.outputs|keys)}' terraform.tfstate
+{
+  "version": 4,
+  "terraform_version": "1.16.4",
+  "serial": 30,
+  "lineage": "062f9e7b-1b88-3f6f-aff3-a07164800d06",
+  "resources": 24,
+  "outputs": [
+    "ami_used",
+    "bucket_name",
+    "instance_id",
+    "instance_private_ip",
+    "instance_public_ip",
+    "private_subnet_ids",
+    "public_subnet_ids",
+    "security_group_id",
+    "vpc_id",
+    "web_url"
+  ]
+}
+
+$ jq '.resources[] | select(.type=="aws_instance") | {mode, type, name, provider, dependencies: .instances[0].dependencies}' terraform.tfstate
+{
+  "mode": "managed",
+  "type": "aws_instance",
+  "name": "web",
+  "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+  "dependencies": [
+    "aws_iam_instance_profile.web",
+    "aws_iam_role.web",
+    "aws_internet_gateway.main",
+    "aws_route_table.public",
+    "aws_route_table_association.public",
+    "aws_s3_bucket.assets",
+    "aws_security_group.web",
+    "aws_subnet.public",
+    "aws_vpc.main",
+    "data.aws_ami.al2023",
+    "random_id.bucket_suffix"
+  ]
+}

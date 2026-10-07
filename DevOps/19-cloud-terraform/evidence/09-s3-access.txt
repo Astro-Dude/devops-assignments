@@ -1,0 +1,6 @@
+$ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:4566/s19-web-assets-fd16ed/site/index.html      # anonymous
+403
+
+$ URL=$(aws --endpoint-url http://localhost:4566 s3 presign s3://s19-web-assets-fd16ed/site/index.html --expires-in 600)
+$ curl -s -o /dev/null -w "%{http_code} %{content_type}\n" "$URL"      # signed
+200 text/html

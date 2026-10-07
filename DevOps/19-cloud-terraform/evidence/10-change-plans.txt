@@ -1,0 +1,53 @@
+$ terraform plan -no-color -var instance_type=t3.small
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # aws_instance.web will be updated in-place
+  ~ resource "aws_instance" "web" {
+        id                                   = "i-8698d0daf5dddb969"
+      ~ instance_type                        = "t3.micro" -> "t3.small"
+      ~ public_dns                           = "ec2-54-214-30-109.ap-south-1.compute.amazonaws.com" -> (known after apply)
+      ~ public_ip                            = "54.214.30.109" -> (known after apply)
+        tags                                 = {
+            "Name" = "s19-web-ec2"
+        }
+        # (38 unchanged attributes hidden)
+
+        # (4 unchanged blocks hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ instance_public_ip  = "54.214.30.109" -> (known after apply)
+  ~ web_url             = "http://54.214.30.109/" -> (known after apply)
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
+
+$ terraform plan -no-color -var vpc_cidr=10.30.0.0/16 -var 'public_subnets={a="10.30.1.0/24",b="10.30.2.0/24"}' -var 'private_subnets={a="10.30.11.0/24",b="10.30.12.0/24"}' | grep -E "must be replaced|will be|Plan:"
+  # aws_instance.web must be replaced
+  # aws_internet_gateway.main will be updated in-place
+  # aws_route_table.private must be replaced
+  # aws_route_table.public must be replaced
+  # aws_route_table_association.private["a"] must be replaced
+  # aws_route_table_association.private["b"] must be replaced
+  # aws_route_table_association.public["a"] must be replaced
+  # aws_route_table_association.public["b"] must be replaced
+  # aws_security_group.web must be replaced
+  # aws_subnet.private["a"] must be replaced
+  # aws_subnet.private["b"] must be replaced
+  # aws_subnet.public["a"] must be replaced
+  # aws_subnet.public["b"] must be replaced
+  # aws_vpc.main must be replaced
+  # aws_vpc_security_group_egress_rule.web_all_out must be replaced
+  # aws_vpc_security_group_ingress_rule.web_http must be replaced
+  # aws_vpc_security_group_ingress_rule.web_https must be replaced
+  # aws_vpc_security_group_ingress_rule.web_ssh must be replaced
+Plan: 17 to add, 1 to change, 17 to destroy.

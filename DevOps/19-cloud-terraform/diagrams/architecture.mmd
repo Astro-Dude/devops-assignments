@@ -1,0 +1,38 @@
+flowchart TB
+    user(["Internet user"])
+    tf[["Terraform CLI<br/>providers: aws + random"]]
+
+    subgraph region["AWS region ap-south-1  (emulated by moto on localhost:4566)"]
+        direction TB
+        igw["Internet Gateway<br/>s19-web-igw"]
+        subgraph vpc["VPC s19-web-vpc  10.20.0.0/16"]
+            direction TB
+            prt["public route table<br/>10.20.0.0/16 → local<br/>0.0.0.0/0 → IGW"]
+            subgraph pub["public subnets"]
+                direction LR
+                pa["public-a<br/>10.20.1.0/24 · ap-south-1a"]
+                pb["public-b<br/>10.20.2.0/24 · ap-south-1b"]
+            end
+            ec2["EC2 s19-web-ec2<br/>t3.micro · Amazon Linux 2023<br/>10 GiB gp3 encrypted · IMDSv2<br/>user_data: nginx + page from S3"]
+            sg{{"security group s19-web-sg<br/>in 80, 443 ← 0.0.0.0/0<br/>in 22 ← 203.0.113.10/32<br/>out all"}}
+            subgraph priv["private subnets"]
+                direction LR
+                xa["private-a<br/>10.20.11.0/24 · ap-south-1a"]
+                xb["private-b<br/>10.20.12.0/24 · ap-south-1b"]
+            end
+            xrt["private route table<br/>10.20.0.0/16 → local only"]
+        end
+        iam["IAM role s19-web-ec2-role<br/>+ instance profile<br/>s3:GetObject, s3:ListBucket<br/>on this bucket only"]
+        s3[("S3 bucket s19-web-assets-fd16ed<br/>versioned · SSE AES256<br/>public access blocked<br/>object site/index.html")]
+    end
+
+    user -- "HTTP :80" --> igw
+    igw --> prt
+    prt --> pub
+    pa --- ec2
+    sg -. "attached to" .- ec2
+    priv --- xrt
+    ec2 -- "assumes" --> iam
+    iam -- "allows read" --> s3
+    ec2 -- "aws s3 cp at boot" --> s3
+    tf == "plan / apply / destroy" ==> region

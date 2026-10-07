@@ -1,0 +1,5 @@
+owner         = "shaurya-verma-24bcs10151"
+project       = "s19-web"
+vpc_cidr      = "10.20.0.0/16"
+instance_type = "t3.micro"
+admin_cidr    = "203.0.113.10/32"

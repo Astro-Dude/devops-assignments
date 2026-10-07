@@ -1,0 +1,906 @@
+$ terraform plan -destroy -no-color | grep Plan:
+Plan: 0 to add, 0 to change, 27 to destroy.
+
+$ terraform destroy -no-color      # typed "yes" at the prompt
+random_id.bucket_suffix: Refreshing state... [id=_Rbt]
+data.aws_ami.al2023: Reading...
+aws_vpc.main: Refreshing state... [id=vpc-81867c303e3b227ec]
+aws_iam_role.web: Refreshing state... [id=s19-web-ec2-role]
+aws_s3_bucket.assets: Refreshing state... [id=s19-web-assets-fd16ed]
+data.aws_ami.al2023: Read complete after 0s [id=ami-0884624fc54d115f3]
+aws_iam_instance_profile.web: Refreshing state... [id=s19-web-ec2-profile]
+aws_internet_gateway.main: Refreshing state... [id=igw-70e6dacf2c7f672ca]
+aws_route_table.private: Refreshing state... [id=rtb-ad741b5b85b22158c]
+aws_subnet.public["b"]: Refreshing state... [id=subnet-b85df48409da6c95b]
+aws_subnet.private["a"]: Refreshing state... [id=subnet-6946e3334833dc6af]
+aws_subnet.private["b"]: Refreshing state... [id=subnet-009573264804cc716]
+aws_subnet.public["a"]: Refreshing state... [id=subnet-1af7252bc7cb1b341]
+aws_security_group.web: Refreshing state... [id=sg-0865ba1db15857b76]
+aws_route_table.public: Refreshing state... [id=rtb-a9d5ee78ce91c0a74]
+aws_route_table_association.private["b"]: Refreshing state... [id=rtbassoc-8ebefb1d5c1fe033b]
+aws_route_table_association.private["a"]: Refreshing state... [id=rtbassoc-b83a47cf036ddad9c]
+aws_vpc_security_group_ingress_rule.web_ssh: Refreshing state... [id=sgr-b1a301dad802530f9]
+aws_vpc_security_group_egress_rule.web_all_out: Refreshing state... [id=sgr-328894294b6ef8827]
+aws_vpc_security_group_ingress_rule.web_https: Refreshing state... [id=sgr-36b4f2b65967ea5b5]
+aws_vpc_security_group_ingress_rule.web_http: Refreshing state... [id=sgr-ed75b07385895926d]
+aws_route_table_association.public["a"]: Refreshing state... [id=rtbassoc-2ef2d1ac237e74774]
+aws_route_table_association.public["b"]: Refreshing state... [id=rtbassoc-27d64c65207073c6a]
+aws_s3_bucket_public_access_block.assets: Refreshing state... [id=s19-web-assets-fd16ed]
+aws_s3_bucket_versioning.assets: Refreshing state... [id=s19-web-assets-fd16ed]
+aws_s3_bucket_server_side_encryption_configuration.assets: Refreshing state... [id=s19-web-assets-fd16ed]
+aws_iam_role_policy.web_read_assets: Refreshing state... [id=s19-web-ec2-role:read-site-assets]
+aws_instance.web: Refreshing state... [id=i-8698d0daf5dddb969]
+aws_s3_object.index: Refreshing state... [id=s19-web-assets-fd16ed/site/index.html]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_iam_instance_profile.web will be destroyed
+  - resource "aws_iam_instance_profile" "web" {
+      - arn         = "arn:aws:iam::123456789012:instance-profile/s19-web-ec2-profile" -> null
+      - create_date = "2026-10-07T14:28:55Z" -> null
+      - id          = "s19-web-ec2-profile" -> null
+      - name        = "s19-web-ec2-profile" -> null
+      - path        = "/" -> null
+      - role        = "s19-web-ec2-role" -> null
+      - tags        = {} -> null
+      - tags_all    = {
+          - "ManagedBy" = "Terraform"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - unique_id   = "vscg5cuvexmapcasi0mc" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_iam_role.web will be destroyed
+  - resource "aws_iam_role" "web" {
+      - arn                   = "arn:aws:iam::123456789012:role/s19-web-ec2-role" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-10-07T14:28:55Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "s19-web-ec2-role" -> null
+      - managed_policy_arns   = [] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "s19-web-ec2-role" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "ManagedBy" = "Terraform"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - unique_id             = "AROARZPUZDIKLICQXRS2M" -> null
+        # (3 unchanged attributes hidden)
+
+      - inline_policy {
+          - name   = "read-site-assets" -> null
+          - policy = jsonencode(
+                {
+                  - Statement = [
+                      - {
+                          - Action   = [
+                              - "s3:ListBucket",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "arn:aws:s3:::s19-web-assets-fd16ed"
+                        },
+                      - {
+                          - Action   = [
+                              - "s3:GetObject",
+                            ]
+                          - Effect   = "Allow"
+                          - Resource = "arn:aws:s3:::s19-web-assets-fd16ed/*"
+                        },
+                    ]
+                  - Version   = "2012-10-17"
+                }
+            ) -> null
+        }
+    }
+
+  # aws_iam_role_policy.web_read_assets will be destroyed
+  - resource "aws_iam_role_policy" "web_read_assets" {
+      - id          = "s19-web-ec2-role:read-site-assets" -> null
+      - name        = "read-site-assets" -> null
+      - policy      = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action   = [
+                          - "s3:ListBucket",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "arn:aws:s3:::s19-web-assets-fd16ed"
+                    },
+                  - {
+                      - Action   = [
+                          - "s3:GetObject",
+                        ]
+                      - Effect   = "Allow"
+                      - Resource = "arn:aws:s3:::s19-web-assets-fd16ed/*"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - role        = "s19-web-ec2-role" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_instance.web will be destroyed
+  - resource "aws_instance" "web" {
+      - ami                                  = "ami-0884624fc54d115f3" -> null
+      - arn                                  = "arn:aws:ec2:ap-south-1::instance/i-8698d0daf5dddb969" -> null
+      - associate_public_ip_address          = true -> null
+      - availability_zone                    = "ap-south-1a" -> null
+      - disable_api_stop                     = false -> null
+      - disable_api_termination              = false -> null
+      - ebs_optimized                        = false -> null
+      - force_destroy                        = false -> null
+      - get_password_data                    = false -> null
+      - hibernation                          = false -> null
+      - iam_instance_profile                 = "s19-web-ec2-profile" -> null
+      - id                                   = "i-8698d0daf5dddb969" -> null
+      - instance_initiated_shutdown_behavior = "stop" -> null
+      - instance_state                       = "running" -> null
+      - instance_type                        = "t3.micro" -> null
+      - ipv6_address_count                   = 0 -> null
+      - ipv6_addresses                       = [] -> null
+      - monitoring                           = false -> null
+      - placement_partition_number           = 0 -> null
+      - primary_network_interface_id         = "eni-29722b81bb190ee92" -> null
+      - private_dns                          = "ip-10-20-1-4.ap-south-1.compute.internal" -> null
+      - private_ip                           = "10.20.1.4" -> null
+      - public_dns                           = "ec2-54-214-30-109.ap-south-1.compute.amazonaws.com" -> null
+      - public_ip                            = "54.214.30.109" -> null
+      - region                               = "ap-south-1" -> null
+      - secondary_private_ips                = [] -> null
+      - security_groups                      = [] -> null
+      - source_dest_check                    = true -> null
+      - subnet_id                            = "subnet-1af7252bc7cb1b341" -> null
+      - tags                                 = {
+          - "Name" = "s19-web-ec2"
+        } -> null
+      - tags_all                             = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-ec2"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - tenancy                              = "default" -> null
+      - user_data                            = <<-EOT
+            #!/bin/bash
+            # Rendered by Terraform templatefile(); runs once on first boot (cloud-init).
+            set -euxo pipefail
+            dnf install -y nginx
+            aws s3 cp "s3://s19-web-assets-fd16ed/site/index.html" /usr/share/nginx/html/index.html --region "ap-south-1"
+            systemctl enable --now nginx
+        EOT -> null
+      - user_data_replace_on_change          = false -> null
+      - vpc_security_group_ids               = [
+          - "sg-0865ba1db15857b76",
+        ] -> null
+        # (8 unchanged attributes hidden)
+
+      - credit_specification {
+          - cpu_credits = "standard" -> null
+        }
+
+      - metadata_options {
+          - http_endpoint               = "enabled" -> null
+          - http_protocol_ipv6          = "disabled" -> null
+          - http_put_response_hop_limit = 1 -> null
+          - http_tokens                 = "required" -> null
+          - instance_metadata_tags      = "disabled" -> null
+        }
+
+      - primary_network_interface {
+          - delete_on_termination = false -> null
+          - network_interface_id  = "eni-29722b81bb190ee92" -> null
+        }
+
+      - root_block_device {
+          - delete_on_termination = true -> null
+          - device_name           = "/dev/xvda" -> null
+          - encrypted             = true -> null
+          - iops                  = 3000 -> null
+          - kms_key_id            = "arn:aws:kms:ap-south-1:123456789012:key/cf4465b4-302e-434b-ac9d-07059202fbd3" -> null
+          - tags                  = {} -> null
+          - tags_all              = {
+              - "ManagedBy" = "Terraform"
+              - "Owner"     = "shaurya-verma-24bcs10151"
+              - "Project"   = "s19-web"
+              - "Session"   = "19"
+            } -> null
+          - throughput            = 0 -> null
+          - volume_id             = "vol-6260eed306e112bfa" -> null
+          - volume_size           = 10 -> null
+          - volume_type           = "gp3" -> null
+        }
+    }
+
+  # aws_internet_gateway.main will be destroyed
+  - resource "aws_internet_gateway" "main" {
+      - arn      = "arn:aws:ec2:ap-south-1:123456789012:internet-gateway/igw-70e6dacf2c7f672ca" -> null
+      - id       = "igw-70e6dacf2c7f672ca" -> null
+      - owner_id = "123456789012" -> null
+      - region   = "ap-south-1" -> null
+      - tags     = {
+          - "Name" = "s19-web-igw"
+        } -> null
+      - tags_all = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-igw"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - vpc_id   = "vpc-81867c303e3b227ec" -> null
+    }
+
+  # aws_route_table.private will be destroyed
+  - resource "aws_route_table" "private" {
+      - arn              = "arn:aws:ec2:ap-south-1:123456789012:route-table/rtb-ad741b5b85b22158c" -> null
+      - id               = "rtb-ad741b5b85b22158c" -> null
+      - owner_id         = "123456789012" -> null
+      - propagating_vgws = [] -> null
+      - region           = "ap-south-1" -> null
+      - route            = [] -> null
+      - tags             = {
+          - "Name" = "s19-web-private-rt"
+        } -> null
+      - tags_all         = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-private-rt"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - vpc_id           = "vpc-81867c303e3b227ec" -> null
+    }
+
+  # aws_route_table.public will be destroyed
+  - resource "aws_route_table" "public" {
+      - arn              = "arn:aws:ec2:ap-south-1:123456789012:route-table/rtb-a9d5ee78ce91c0a74" -> null
+      - id               = "rtb-a9d5ee78ce91c0a74" -> null
+      - owner_id         = "123456789012" -> null
+      - propagating_vgws = [] -> null
+      - region           = "ap-south-1" -> null
+      - route            = [
+          - {
+              - cidr_block                 = "0.0.0.0/0"
+              - gateway_id                 = "igw-70e6dacf2c7f672ca"
+                # (12 unchanged attributes hidden)
+            },
+        ] -> null
+      - tags             = {
+          - "Name" = "s19-web-public-rt"
+        } -> null
+      - tags_all         = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-public-rt"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - vpc_id           = "vpc-81867c303e3b227ec" -> null
+    }
+
+  # aws_route_table_association.private["a"] will be destroyed
+  - resource "aws_route_table_association" "private" {
+      - id             = "rtbassoc-b83a47cf036ddad9c" -> null
+      - region         = "ap-south-1" -> null
+      - route_table_id = "rtb-ad741b5b85b22158c" -> null
+      - subnet_id      = "subnet-6946e3334833dc6af" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.private["b"] will be destroyed
+  - resource "aws_route_table_association" "private" {
+      - id             = "rtbassoc-8ebefb1d5c1fe033b" -> null
+      - region         = "ap-south-1" -> null
+      - route_table_id = "rtb-ad741b5b85b22158c" -> null
+      - subnet_id      = "subnet-009573264804cc716" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.public["a"] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-2ef2d1ac237e74774" -> null
+      - region         = "ap-south-1" -> null
+      - route_table_id = "rtb-a9d5ee78ce91c0a74" -> null
+      - subnet_id      = "subnet-1af7252bc7cb1b341" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.public["b"] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-27d64c65207073c6a" -> null
+      - region         = "ap-south-1" -> null
+      - route_table_id = "rtb-a9d5ee78ce91c0a74" -> null
+      - subnet_id      = "subnet-b85df48409da6c95b" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_s3_bucket.assets will be destroyed
+  - resource "aws_s3_bucket" "assets" {
+      - arn                         = "arn:aws:s3:::s19-web-assets-fd16ed" -> null
+      - bucket                      = "s19-web-assets-fd16ed" -> null
+      - bucket_domain_name          = "s19-web-assets-fd16ed.s3.amazonaws.com" -> null
+      - bucket_namespace            = "global" -> null
+      - bucket_region               = "ap-south-1" -> null
+      - bucket_regional_domain_name = "s19-web-assets-fd16ed.s3.ap-south-1.amazonaws.com" -> null
+      - force_destroy               = true -> null
+      - hosted_zone_id              = "Z11RGJOFQNVJUP" -> null
+      - id                          = "s19-web-assets-fd16ed" -> null
+      - object_lock_enabled         = false -> null
+      - region                      = "ap-south-1" -> null
+      - tags                        = {
+          - "Name" = "s19-web-assets"
+        } -> null
+      - tags_all                    = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-assets"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+        # (4 unchanged attributes hidden)
+
+      - grant {
+          - id          = "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a" -> null
+          - permissions = [
+              - "FULL_CONTROL",
+            ] -> null
+          - type        = "CanonicalUser" -> null
+            # (1 unchanged attribute hidden)
+        }
+
+      - server_side_encryption_configuration {
+          - rule {
+              - bucket_key_enabled = false -> null
+
+              - apply_server_side_encryption_by_default {
+                  - sse_algorithm     = "AES256" -> null
+                    # (1 unchanged attribute hidden)
+                }
+            }
+        }
+
+      - versioning {
+          - enabled    = true -> null
+          - mfa_delete = false -> null
+        }
+    }
+
+  # aws_s3_bucket_public_access_block.assets will be destroyed
+  - resource "aws_s3_bucket_public_access_block" "assets" {
+      - block_public_acls       = true -> null
+      - block_public_policy     = true -> null
+      - bucket                  = "s19-web-assets-fd16ed" -> null
+      - id                      = "s19-web-assets-fd16ed" -> null
+      - ignore_public_acls      = true -> null
+      - region                  = "ap-south-1" -> null
+      - restrict_public_buckets = true -> null
+    }
+
+  # aws_s3_bucket_server_side_encryption_configuration.assets will be destroyed
+  - resource "aws_s3_bucket_server_side_encryption_configuration" "assets" {
+      - bucket                = "s19-web-assets-fd16ed" -> null
+      - id                    = "s19-web-assets-fd16ed" -> null
+      - region                = "ap-south-1" -> null
+        # (1 unchanged attribute hidden)
+
+      - rule {
+          - blocked_encryption_types = [] -> null
+          - bucket_key_enabled       = false -> null
+
+          - apply_server_side_encryption_by_default {
+              - sse_algorithm     = "AES256" -> null
+                # (1 unchanged attribute hidden)
+            }
+        }
+    }
+
+  # aws_s3_bucket_versioning.assets will be destroyed
+  - resource "aws_s3_bucket_versioning" "assets" {
+      - bucket                = "s19-web-assets-fd16ed" -> null
+      - id                    = "s19-web-assets-fd16ed" -> null
+      - region                = "ap-south-1" -> null
+        # (1 unchanged attribute hidden)
+
+      - versioning_configuration {
+          - mfa_delete = "Disabled" -> null
+          - status     = "Enabled" -> null
+        }
+    }
+
+  # aws_s3_object.index will be destroyed
+  - resource "aws_s3_object" "index" {
+      - arn                           = "arn:aws:s3:::s19-web-assets-fd16ed/site/index.html" -> null
+      - bucket                        = "s19-web-assets-fd16ed" -> null
+      - bucket_key_enabled            = false -> null
+      - content                       = <<-EOT
+            <!doctype html>
+            <html lang="en">
+            <head><meta charset="utf-8"><title>s19-web</title></head>
+            <body>
+              <h1>Session 19 - Terraform in action</h1>
+              <p>Served by nginx on EC2, page stored in S3, network built by Terraform.</p>
+              <p>Owner: shaurya-verma-24bcs10151</p>
+            </body>
+            </html>
+        EOT -> null
+      - content_type                  = "text/html" -> null
+      - etag                          = "f6da9009453bd16f202cdfb7f03f6fce" -> null
+      - force_destroy                 = false -> null
+      - id                            = "s19-web-assets-fd16ed/site/index.html" -> null
+      - key                           = "site/index.html" -> null
+      - metadata                      = {} -> null
+      - region                        = "ap-south-1" -> null
+      - server_side_encryption        = "AES256" -> null
+      - storage_class                 = "STANDARD" -> null
+      - tags                          = {} -> null
+      - tags_all                      = {
+          - "ManagedBy" = "Terraform"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - version_id                    = "52ae945e-a0e0-41cc-8432-fafe120d7f1d" -> null
+        # (13 unchanged attributes hidden)
+    }
+
+  # aws_security_group.web will be destroyed
+  - resource "aws_security_group" "web" {
+      - arn                    = "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-0865ba1db15857b76" -> null
+      - description            = "Web server: 80/443 public, 22 from admin only" -> null
+      - egress                 = [
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "All outbound"
+              - from_port        = 0
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "-1"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 0
+            },
+        ] -> null
+      - id                     = "sg-0865ba1db15857b76" -> null
+      - ingress                = [
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "HTTP from anywhere"
+              - from_port        = 80
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 80
+            },
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "HTTPS from anywhere"
+              - from_port        = 443
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 443
+            },
+          - {
+              - cidr_blocks      = [
+                  - "203.0.113.10/32",
+                ]
+              - description      = "SSH from the admin address only"
+              - from_port        = 22
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 22
+            },
+        ] -> null
+      - name                   = "s19-web-web-sg" -> null
+      - owner_id               = "123456789012" -> null
+      - region                 = "ap-south-1" -> null
+      - revoke_rules_on_delete = false -> null
+      - tags                   = {
+          - "Name" = "s19-web-web-sg"
+        } -> null
+      - tags_all               = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-web-sg"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - vpc_id                 = "vpc-81867c303e3b227ec" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_subnet.private["a"] will be destroyed
+  - resource "aws_subnet" "private" {
+      - arn                                            = "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-6946e3334833dc6af" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "ap-south-1a" -> null
+      - availability_zone_id                           = "aps1-az1" -> null
+      - cidr_block                                     = "10.20.11.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-6946e3334833dc6af" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = false -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "ap-south-1" -> null
+      - tags                                           = {
+          - "Name" = "s19-web-private-a"
+          - "Tier" = "private"
+        } -> null
+      - tags_all                                       = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-private-a"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+          - "Tier"      = "private"
+        } -> null
+      - vpc_id                                         = "vpc-81867c303e3b227ec" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.private["b"] will be destroyed
+  - resource "aws_subnet" "private" {
+      - arn                                            = "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-009573264804cc716" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "ap-south-1b" -> null
+      - availability_zone_id                           = "aps1-az3" -> null
+      - cidr_block                                     = "10.20.12.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-009573264804cc716" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = false -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "ap-south-1" -> null
+      - tags                                           = {
+          - "Name" = "s19-web-private-b"
+          - "Tier" = "private"
+        } -> null
+      - tags_all                                       = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-private-b"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+          - "Tier"      = "private"
+        } -> null
+      - vpc_id                                         = "vpc-81867c303e3b227ec" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.public["a"] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-1af7252bc7cb1b341" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "ap-south-1a" -> null
+      - availability_zone_id                           = "aps1-az1" -> null
+      - cidr_block                                     = "10.20.1.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-1af7252bc7cb1b341" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = true -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "ap-south-1" -> null
+      - tags                                           = {
+          - "Name" = "s19-web-public-a"
+          - "Tier" = "public"
+        } -> null
+      - tags_all                                       = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-public-a"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+          - "Tier"      = "public"
+        } -> null
+      - vpc_id                                         = "vpc-81867c303e3b227ec" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.public["b"] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-b85df48409da6c95b" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "ap-south-1b" -> null
+      - availability_zone_id                           = "aps1-az3" -> null
+      - cidr_block                                     = "10.20.2.0/24" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-b85df48409da6c95b" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = true -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "ap-south-1" -> null
+      - tags                                           = {
+          - "Name" = "s19-web-public-b"
+          - "Tier" = "public"
+        } -> null
+      - tags_all                                       = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-public-b"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+          - "Tier"      = "public"
+        } -> null
+      - vpc_id                                         = "vpc-81867c303e3b227ec" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_vpc.main will be destroyed
+  - resource "aws_vpc" "main" {
+      - arn                                  = "arn:aws:ec2:ap-south-1:123456789012:vpc/vpc-81867c303e3b227ec" -> null
+      - assign_generated_ipv6_cidr_block     = false -> null
+      - cidr_block                           = "10.20.0.0/16" -> null
+      - default_network_acl_id               = "acl-698ff7bd15e263cf7" -> null
+      - default_route_table_id               = "rtb-a07aac4b97654103e" -> null
+      - default_security_group_id            = "sg-068513df1bb2378a6" -> null
+      - dhcp_options_id                      = "default" -> null
+      - enable_dns_hostnames                 = true -> null
+      - enable_dns_support                   = true -> null
+      - enable_network_address_usage_metrics = false -> null
+      - id                                   = "vpc-81867c303e3b227ec" -> null
+      - instance_tenancy                     = "default" -> null
+      - ipv6_netmask_length                  = 0 -> null
+      - main_route_table_id                  = "rtb-a07aac4b97654103e" -> null
+      - owner_id                             = "123456789012" -> null
+      - region                               = "ap-south-1" -> null
+      - tags                                 = {
+          - "Name" = "s19-web-vpc"
+        } -> null
+      - tags_all                             = {
+          - "ManagedBy" = "Terraform"
+          - "Name"      = "s19-web-vpc"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_vpc_security_group_egress_rule.web_all_out will be destroyed
+  - resource "aws_vpc_security_group_egress_rule" "web_all_out" {
+      - arn                    = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-328894294b6ef8827" -> null
+      - cidr_ipv4              = "0.0.0.0/0" -> null
+      - description            = "All outbound" -> null
+      - id                     = "sgr-328894294b6ef8827" -> null
+      - ip_protocol            = "-1" -> null
+      - region                 = "ap-south-1" -> null
+      - security_group_id      = "sg-0865ba1db15857b76" -> null
+      - security_group_rule_id = "sgr-328894294b6ef8827" -> null
+      - tags_all               = {
+          - "ManagedBy" = "Terraform"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.web_http will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "web_http" {
+      - arn                    = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-ed75b07385895926d" -> null
+      - cidr_ipv4              = "0.0.0.0/0" -> null
+      - description            = "HTTP from anywhere" -> null
+      - from_port              = 80 -> null
+      - id                     = "sgr-ed75b07385895926d" -> null
+      - ip_protocol            = "tcp" -> null
+      - region                 = "ap-south-1" -> null
+      - security_group_id      = "sg-0865ba1db15857b76" -> null
+      - security_group_rule_id = "sgr-ed75b07385895926d" -> null
+      - tags_all               = {
+          - "ManagedBy" = "Terraform"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - to_port                = 80 -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.web_https will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "web_https" {
+      - arn                    = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-36b4f2b65967ea5b5" -> null
+      - cidr_ipv4              = "0.0.0.0/0" -> null
+      - description            = "HTTPS from anywhere" -> null
+      - from_port              = 443 -> null
+      - id                     = "sgr-36b4f2b65967ea5b5" -> null
+      - ip_protocol            = "tcp" -> null
+      - region                 = "ap-south-1" -> null
+      - security_group_id      = "sg-0865ba1db15857b76" -> null
+      - security_group_rule_id = "sgr-36b4f2b65967ea5b5" -> null
+      - tags_all               = {
+          - "ManagedBy" = "Terraform"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - to_port                = 443 -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.web_ssh will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "web_ssh" {
+      - arn                    = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-b1a301dad802530f9" -> null
+      - cidr_ipv4              = "203.0.113.10/32" -> null
+      - description            = "SSH from the admin address only" -> null
+      - from_port              = 22 -> null
+      - id                     = "sgr-b1a301dad802530f9" -> null
+      - ip_protocol            = "tcp" -> null
+      - region                 = "ap-south-1" -> null
+      - security_group_id      = "sg-0865ba1db15857b76" -> null
+      - security_group_rule_id = "sgr-b1a301dad802530f9" -> null
+      - tags_all               = {
+          - "ManagedBy" = "Terraform"
+          - "Owner"     = "shaurya-verma-24bcs10151"
+          - "Project"   = "s19-web"
+          - "Session"   = "19"
+        } -> null
+      - to_port                = 22 -> null
+    }
+
+  # random_id.bucket_suffix will be destroyed
+  - resource "random_id" "bucket_suffix" {
+      - b64_std     = "/Rbt" -> null
+      - b64_url     = "_Rbt" -> null
+      - byte_length = 3 -> null
+      - dec         = "16586477" -> null
+      - hex         = "fd16ed" -> null
+      - id          = "_Rbt" -> null
+    }
+
+Plan: 0 to add, 0 to change, 27 to destroy.
+
+Changes to Outputs:
+  - ami_used            = "ami-0884624fc54d115f3 (al2023-ami-2023.12.20260727.0-kernel-6.1-x86_64)" -> null
+  - bucket_name         = "s19-web-assets-fd16ed" -> null
+  - instance_id         = "i-8698d0daf5dddb969" -> null
+  - instance_private_ip = "10.20.1.4" -> null
+  - instance_public_ip  = "54.214.30.109" -> null
+  - private_subnet_ids  = {
+      - a = "subnet-6946e3334833dc6af"
+      - b = "subnet-009573264804cc716"
+    } -> null
+  - public_subnet_ids   = {
+      - a = "subnet-1af7252bc7cb1b341"
+      - b = "subnet-b85df48409da6c95b"
+    } -> null
+  - security_group_id   = "sg-0865ba1db15857b76" -> null
+  - vpc_id              = "vpc-81867c303e3b227ec" -> null
+  - web_url             = "http://54.214.30.109/" -> null
+
+Do you really want to destroy all resources?
+  Terraform will destroy all your managed infrastructure, as shown above.
+  There is no undo. Only 'yes' will be accepted to confirm.
+
+  Enter a value: 
+aws_s3_bucket_public_access_block.assets: Destroying... [id=s19-web-assets-fd16ed]
+aws_iam_role_policy.web_read_assets: Destroying... [id=s19-web-ec2-role:read-site-assets]
+aws_s3_bucket_versioning.assets: Destroying... [id=s19-web-assets-fd16ed]
+aws_vpc_security_group_egress_rule.web_all_out: Destroying... [id=sgr-328894294b6ef8827]
+aws_route_table_association.private["a"]: Destroying... [id=rtbassoc-b83a47cf036ddad9c]
+aws_vpc_security_group_ingress_rule.web_http: Destroying... [id=sgr-ed75b07385895926d]
+aws_vpc_security_group_ingress_rule.web_ssh: Destroying... [id=sgr-b1a301dad802530f9]
+aws_vpc_security_group_ingress_rule.web_https: Destroying... [id=sgr-36b4f2b65967ea5b5]
+aws_s3_object.index: Destroying... [id=s19-web-assets-fd16ed/site/index.html]
+aws_instance.web: Destroying... [id=i-8698d0daf5dddb969]
+aws_s3_bucket_versioning.assets: Destruction complete after 0s
+aws_iam_role_policy.web_read_assets: Destruction complete after 0s
+aws_vpc_security_group_ingress_rule.web_ssh: Destruction complete after 0s
+aws_vpc_security_group_egress_rule.web_all_out: Destruction complete after 0s
+aws_vpc_security_group_ingress_rule.web_http: Destruction complete after 0s
+aws_route_table_association.private["b"]: Destroying... [id=rtbassoc-8ebefb1d5c1fe033b]
+aws_vpc_security_group_ingress_rule.web_https: Destruction complete after 0s
+aws_route_table_association.private["b"]: Destruction complete after 0s
+aws_s3_bucket_public_access_block.assets: Destruction complete after 0s
+aws_route_table_association.private["a"]: Destruction complete after 0s
+aws_s3_object.index: Destruction complete after 0s
+aws_s3_bucket_server_side_encryption_configuration.assets: Destroying... [id=s19-web-assets-fd16ed]
+aws_route_table.private: Destroying... [id=rtb-ad741b5b85b22158c]
+aws_subnet.private["b"]: Destroying... [id=subnet-009573264804cc716]
+aws_subnet.private["a"]: Destroying... [id=subnet-6946e3334833dc6af]
+aws_s3_bucket_server_side_encryption_configuration.assets: Destruction complete after 0s
+aws_subnet.private["b"]: Destruction complete after 0s
+aws_subnet.private["a"]: Destruction complete after 0s
+aws_route_table.private: Destruction complete after 0s
+aws_instance.web: Still destroying... [id=i-8698d0daf5dddb969, 00m10s elapsed]
+aws_instance.web: Destruction complete after 10s
+aws_route_table_association.public["b"]: Destroying... [id=rtbassoc-27d64c65207073c6a]
+aws_iam_instance_profile.web: Destroying... [id=s19-web-ec2-profile]
+aws_route_table_association.public["a"]: Destroying... [id=rtbassoc-2ef2d1ac237e74774]
+aws_security_group.web: Destroying... [id=sg-0865ba1db15857b76]
+aws_s3_bucket.assets: Destroying... [id=s19-web-assets-fd16ed]
+aws_route_table_association.public["a"]: Destruction complete after 1s
+aws_iam_instance_profile.web: Destruction complete after 1s
+aws_route_table_association.public["b"]: Destruction complete after 1s
+aws_s3_bucket.assets: Destruction complete after 1s
+aws_security_group.web: Destruction complete after 1s
+aws_iam_role.web: Destroying... [id=s19-web-ec2-role]
+aws_subnet.public["a"]: Destroying... [id=subnet-1af7252bc7cb1b341]
+aws_route_table.public: Destroying... [id=rtb-a9d5ee78ce91c0a74]
+aws_subnet.public["b"]: Destroying... [id=subnet-b85df48409da6c95b]
+random_id.bucket_suffix: Destroying... [id=_Rbt]
+random_id.bucket_suffix: Destruction complete after 0s
+aws_iam_role.web: Destruction complete after 0s
+aws_subnet.public["b"]: Destruction complete after 0s
+aws_subnet.public["a"]: Destruction complete after 0s
+aws_route_table.public: Destruction complete after 0s
+aws_internet_gateway.main: Destroying... [id=igw-70e6dacf2c7f672ca]
+aws_internet_gateway.main: Destruction complete after 0s
+aws_vpc.main: Destroying... [id=vpc-81867c303e3b227ec]
+aws_vpc.main: Destruction complete after 0s
+
+Destroy complete! Resources: 27 destroyed.
+[exit code: 0]
+$ terraform state list
+[exit code: 0]
+
+$ aws ec2 describe-vpcs --filters Name=tag:Project,Values=s19-web --query Vpcs
+[]
+
+$ aws ec2 describe-instances --filters Name=tag:Project,Values=s19-web --query Reservations[].Instances[].[InstanceId,State.Name] --output text
+i-8698d0daf5dddb969	terminated
+
+$ aws s3 ls
+
+$ aws iam get-role --role-name s19-web-ec2-role --query Role.Arn
+
+aws: [ERROR]: An error occurred (NoSuchEntity) when calling the GetRole operation: Role s19-web-ec2-role not found
+[exit code: 254]
+

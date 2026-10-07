@@ -1,0 +1,8 @@
+$ terraform fmt -check -recursive
+[exit code: 0]
+
+$ terraform validate -no-color
+Success! The configuration is valid.
+
+[exit code: 0]
+

@@ -1,0 +1,24 @@
+$ terraform output
+ami_used = "ami-0884624fc54d115f3 (al2023-ami-2023.12.20260727.0-kernel-6.1-x86_64)"
+bucket_name = "s19-web-assets-fd16ed"
+instance_id = "i-8698d0daf5dddb969"
+instance_private_ip = "10.20.1.4"
+instance_public_ip = "54.214.30.109"
+private_subnet_ids = {
+  "a" = "subnet-6946e3334833dc6af"
+  "b" = "subnet-009573264804cc716"
+}
+public_subnet_ids = {
+  "a" = "subnet-1af7252bc7cb1b341"
+  "b" = "subnet-b85df48409da6c95b"
+}
+security_group_id = "sg-0865ba1db15857b76"
+vpc_id = "vpc-81867c303e3b227ec"
+web_url = "http://54.214.30.109/"
+
+$ terraform output -raw instance_public_ip
+54.214.30.109
+
+$ terraform output -json public_subnet_ids
+{"a":"subnet-1af7252bc7cb1b341","b":"subnet-b85df48409da6c95b"}
+

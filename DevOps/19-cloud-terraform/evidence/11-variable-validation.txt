@@ -1,0 +1,16 @@
+$ terraform plan -no-color -var vpc_cidr=10.20.0.0/28
+
+Planning failed. Terraform encountered an error while generating this plan.
+
+
+Error: Invalid value for variable
+
+  on variables.tf line 24:
+  24: variable "vpc_cidr" {
+    ├────────────────
+    │ var.vpc_cidr is "10.20.0.0/28"
+
+vpc_cidr must be a valid IPv4 CIDR block of /24 or larger.
+
+This was checked by the validation rule at variables.tf:29,3-13.
+[exit code: 1]
