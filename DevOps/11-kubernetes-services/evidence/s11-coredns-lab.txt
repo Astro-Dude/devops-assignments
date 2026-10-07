@@ -1,0 +1,308 @@
+########## COREDNS IN THE CLUSTER ##########
+$ kubectl -n kube-system get deploy coredns -o wide
+NAME      READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                    SELECTOR
+coredns   2/2     2            2           25m   coredns      registry.k8s.io/coredns/coredns:v1.14.6   k8s-app=kube-dns
+
+$ kubectl -n kube-system get pods -l k8s-app=kube-dns -o wide
+NAME                       READY   STATUS    RESTARTS   AGE   IP           NODE                      NOMINATED NODE   READINESS GATES
+coredns-559f6c778d-5bxcs   1/1     Running   0          25m   10.244.0.4   hw-legacy-control-plane   <none>           <none>
+coredns-559f6c778d-mps4k   1/1     Running   0          25m   10.244.0.3   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n kube-system get svc kube-dns
+NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                  AGE
+kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP,9153/TCP   25m
+
+$ kubectl -n kube-system get endpointslices -l kubernetes.io/service-name=kube-dns
+NAME             ADDRESSTYPE   PORTS        ENDPOINTS               AGE
+kube-dns-qt6dw   IPv4          53,53,9153   10.244.0.3,10.244.0.4   25m
+
+$ kubectl -n kube-system get deploy coredns -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}{.spec.template.spec.containers[0].args}{"\n"}'
+registry.k8s.io/coredns/coredns:v1.14.6
+["-conf","/etc/coredns/Corefile"]
+
+$ kubectl -n kube-system get configmap coredns -o yaml
+apiVersion: v1
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health {
+           lameduck 5s
+        }
+        ready
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+           pods insecure
+           fallthrough in-addr.arpa ip6.arpa
+           ttl 30
+        }
+        prometheus :9153
+        forward . /etc/resolv.conf {
+           max_concurrent 1000
+        }
+        cache 30 {
+           disable success cluster.local
+           disable denial cluster.local
+        }
+        loop
+        reload
+        loadbalance
+    }
+kind: ConfigMap
+metadata:
+  creationTimestamp: "2026-10-07T13:06:54Z"
+  name: coredns
+  namespace: kube-system
+  resourceVersion: "237"
+  uid: c9a13581-240f-4aff-9d87-6b12640b9724
+
+$ kubectl get clusterrole system:coredns -o jsonpath='{range .rules[*]}{.resources} {.verbs}{"\n"}{end}'
+["endpoints","services","pods","namespaces"] ["list","watch"]
+["endpointslices"] ["list","watch"]
+
+$ kubectl -n s11-dns-a exec client -- cat /etc/resolv.conf
+search s11-dns-a.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+
+########## HOW A NAME IS RESOLVED: THE SEARCH-LIST WALK ##########
+# dig ignores the search list unless told (+search); +showsearch prints every attempt
+$ kubectl -n s11-dns-a exec client -- dig +search +showsearch +noall +answer +comments api
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 55397
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: cd0c09fae819c49d (echoed)
+;; ANSWER SECTION:
+api.s11-dns-a.svc.cluster.local. 30 IN	A	10.96.98.48
+
+
+$ kubectl -n s11-dns-a exec client -- dig +search +showsearch +noall +answer +comments example.com
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 45778
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 26d089251c0aba3d (echoed)
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 23354
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 26d089251c0aba3d (echoed)
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 24738
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 26d089251c0aba3d (echoed)
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 63666
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+; COOKIE: 26d089251c0aba3d (echoed)
+;; ANSWER SECTION:
+example.com.		15	IN	A	172.66.147.243
+example.com.		15	IN	A	104.20.23.154
+
+
+# the same walk done by hand: each search suffix is a separate query
+$ kubectl -n s11-dns-a exec client -- dig +noall +comments +answer example.com.s11-dns-a.svc.cluster.local | grep -E 'status:|IN\s+A'
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 21640
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +comments +answer example.com.svc.cluster.local | grep -E 'status:|IN\s+A'
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 12516
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +comments +answer example.com.cluster.local | grep -E 'status:|IN\s+A'
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 9665
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +comments +answer example.com | grep -E 'status:|IN\s+A'
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 31856
+example.com.		15	IN	A	172.66.147.243
+example.com.		15	IN	A	104.20.23.154
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +comments +answer example.com. | grep -E 'status:|IN\s+A'
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 52555
+example.com.		15	IN	A	172.66.147.243
+example.com.		15	IN	A	104.20.23.154
+
+# CoreDNS answers cluster names itself (authoritative, 'aa' flag) and forwards the rest
+$ kubectl -n s11-dns-a exec client -- dig api.s11-dns-a.svc.cluster.local | grep -E 'flags:|SERVER'
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+; EDNS: version: 0, flags:; udp: 1232
+;; SERVER: 10.96.0.10#53(10.96.0.10) (UDP)
+
+$ kubectl -n s11-dns-a exec client -- dig example.com | grep -E 'flags:|SERVER'
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+; EDNS: version: 0, flags:; udp: 1232
+;; SERVER: 10.96.0.10#53(10.96.0.10) (UDP)
+
+# service discovery is live: a new Service is resolvable as soon as it exists
+$ kubectl -n s11-dns-a exec client -- dig +short brand-new.s11-dns-a.svc.cluster.local; echo "(empty = NXDOMAIN)"
+(empty = NXDOMAIN)
+
+$ kubectl -n s11-dns-a create service clusterip brand-new --tcp=80:80
+service/brand-new created
+
+$ kubectl -n s11-dns-a exec client -- dig +short brand-new.s11-dns-a.svc.cluster.local
+10.96.44.197
+
+$ kubectl -n s11-dns-a get svc brand-new
+NAME        TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+brand-new   ClusterIP   10.96.44.197   <none>        80/TCP    0s
+
+$ kubectl -n s11-dns-a delete svc brand-new
+service "brand-new" deleted from s11-dns-a namespace
+
+########## TROUBLESHOOTING 1: POD CANNOT RESOLVE ANYTHING ##########
+$ kubectl apply -f broken-dns-pod.yaml
+pod/dns-broken created
+
+$ kubectl -n s11-dns-a wait --for=condition=Ready pod/dns-broken --timeout=60s
+pod/dns-broken condition met
+
+$ kubectl -n s11-dns-a exec dns-broken -- nslookup -timeout=2 api
+;; connection timed out; no servers could be reached
+
+command terminated with exit code 1
+
+$ kubectl -n s11-dns-a exec dns-broken -- wget -q -O- -T 3 http://api
+wget: bad address 'api'
+command terminated with exit code 1
+
+# step 1: is CoreDNS itself healthy? (yes - other pods resolve fine)
+$ kubectl -n kube-system get pods -l k8s-app=kube-dns
+NAME                       READY   STATUS    RESTARTS   AGE
+coredns-559f6c778d-5bxcs   1/1     Running   0          26m
+coredns-559f6c778d-mps4k   1/1     Running   0          26m
+
+$ kubectl -n s11-dns-a exec client -- nslookup api
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+Name:	api.s11-dns-a.svc.cluster.local
+Address: 10.96.98.48
+
+
+# step 2: what resolver is THIS pod using?
+$ kubectl -n s11-dns-a exec dns-broken -- cat /etc/resolv.conf
+search s11-dns-a.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.99
+options ndots:5
+
+$ kubectl -n s11-dns-a get pod dns-broken -o jsonpath='dnsPolicy={.spec.dnsPolicy} dnsConfig={.spec.dnsConfig}{"\n"}'
+dnsPolicy=None dnsConfig={"nameservers":["10.96.0.99"],"options":[{"name":"ndots","value":"5"}],"searches":["s11-dns-a.svc.cluster.local","svc.cluster.local","cluster.local"]}
+
+# step 3: can the pod reach the real DNS service directly?
+$ kubectl -n s11-dns-a exec dns-broken -- nslookup api.s11-dns-a.svc.cluster.local 10.96.0.10
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+Name:	api.s11-dns-a.svc.cluster.local
+Address: 10.96.98.48
+
+
+
+# root cause: dnsPolicy None + nameserver 10.96.0.99. Fix: recreate with ClusterFirst
+$ kubectl -n s11-dns-a delete pod dns-broken --grace-period=1
+pod "dns-broken" deleted from s11-dns-a namespace
+
+$ kubectl apply -f fixed-dns-pod.yaml
+pod/dns-broken created
+
+$ kubectl -n s11-dns-a wait --for=condition=Ready pod/dns-broken --timeout=60s
+pod/dns-broken condition met
+
+$ kubectl -n s11-dns-a exec dns-broken -- cat /etc/resolv.conf
+search s11-dns-a.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+
+$ kubectl -n s11-dns-a exec dns-broken -- nslookup api
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+** server can't find api.cluster.local: NXDOMAIN
+
+Name:	api.s11-dns-a.svc.cluster.local
+Address: 10.96.98.48
+
+** server can't find api.cluster.local: NXDOMAIN
+
+** server can't find api.svc.cluster.local: NXDOMAIN
+
+
+** server can't find api.svc.cluster.local: NXDOMAIN
+
+command terminated with exit code 1
+
+$ kubectl -n s11-dns-a exec dns-broken -- wget -q -O- -T 3 http://api
+api answering from namespace s11-dns-a
+
+########## TROUBLESHOOTING 2: NXDOMAIN FROM THE WRONG NAMESPACE ##########
+$ kubectl -n s11-dns-b create deployment payments --image=nginx:1.27-alpine
+deployment.apps/payments created
+
+$ kubectl -n s11-dns-b expose deployment payments --port=80
+service/payments exposed
+
+$ kubectl -n s11-dns-b rollout status deploy/payments --timeout=90s
+Waiting for deployment "payments" rollout to finish: 0 of 1 updated replicas are available...
+deployment "payments" successfully rolled out
+
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 http://payments
+command terminated with exit code 6
+
+$ kubectl -n s11-dns-a exec client -- nslookup payments
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+** server can't find payments: NXDOMAIN
+
+command terminated with exit code 1
+
+$ kubectl get svc -A --field-selector metadata.name=payments
+NAMESPACE   NAME       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+s11-dns-b   payments   ClusterIP   10.96.137.166   <none>        80/TCP    2s
+
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 -o /dev/null -w '%{http_code}\n' http://payments.s11-dns-b
+200
+
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 -o /dev/null -w '%{http_code}\n' http://payments.s11-dns-b.svc.cluster.local
+200
+
+########## COREDNS LOGS ##########
+$ kubectl -n kube-system logs -l k8s-app=kube-dns --tail=10
+maxprocs: Leaving GOMAXPROCS=15: CPU quota undefined
+.:53
+[INFO] plugin/reload: Running configuration SHA512 = 1b226df79860026c6a52e67daa10d7f0d57ec5b023288ec00c5e05f93523c894564e15b91770d3a07ae1cfbe861d15b37d4a0027e69c546ab112970993a3b03b
+CoreDNS-1.14.6
+linux/arm64, go1.26.5, 424d125
+maxprocs: Leaving GOMAXPROCS=15: CPU quota undefined
+.:53
+[INFO] plugin/reload: Running configuration SHA512 = 1b226df79860026c6a52e67daa10d7f0d57ec5b023288ec00c5e05f93523c894564e15b91770d3a07ae1cfbe861d15b37d4a0027e69c546ab112970993a3b03b
+CoreDNS-1.14.6
+linux/arm64, go1.26.5, 424d125
+
+$ kubectl -n kube-system get --raw /api/v1/namespaces/kube-system/pods/$(kubectl -n kube-system get pod -l k8s-app=kube-dns -o jsonpath='{.items[0].metadata.name}'):9153/proxy/metrics | grep -E '^coredns_dns_responses_total' | head -8
+coredns_dns_responses_total{plugin="errors",rcode="NOERROR",server="dns://:53",view="",zone="."} 169673
+coredns_dns_responses_total{plugin="errors",rcode="NXDOMAIN",server="dns://:53",view="",zone="."} 38
+

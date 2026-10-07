@@ -1,0 +1,183 @@
+$ kubectl create namespace s11-dns-a
+namespace/s11-dns-a created
+
+$ kubectl create namespace s11-dns-b
+namespace/s11-dns-b created
+
+$ NS=s11-dns-a envsubst < dns-lab.yaml | kubectl apply -f -
+deployment.apps/api created
+service/api created
+service/web-headless created
+statefulset.apps/web created
+
+$ NS=s11-dns-b envsubst < dns-lab.yaml | kubectl apply -f -
+deployment.apps/api created
+service/api created
+service/web-headless created
+statefulset.apps/web created
+
+$ kubectl apply -f client.yaml
+pod/client created
+
+$ kubectl -n s11-dns-a rollout status deploy/api --timeout=120s
+Waiting for deployment "api" rollout to finish: 0 of 1 updated replicas are available...
+deployment "api" successfully rolled out
+
+$ kubectl -n s11-dns-b rollout status deploy/api --timeout=120s
+Waiting for deployment "api" rollout to finish: 0 of 1 updated replicas are available...
+deployment "api" successfully rolled out
+
+$ kubectl -n s11-dns-a rollout status sts/web --timeout=120s
+Waiting for 1 pods to be ready...
+partitioned roll out complete: 2 new pods have been updated...
+
+$ kubectl -n s11-dns-a wait --for=condition=Ready pod/client --timeout=120s
+pod/client condition met
+
+$ kubectl get svc -n s11-dns-a
+NAME           TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+api            ClusterIP   10.96.98.48   <none>        80/TCP    2s
+web-headless   ClusterIP   None          <none>        80/TCP    2s
+
+$ kubectl get svc -n s11-dns-b
+NAME           TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+api            ClusterIP   10.96.7.141   <none>        80/TCP    1s
+web-headless   ClusterIP   None          <none>        80/TCP    1s
+
+$ kubectl -n s11-dns-a get pods -o wide
+NAME                   READY   STATUS    RESTARTS   AGE   IP            NODE                      NOMINATED NODE   READINESS GATES
+api-77dd6559bc-vsmp4   1/1     Running   0          2s    10.244.0.41   hw-legacy-control-plane   <none>           <none>
+client                 1/1     Running   0          1s    10.244.0.45   hw-legacy-control-plane   <none>           <none>
+web-0                  1/1     Running   0          1s    10.244.0.42   hw-legacy-control-plane   <none>           <none>
+web-1                  1/1     Running   0          1s    10.244.0.47   hw-legacy-control-plane   <none>           <none>
+
+########## THE CLIENT'S RESOLVER CONFIG ##########
+$ kubectl -n s11-dns-a exec client -- cat /etc/resolv.conf
+search s11-dns-a.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+
+########## SERVICE NAME FORMS (client lives in s11-dns-a) ##########
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 http://api
+api answering from namespace s11-dns-a
+
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 http://api.s11-dns-a
+api answering from namespace s11-dns-a
+
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 http://api.s11-dns-a.svc
+api answering from namespace s11-dns-a
+
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 http://api.s11-dns-a.svc.cluster.local
+api answering from namespace s11-dns-a
+
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 http://api.s11-dns-b
+api answering from namespace s11-dns-b
+
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 http://api.s11-dns-b.svc.cluster.local
+api answering from namespace s11-dns-b
+
+$ kubectl -n s11-dns-a exec client -- nslookup api
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+Name:	api.s11-dns-a.svc.cluster.local
+Address: 10.96.98.48
+
+
+$ kubectl -n s11-dns-a exec client -- nslookup api.s11-dns-b
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+Name:	api.s11-dns-b.svc.cluster.local
+Address: 10.96.7.141
+
+
+$ kubectl -n s11-dns-a exec client -- nslookup api.s11-dns-b.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+Name:	api.s11-dns-b.svc.cluster.local
+Address: 10.96.7.141
+
+
+########## A SHORT NAME ONLY SEARCHES THE CLIENT'S OWN NAMESPACE ##########
+$ kubectl -n s11-dns-b delete deploy,svc api
+deployment.apps "api" deleted from s11-dns-b namespace
+service "api" deleted from s11-dns-b namespace
+
+$ kubectl -n s11-dns-a exec client -- curl -s --max-time 3 http://api.s11-dns-b
+command terminated with exit code 6
+
+$ kubectl -n s11-dns-a exec client -- nslookup api.s11-dns-b
+Server:		10.96.0.10
+Address:	10.96.0.10#53
+
+** server can't find api.s11-dns-b: NXDOMAIN
+
+command terminated with exit code 1
+
+$ NS=s11-dns-b envsubst < dns-lab.yaml | kubectl apply -f -
+deployment.apps/api created
+service/api created
+service/web-headless unchanged
+statefulset.apps/web unchanged
+
+$ kubectl -n s11-dns-b rollout status deploy/api --timeout=120s
+Waiting for deployment "api" rollout to finish: 0 of 1 updated replicas are available...
+deployment "api" successfully rolled out
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +answer api.s11-dns-a.svc.cluster.local api.s11-dns-b.svc.cluster.local
+api.s11-dns-a.svc.cluster.local. 30 IN	A	10.96.98.48
+api.s11-dns-b.svc.cluster.local. 30 IN	A	10.96.56.203
+
+########## SRV RECORD FOR THE NAMED PORT ##########
+$ kubectl -n s11-dns-a exec client -- dig +noall +answer SRV _http._tcp.api.s11-dns-a.svc.cluster.local
+_http._tcp.api.s11-dns-a.svc.cluster.local. 30 IN SRV 0 100 80 api.s11-dns-a.svc.cluster.local.
+
+########## POD A RECORDS (<ip-with-dashes>.<ns>.pod.cluster.local) ##########
+$ kubectl -n s11-dns-a get pod -l app=api -o jsonpath='{.items[0].metadata.name} {.items[0].status.podIP}{"\n"}'
+api-77dd6559bc-vsmp4 10.244.0.41
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +answer 10-244-0-41.s11-dns-a.pod.cluster.local
+10-244-0-41.s11-dns-a.pod.cluster.local. 30 IN A 10.244.0.41
+
+########## HEADLESS SERVICE + STATEFULSET: ONE NAME PER POD ##########
+$ kubectl -n s11-dns-a get pods -l app=web-sts -o wide
+NAME    READY   STATUS    RESTARTS   AGE   IP            NODE                      NOMINATED NODE   READINESS GATES
+web-0   1/1     Running   0          3s    10.244.0.42   hw-legacy-control-plane   <none>           <none>
+web-1   1/1     Running   0          3s    10.244.0.47   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +answer web-headless.s11-dns-a.svc.cluster.local
+web-headless.s11-dns-a.svc.cluster.local. 30 IN	A 10.244.0.47
+web-headless.s11-dns-a.svc.cluster.local. 30 IN	A 10.244.0.42
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +answer web-0.web-headless.s11-dns-a.svc.cluster.local
+web-0.web-headless.s11-dns-a.svc.cluster.local.	30 IN A	10.244.0.42
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +answer web-1.web-headless.s11-dns-a.svc.cluster.local
+web-1.web-headless.s11-dns-a.svc.cluster.local.	30 IN A	10.244.0.47
+
+$ kubectl -n s11-dns-a exec web-0 -- hostname -f
+web-0.web-headless.s11-dns-a.svc.cluster.local
+
+$ kubectl -n s11-dns-a exec client -- dig +noall +answer -x 10.244.0.41
+41.0.244.10.in-addr.arpa. 30	IN	PTR	10-244-0-41.api.s11-dns-a.svc.cluster.local.
+
+########## SAME QUERIES FROM A POD IN THE OTHER NAMESPACE ##########
+$ kubectl -n s11-dns-b run client-b --image=busybox:1.36 --restart=Never --command -- sleep 600
+pod/client-b created
+
+$ kubectl -n s11-dns-b wait --for=condition=Ready pod/client-b --timeout=60s
+pod/client-b condition met
+
+$ kubectl -n s11-dns-b exec client-b -- cat /etc/resolv.conf
+search s11-dns-b.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+
+$ kubectl -n s11-dns-b exec client-b -- wget -q -O- -T 3 http://api
+api answering from namespace s11-dns-b
+
+$ kubectl -n s11-dns-b exec client-b -- wget -q -O- -T 3 http://api.s11-dns-a
+api answering from namespace s11-dns-a
+

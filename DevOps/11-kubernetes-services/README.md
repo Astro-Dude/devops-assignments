@@ -5,7 +5,7 @@ the four ports people confuse in interviews and the DNS behaviour behind each
 type.
 
 Command results are **real captured output** from the three-node kind cluster
-built in [assignment 09](../09-kubernetes-fundamentals/README.md).
+built in [session 09](../09-kubernetes-fundamentals/README.md).
 
 ---
 
@@ -291,7 +291,7 @@ A LoadBalancer Service **is** a NodePort Service, plus a request to the cloud
 provider (here MetalLB) to point something external at it. This is why a
 LoadBalancer costs money per service on a cloud provider, and why teams put one
 Ingress in front of many services instead — the subject of
-[assignment 12](../12-ingress-configmaps-secrets/README.md).
+[session 12](../12-ingress-configmaps-secrets/README.md).
 
 ---
 
@@ -411,7 +411,7 @@ you want when the *client* must choose the backend: a database driver that needs
 to send writes to the primary and reads to replicas, or a Kafka client that
 connects to specific brokers. It is also what StatefulSets use to give each pod a
 stable DNS name — demonstrated in
-[assignment 10](../10-k8s-core-objects/README.md).
+[session 10](../10-k8s-core-objects/README.md).
 
 ---
 
@@ -475,7 +475,7 @@ know where to look.
 
 ### Failure A — no endpoints (selector matches nothing)
 
-Covered in [assignment 10](../10-k8s-core-objects/README.md): the Service is
+Covered in [session 10](../10-k8s-core-objects/README.md): the Service is
 healthy, the pods are healthy, and `ENDPOINTS` is `<none>`. Requests time out.
 
 ### Failure B — endpoints exist, but the port is wrong
@@ -522,6 +522,41 @@ kubectl exec <client> -- nslookup <svc>   # does the name even resolve?
 
 ---
 
+## Task 11 — Object comparison, FQDN and CoreDNS documents
+
+The spec's Tasks 2–4 each ask for a separate document. Each one has its own
+README with a live demo on the `hw-legacy` kind cluster:
+
+| Spec task | Document | Live demo inside |
+|---|---|---|
+| Task 2 — Kubernetes Object Comparison | [`object-comparison/README.md`](object-comparison/README.md) | Deployment→ReplicaSet→Pod `ownerReferences`; a manual ReplicaSet scale reverted in 3 s; a rollout leaving two ReplicaSets; a DaemonSet refusing `kubectl scale`; StatefulSet `db-0` keeping its name and data with a new IP, PVC kept after scale-down; an EndpointSlice following a replaced Pod while the ClusterIP stays fixed |
+| Task 3 — FQDN | [`fqdn/README.md`](fqdn/README.md) | Same Service name `api` in two namespaces answering differently; short name vs `<svc>.<ns>` vs full FQDN; NXDOMAIN when the Service is missing; SRV record for a named port; Pod A/PTR records; per-Pod StatefulSet names |
+| Task 4 — CoreDNS | [`coredns/README.md`](coredns/README.md) | The live Corefile explained line by line; a new Service resolvable at age 0 s; the `ndots:5` search-list walk captured (4 queries for `example.com`); two broken-then-fixed DNS scenarios (bad `dnsConfig` nameserver → timeout; wrong namespace → NXDOMAIN) |
+
+The headline result from each:
+
+```console
+# object comparison: the Service only follows a label, never the ReplicaSet
+$ kubectl get endpointslices -l kubernetes.io/service-name=backend-svc     # before / after deleting a pod
+backend-svc-gb9th   IPv4          80      10.244.0.36,10.244.0.37   0s
+backend-svc-gb9th   IPv4          80      10.244.0.37,10.244.0.38   1s
+
+# FQDN: one short name, two namespaces, two answers
+$ kubectl -n s11-dns-a exec client -- curl -s http://api
+api answering from namespace s11-dns-a
+$ kubectl -n s11-dns-a exec client -- curl -s http://api.s11-dns-b
+api answering from namespace s11-dns-b
+
+# CoreDNS: a pod with the wrong nameserver vs CoreDNS queried directly
+$ kubectl -n s11-dns-a exec dns-broken -- nslookup -timeout=2 api
+;; connection timed out; no servers could be reached
+$ kubectl -n s11-dns-a exec dns-broken -- nslookup api.s11-dns-a.svc.cluster.local 10.96.0.10
+Name:	api.s11-dns-a.svc.cluster.local
+Address: 10.96.98.48
+```
+
+---
+
 ## What I took away
 
 - **A Service is a stable name plus a list of IPs, and nothing more.** Deleting
@@ -555,6 +590,9 @@ kubectl exec <client> -- nslookup <svc>   # does the name even resolve?
 | 7 | Create a Headless Service | Done — DNS returns 3 pod IPs vs 1 virtual IP, identical EndpointSlices |
 | 8 | Understand cluster DNS and FQDNs | Done — all 4 name forms tested, `ndots:5` trap explained |
 | 9 | Troubleshoot Service problems | Done — wrong-`targetPort` failure built and diagnosed by curl exit code |
+| 10 | Object comparison docs (Deployment/RS, Deployment/DS/STS, RS/Service) | Done — [`object-comparison/README.md`](object-comparison/README.md), each comparison backed by live output |
+| 11 | `fqdn/README.md` | Done — [`fqdn/README.md`](fqdn/README.md), namespace-based DNS proved with two same-named Services |
+| 12 | `coredns/README.md` | Done — [`coredns/README.md`](coredns/README.md), Corefile explained, search walk captured, 2 DNS faults fixed |
 
 ## Raw evidence
 

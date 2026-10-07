@@ -1,0 +1,252 @@
+$ kubectl create namespace s11-compare
+namespace/s11-compare created
+
+########## 1. DEPLOYMENT -> REPLICASET -> POD ##########
+$ kubectl -n s11-compare apply -f manifests/01-deployment.yaml
+deployment.apps/web created
+
+$ kubectl -n s11-compare rollout status deploy/web --timeout=120s
+Waiting for deployment "web" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "web" rollout to finish: 1 of 2 updated replicas are available...
+deployment "web" successfully rolled out
+
+$ kubectl -n s11-compare get deploy,rs,pods -l app=web
+NAME                             DESIRED   CURRENT   READY   AGE
+replicaset.apps/web-68ccc9d8fd   2         2         2       1s
+
+NAME                       READY   STATUS    RESTARTS   AGE
+pod/web-68ccc9d8fd-g27rp   1/1     Running   0          1s
+pod/web-68ccc9d8fd-tmwpr   1/1     Running   0          1s
+
+$ kubectl -n s11-compare get rs -l app=web -o jsonpath='{range .items[*]}ReplicaSet {.metadata.name} is owned by {.metadata.ownerReferences[0].kind}/{.metadata.ownerReferences[0].name}{"\n"}{end}'
+ReplicaSet web-68ccc9d8fd is owned by Deployment/web
+
+$ kubectl -n s11-compare get pods -l app=web -o jsonpath='{range .items[*]}Pod {.metadata.name} is owned by {.metadata.ownerReferences[0].kind}/{.metadata.ownerReferences[0].name}{"\n"}{end}'
+Pod web-68ccc9d8fd-g27rp is owned by ReplicaSet/web-68ccc9d8fd
+Pod web-68ccc9d8fd-tmwpr is owned by ReplicaSet/web-68ccc9d8fd
+
+--- scaling the Deployment changes the ReplicaSet's replicas, not the other way round
+$ kubectl -n s11-compare scale deploy/web --replicas=3
+deployment.apps/web scaled
+
+$ kubectl -n s11-compare rollout status deploy/web --timeout=120s
+Waiting for deployment "web" rollout to finish: 2 of 3 updated replicas are available...
+deployment "web" successfully rolled out
+
+$ kubectl -n s11-compare get rs -l app=web
+NAME             DESIRED   CURRENT   READY   AGE
+web-68ccc9d8fd   3         3         3       2s
+
+--- scaling the ReplicaSet directly is reverted by the Deployment controller
+$ kubectl -n s11-compare scale rs -l app=web --replicas=1
+replicaset.apps/web-68ccc9d8fd scaled
+
+$ kubectl -n s11-compare get rs -l app=web
+NAME             DESIRED   CURRENT   READY   AGE
+web-68ccc9d8fd   3         3         3       5s
+
+--- a rolling update creates a SECOND ReplicaSet; the old one is scaled to 0 and kept for rollback
+$ kubectl -n s11-compare set image deploy/web nginx=nginx:1.27
+deployment.apps/web image updated
+
+$ kubectl -n s11-compare rollout status deploy/web --timeout=180s
+Waiting for deployment "web" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "web" rollout to finish: 1 old replicas are pending termination...
+deployment "web" successfully rolled out
+
+$ kubectl -n s11-compare get rs -l app=web -o wide
+NAME             DESIRED   CURRENT   READY   AGE   CONTAINERS   IMAGES              SELECTOR
+web-6759f89cbb   3         3         3       1s    nginx        nginx:1.27          app=web,pod-template-hash=6759f89cbb
+web-68ccc9d8fd   0         0         0       6s    nginx        nginx:1.27-alpine   app=web,pod-template-hash=68ccc9d8fd
+
+$ kubectl -n s11-compare rollout history deploy/web
+deployment.apps/web 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+
+########## 2. DAEMONSET ##########
+$ kubectl -n s11-compare apply -f manifests/02-daemonset.yaml
+daemonset.apps/node-agent created
+
+$ kubectl -n s11-compare rollout status ds/node-agent --timeout=120s
+Waiting for daemon set "node-agent" rollout to finish: 0 of 1 updated pods are available...
+daemon set "node-agent" successfully rolled out
+
+$ kubectl get nodes
+NAME                      STATUS   ROLES           AGE   VERSION
+hw-legacy-control-plane   Ready    control-plane   23m   v1.37.0
+
+$ kubectl -n s11-compare get ds node-agent
+NAME         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+node-agent   1         1         1       1            1           <none>          1s
+
+$ kubectl -n s11-compare get pods -l app=node-agent -o wide
+NAME               READY   STATUS    RESTARTS   AGE   IP            NODE                      NOMINATED NODE   READINESS GATES
+node-agent-72zpj   1/1     Running   0          1s    10.244.0.25   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n s11-compare logs -l app=node-agent
+agent on hw-legacy-control-plane
+
+$ kubectl -n s11-compare scale ds/node-agent --replicas=3
+Error from server (NotFound): the server could not find the requested resource
+
+########## 3. STATEFULSET ##########
+$ kubectl -n s11-compare apply -f manifests/03-statefulset.yaml
+service/db created
+statefulset.apps/db created
+
+$ kubectl -n s11-compare rollout status sts/db --timeout=180s
+Waiting for 2 pods to be ready...
+Waiting for 1 pods to be ready...
+Waiting for 1 pods to be ready...
+partitioned roll out complete: 2 new pods have been updated...
+
+$ kubectl -n s11-compare get sts,pods,pvc -l app=db
+NAME       READY   STATUS    RESTARTS   AGE
+pod/db-0   1/1     Running   0          8s
+pod/db-1   1/1     Running   0          4s
+
+NAME                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/data-db-0   Bound    pvc-574d697f-491b-4082-85a4-685778abcae7   64Mi       RWO            standard       <unset>                 8s
+persistentvolumeclaim/data-db-1   Bound    pvc-cc303650-ede0-43d6-92b5-5b0bb3d226c8   64Mi       RWO            standard       <unset>                 4s
+
+$ kubectl -n s11-compare get pvc
+NAME        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data-db-0   Bound    pvc-574d697f-491b-4082-85a4-685778abcae7   64Mi       RWO            standard       <unset>                 8s
+data-db-1   Bound    pvc-cc303650-ede0-43d6-92b5-5b0bb3d226c8   64Mi       RWO            standard       <unset>                 4s
+
+$ kubectl -n s11-compare exec db-0 -- cat /data/id
+created by db-0 at 13:30:54
+
+$ kubectl -n s11-compare exec db-1 -- cat /data/id
+created by db-1 at 13:30:58
+
+$ kubectl -n s11-compare get pod db-0 -o jsonpath='{.metadata.name} IP={.status.podIP}{"\n"}'
+db-0 IP=10.244.0.27
+
+$ kubectl -n s11-compare delete pod db-0
+pod "db-0" deleted from s11-compare namespace
+
+$ kubectl -n s11-compare wait --for=condition=Ready pod/db-0 --timeout=120s
+pod/db-0 condition met
+
+$ kubectl -n s11-compare get pod db-0 -o jsonpath='{.metadata.name} IP={.status.podIP}{"\n"}'
+db-0 IP=10.244.0.34
+
+$ kubectl -n s11-compare exec db-0 -- cat /data/id
+created by db-0 at 13:30:54
+
+$ kubectl -n s11-compare run dnsclient --image=nicolaka/netshoot:v0.13 --restart=Never --command -- sleep 3600
+pod/dnsclient created
+
+$ kubectl -n s11-compare wait --for=condition=Ready pod/dnsclient --timeout=120s
+pod/dnsclient condition met
+
+$ kubectl -n s11-compare exec dnsclient -- dig +short db-0.db.s11-compare.svc.cluster.local
+10.244.0.34
+
+$ kubectl -n s11-compare exec dnsclient -- dig +short db-1.db.s11-compare.svc.cluster.local
+10.244.0.29
+
+$ kubectl -n s11-compare exec dnsclient -- dig +short db.s11-compare.svc.cluster.local
+10.244.0.34
+10.244.0.29
+
+$ kubectl -n s11-compare scale sts/db --replicas=1
+statefulset.apps/db scaled
+
+$ kubectl -n s11-compare get pods,pvc -l app=db
+NAME       READY   STATUS        RESTARTS   AGE
+pod/db-0   1/1     Running       0          6s
+pod/db-1   1/1     Terminating   0          41s
+
+NAME                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/data-db-0   Bound    pvc-574d697f-491b-4082-85a4-685778abcae7   64Mi       RWO            standard       <unset>                 45s
+persistentvolumeclaim/data-db-1   Bound    pvc-cc303650-ede0-43d6-92b5-5b0bb3d226c8   64Mi       RWO            standard       <unset>                 41s
+
+$ kubectl -n s11-compare get pvc
+NAME        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+data-db-0   Bound    pvc-574d697f-491b-4082-85a4-685778abcae7   64Mi       RWO            standard       <unset>                 45s
+data-db-1   Bound    pvc-cc303650-ede0-43d6-92b5-5b0bb3d226c8   64Mi       RWO            standard       <unset>                 41s
+
+########## 4. REPLICASET vs SERVICE ##########
+$ kubectl -n s11-compare apply -f manifests/04-replicaset-service.yaml
+replicaset.apps/backend-rs created
+service/backend-svc created
+
+$ kubectl -n s11-compare wait --for=condition=Ready pod -l app=backend --timeout=120s
+pod/backend-rs-6sv4z condition met
+pod/backend-rs-86svq condition met
+
+$ kubectl -n s11-compare get rs,svc backend-rs backend-svc
+NAME                         DESIRED   CURRENT   READY   AGE
+replicaset.apps/backend-rs   2         2         2       0s
+
+NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/backend-svc   ClusterIP   10.96.41.147   <none>        80/TCP    0s
+Error from server (NotFound): replicasets.apps "backend-svc" not found
+Error from server (NotFound): services "backend-rs" not found
+
+$ kubectl -n s11-compare get rs backend-rs
+NAME         DESIRED   CURRENT   READY   AGE
+backend-rs   2         2         2       0s
+
+$ kubectl -n s11-compare get svc backend-svc
+NAME          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+backend-svc   ClusterIP   10.96.41.147   <none>        80/TCP    0s
+
+$ kubectl -n s11-compare get pods -l app=backend -o wide
+NAME               READY   STATUS    RESTARTS   AGE   IP            NODE                      NOMINATED NODE   READINESS GATES
+backend-rs-6sv4z   1/1     Running   0          0s    10.244.0.36   hw-legacy-control-plane   <none>           <none>
+backend-rs-86svq   1/1     Running   0          0s    10.244.0.37   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n s11-compare get endpointslices -l kubernetes.io/service-name=backend-svc
+NAME                ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+backend-svc-gb9th   IPv4          80      10.244.0.36,10.244.0.37   0s
+
+$ kubectl -n s11-compare delete pod backend-rs-6sv4z
+pod "backend-rs-6sv4z" deleted from s11-compare namespace
+
+$ kubectl -n s11-compare wait --for=condition=Ready pod -l app=backend --timeout=120s
+pod/backend-rs-86svq condition met
+pod/backend-rs-vcs2c condition met
+
+$ kubectl -n s11-compare get pods -l app=backend -o wide
+NAME               READY   STATUS    RESTARTS   AGE   IP            NODE                      NOMINATED NODE   READINESS GATES
+backend-rs-86svq   1/1     Running   0          1s    10.244.0.37   hw-legacy-control-plane   <none>           <none>
+backend-rs-vcs2c   1/1     Running   0          1s    10.244.0.38   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n s11-compare get endpointslices -l kubernetes.io/service-name=backend-svc
+NAME                ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+backend-svc-gb9th   IPv4          80      10.244.0.37,10.244.0.38   1s
+
+$ kubectl -n s11-compare exec dnsclient -- sh -c 'for i in 1 2 3; do curl -s -o /dev/null -w "%{http_code} via %{remote_ip}\n" http://backend-svc; done'
+200 via 10.96.41.147
+200 via 10.96.41.147
+200 via 10.96.41.147
+
+$ kubectl -n s11-compare get svc backend-svc -o jsonpath='ClusterIP={.spec.clusterIP}{"\n"}'
+ClusterIP=10.96.41.147
+
+--- the Service has no owner relationship with the ReplicaSet; it only knows a label selector
+$ kubectl -n s11-compare get svc backend-svc -o jsonpath='selector={.spec.selector} ownerReferences={.metadata.ownerReferences}{"\n"}'
+selector={"app":"backend"} ownerReferences=
+
+$ kubectl -n s11-compare get deploy web -o wide
+NAME   READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES       SELECTOR
+web    3/3     3            3           61s   nginx        nginx:1.27   app=web
+
+$ kubectl -n s11-compare get deploy web -o jsonpath='revisionHistoryLimit={.spec.revisionHistoryLimit} strategy={.spec.strategy}{"
+"}'
+revisionHistoryLimit=10 strategy={"rollingUpdate":{"maxSurge":1,"maxUnavailable":0},"type":"RollingUpdate"}
+
