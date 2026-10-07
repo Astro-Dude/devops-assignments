@@ -1,0 +1,82 @@
+$ pytest -v --cov --cov-report=term
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /private/tmp/s16venv/bin/python3.14
+cachedir: .pytest_cache
+rootdir: /private/tmp/wt-s16/DevOps/16-github-actions
+configfile: pytest.ini
+testpaths: tests
+plugins: cov-7.1.0
+collecting ... collected 16 items
+
+tests/test_api.py::test_health PASSED                                    [  6%]
+tests/test_api.py::test_index_lists_operations PASSED                    [ 12%]
+tests/test_api.py::test_operations[add-2-3-5] PASSED                     [ 18%]
+tests/test_api.py::test_operations[subtract-9-4-5] PASSED                [ 25%]
+tests/test_api.py::test_operations[multiply-6-7-42] PASSED               [ 31%]
+tests/test_api.py::test_operations[divide-9-2-4.5] PASSED                [ 37%]
+tests/test_api.py::test_divide_by_zero_returns_400 PASSED                [ 43%]
+tests/test_api.py::test_unknown_operation_returns_404 PASSED             [ 50%]
+tests/test_api.py::test_missing_parameter_returns_400 PASSED             [ 56%]
+tests/test_api.py::test_non_numeric_parameter_returns_400 PASSED         [ 62%]
+tests/test_calculator.py::test_add PASSED                                [ 68%]
+tests/test_calculator.py::test_add_negative PASSED                       [ 75%]
+tests/test_calculator.py::test_subtract PASSED                           [ 81%]
+tests/test_calculator.py::test_multiply PASSED                           [ 87%]
+tests/test_calculator.py::test_divide PASSED                             [ 93%]
+tests/test_calculator.py::test_divide_by_zero PASSED                     [100%]
+
+================================ tests coverage ================================
+_______________ coverage: platform darwin, python 3.14.7-final-0 _______________
+
+Name                Stmts   Miss  Cover
+---------------------------------------
+app/__init__.py         1      0   100%
+app/calculator.py      11      0   100%
+app/main.py            32      0   100%
+---------------------------------------
+TOTAL                  44      0   100%
+============================== 16 passed in 0.10s ==============================
+
+$ ./build.sh
+=================================
+ Building s16-calculator 1.0.0 (local)
+=================================
+
+Build files:
+total 24
+drwxr-xr-x@  5 shauryaverma  wheel   160  7 Oct 18:37 .
+drwxr-xr-x@ 19 shauryaverma  wheel   608  7 Oct 18:37 ..
+-rw-r--r--@  1 shauryaverma  wheel   159  7 Oct 18:37 build-info.txt
+-rw-r--r--@  1 shauryaverma  wheel  1509  7 Oct 18:37 s16-calculator-1.0.0.tar.gz
+-rw-r--r--@  1 shauryaverma  wheel    96  7 Oct 18:37 SHA256SUMS
+
+Application : s16-calculator
+Version     : 1.0.0
+Git SHA     : local
+Built at    : 2026-10-07T13:07:02Z
+Built on    : Astro.local (Darwin)
+Workflow run: local
+Build completed successfully.
+
+$ docker build -t s16-calculator:local --build-arg GIT_SHA=local .   (quiet)
+sha256:3028b212e2f3f724d908e0beb8f10c39c4d74db08249366efa9b1e7a69eb2dfc
+$ docker run -d --name s16-calc -p 9201:8000 s16-calculator:local
+364daf6f6fb102d459a6998815ed737b364935db6091680c9dedca3dea3f28af
+$ docker ps --filter name=s16-calc
+NAMES      IMAGE                  STATUS                    PORTS
+s16-calc   s16-calculator:local   Up 18 seconds (healthy)   0.0.0.0:9201->8000/tcp, [::]:9201->8000/tcp
+$ curl -s -w ' [HTTP %{http_code}]' 'localhost:9201/'
+{"git_sha":"local","hostname":"364daf6f6fb1","operations":["add","divide","multiply","subtract"],"service":"s16-calculator","version":"1.0.0"}
+ [HTTP 200]
+$ curl -s -w ' [HTTP %{http_code}]' 'localhost:9201/health'
+{"status":"ok"}
+ [HTTP 200]
+$ curl -s -w ' [HTTP %{http_code}]' 'localhost:9201/api/add?a=2&b=3'
+{"a":2.0,"b":3.0,"operation":"add","result":5.0}
+ [HTTP 200]
+$ curl -s -w ' [HTTP %{http_code}]' 'localhost:9201/api/divide?a=9&b=0'
+{"error":"Cannot divide by zero"}
+ [HTTP 400]
+$ curl -s -w ' [HTTP %{http_code}]' 'localhost:9201/api/power?a=2&b=3'
+{"error":"unknown operation 'power'"}
+ [HTTP 404]

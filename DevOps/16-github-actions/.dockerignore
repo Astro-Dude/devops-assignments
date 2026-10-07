@@ -1,0 +1,15 @@
+.git
+.github
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+coverage.xml
+htmlcov
+reports
+build
+tests
+evidence
+screenshots
+k8s
+*.md

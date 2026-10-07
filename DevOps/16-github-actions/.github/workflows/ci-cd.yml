@@ -1,0 +1,323 @@
+# Session 16 - complete CI/CD pipeline for the calculator API in DevOps/16-github-actions
+#
+#   CI  (every push / PR) : test (matrix of runners) -> security-check -> build (bundle + Docker image)
+#                           test-report collects the test artifacts from every matrix leg
+#   CD  (push to main / manual run only) : publish image to GHCR -> deploy to a kind cluster -> smoke test
+#
+# NOTE: GitHub only executes workflows stored in the repository-root .github/workflows/ directory.
+#       A copy of this file is kept in DevOps/16-github-actions/.github/workflows/ for reference.
+name: S16 CI/CD - Calculator
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "DevOps/16-github-actions/**"
+      - ".github/workflows/s16-ci-cd.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "DevOps/16-github-actions/**"
+      - ".github/workflows/s16-ci-cd.yml"
+  workflow_dispatch:
+
+# least privilege by default; individual jobs ask for more when they need it
+permissions:
+  contents: read
+
+concurrency:
+  group: s16-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  APP_DIR: DevOps/16-github-actions
+  IMAGE_NAME: ghcr.io/astro-dude/devops-assignments/s16-calculator
+
+defaults:
+  run:
+    shell: bash
+    working-directory: DevOps/16-github-actions
+
+jobs:
+  # ---------------------------------------------------------------- CI ----
+  test:
+    name: "CI: Test (${{ matrix.os }}, py${{ matrix.python-version }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.12", "3.13", "3.14"]
+        include:
+          - os: macos-latest
+            python-version: "3.13"
+          - os: windows-latest
+            python-version: "3.13"
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+
+      - name: Show runner details
+        run: |
+          echo "Runner name : $RUNNER_NAME"
+          echo "Runner OS   : $RUNNER_OS ($RUNNER_ARCH)"
+          echo "Image       : ${ImageOS:-n/a} ${ImageVersion:-}"
+          echo "Workspace   : $GITHUB_WORKSPACE"
+          echo "Triggered by: $GITHUB_EVENT_NAME on $GITHUB_REF by $GITHUB_ACTOR (run $GITHUB_RUN_ID, attempt $GITHUB_RUN_ATTEMPT)"
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: ${{ env.APP_DIR }}/requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python --version
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run unit tests with coverage
+        run: |
+          mkdir -p reports
+          pytest -v \
+            --junitxml=reports/junit.xml \
+            --cov --cov-report=term \
+            --cov-report=xml:reports/coverage.xml \
+            --cov-report=html:reports/htmlcov \
+            --cov-fail-under=90
+
+      - name: Upload test report + coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-report-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: ${{ env.APP_DIR }}/reports/
+          retention-days: 14
+          if-no-files-found: warn
+
+  test-report:
+    name: "CI: Test report (download artifacts)"
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Download every test-report-* artifact
+        uses: actions/download-artifact@v8
+        with:
+          pattern: test-report-*
+          path: all-reports
+
+      - name: Summarise JUnit results into the job summary
+        run: |
+          find all-reports -maxdepth 2 -name '*.xml' | sort
+          python3 - <<'PY' | tee -a "$GITHUB_STEP_SUMMARY"
+          import glob, os, xml.etree.ElementTree as ET
+          print("### Unit test results per runner\n")
+          print("| Runner / Python | Tests | Failures | Errors | Skipped | Line coverage |")
+          print("|---|---|---|---|---|---|")
+          for d in sorted(glob.glob("all-reports/test-report-*")):
+              leg = os.path.basename(d).removeprefix("test-report-")
+              try:
+                  s = ET.parse(f"{d}/junit.xml").getroot()
+                  s = s if s.tag == "testsuite" else s.find("testsuite")
+                  cov = ET.parse(f"{d}/coverage.xml").getroot().get("line-rate")
+                  cov = f"{float(cov) * 100:.1f}%"
+                  print(f"| {leg} | {s.get('tests')} | {s.get('failures')} | {s.get('errors')} | {s.get('skipped')} | {cov} |")
+              except FileNotFoundError:
+                  print(f"| {leg} | (no report) | | | | |")
+          PY
+
+  security-check:
+    name: "CI: Security check + secrets demo"
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+
+      - name: Check for committed sensitive files
+        run: |
+          echo "Checking $PWD for common sensitive files..."
+          if find . -type f \( -name ".env" -o -name "*.pem" -o -name "*.key" -o -name "kubeconfig*" \) | grep .; then
+            echo "::error::Potential sensitive file committed"
+            exit 1
+          fi
+          echo "No common sensitive files found."
+
+      - name: Secrets are masked in logs (GITHUB_TOKEN)
+        env:
+          # GITHUB_TOKEN is created automatically for every run and expires when the job ends
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # a repository secret that has NOT been configured evaluates to an empty string
+          OPTIONAL_API_KEY: ${{ secrets.S16_DEMO_API_KEY }}
+        run: |
+          echo "Printing the secret directly -> $TOKEN"
+          echo "Secret length                -> ${#TOKEN} characters"
+          echo "Using it to call the GitHub API as the workflow:"
+          curl -fsS -H "Authorization: Bearer $TOKEN" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY" | jq '{full_name, visibility, default_branch}'
+          if [ -z "$OPTIONAL_API_KEY" ]; then
+            echo "S16_DEMO_API_KEY is not configured -> skipping optional integration (secrets never fail open)"
+          fi
+
+  build:
+    name: "CI: Build bundle + Docker image"
+    needs: [test, security-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Build release bundle
+        env:
+          GIT_SHA: ${{ github.sha }}
+        run: ./build.sh
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: calculator-build
+          path: ${{ env.APP_DIR }}/build/
+
+      - name: Build Docker image
+        run: |
+          docker build --build-arg GIT_SHA=${{ github.sha }} -t s16-calculator:${{ github.sha }} .
+          docker image ls s16-calculator
+
+      - name: Smoke-test the container
+        run: |
+          docker run -d --name calc -p 8000:8000 s16-calculator:${{ github.sha }}
+          for _ in $(seq 1 20); do curl -fsS localhost:8000/health && break; sleep 1; done
+          echo; curl -fsS "localhost:8000/api/multiply?a=6&b=7"; echo
+          docker logs calc
+          docker rm -f calc
+
+      - name: Save image as artifact
+        run: docker save s16-calculator:${{ github.sha }} | gzip > s16-calculator-image.tar.gz && ls -lh s16-calculator-image.tar.gz
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: docker-image
+          path: ${{ env.APP_DIR }}/s16-calculator-image.tar.gz
+          retention-days: 3
+
+  # ---------------------------------------------------------------- CD ----
+  publish:
+    name: "CD: Publish image to GHCR"
+    needs: build
+    # Continuous Delivery only for main (or a manual run) - never for pull requests
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # needed to push to ghcr.io with GITHUB_TOKEN
+    outputs:
+      image: ${{ steps.push.outputs.image }}
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Download Docker image artifact (built once in CI)
+        uses: actions/download-artifact@v8
+        with:
+          name: docker-image
+
+      - name: Load image
+        run: gunzip -c s16-calculator-image.tar.gz | docker load
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag and push
+        id: push
+        run: |
+          docker tag s16-calculator:${{ github.sha }} "$IMAGE_NAME":${{ github.sha }}
+          docker tag s16-calculator:${{ github.sha }} "$IMAGE_NAME":latest
+          docker push "$IMAGE_NAME":${{ github.sha }}
+          docker push "$IMAGE_NAME":latest
+          echo "image=${IMAGE_NAME}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "Pushed \`$IMAGE_NAME:${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: "CD: Deploy to kind + smoke test"
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read # pull the private-by-default GHCR image
+    environment:
+      name: s16-kind-ephemeral
+    steps:
+      - name: Checkout manifests
+        uses: actions/checkout@v7
+
+      - name: Download build artifact from the CI build job
+        uses: actions/download-artifact@v8
+        with:
+          name: calculator-build
+          path: ${{ env.APP_DIR }}/release
+
+      - name: Show what is being deployed
+        run: |
+          cat release/build-info.txt
+          (cd release && sha256sum -c SHA256SUMS)
+          echo "Image: ${{ needs.publish.outputs.image }}"
+
+      - name: Create kind cluster on the runner
+        uses: helm/kind-action@v1.15.1
+        with:
+          cluster_name: s16-ci
+
+      - name: Create image pull secret from GITHUB_TOKEN
+        run: |
+          kubectl create secret docker-registry ghcr-pull \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy
+        run: |
+          sed "s|IMAGE_PLACEHOLDER|${{ needs.publish.outputs.image }}|" k8s/deployment.yaml | kubectl apply -f -
+          kubectl apply -f k8s/service.yaml
+          kubectl rollout status deployment/s16-calculator --timeout=180s
+          kubectl get deploy,rs,pods,svc -o wide
+
+      - name: Smoke test the deployment
+        run: |
+          kubectl port-forward svc/s16-calculator 8080:80 >/tmp/pf.log 2>&1 &
+          for _ in $(seq 1 20); do curl -fsS localhost:8080/health && break; sleep 1; done
+          echo
+          info=$(curl -fsS localhost:8080/); echo "$info" | jq .
+          test "$(echo "$info" | jq -r .git_sha)" = "${{ github.sha }}"
+          curl -fsS "localhost:8080/api/add?a=2&b=3" | jq -e '.result == 5'
+          code=$(curl -s -o /dev/null -w '%{http_code}' "localhost:8080/api/divide?a=1&b=0")
+          echo "divide by zero -> HTTP $code"; test "$code" = 400
+          {
+            echo "### Deployed to kind"
+            echo '```'
+            kubectl get pods -o wide
+            echo '```'
+            echo "Smoke test passed: running pod reports git_sha \`${{ github.sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Debug on failure
+        if: failure()
+        run: |
+          kubectl get events --sort-by=.lastTimestamp | tail -30
+          kubectl describe pods -l app=s16-calculator
+          kubectl logs -l app=s16-calculator --tail=50 || true
