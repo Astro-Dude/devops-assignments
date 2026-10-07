@@ -261,6 +261,123 @@ COPY --from=nginx:alpine /etc/nginx/nginx.conf /etc/nginx/nginx.conf
 
 ---
 
+## Task 1 (as written) — cloning the course repository's multi-stage Dockerfile
+
+Task 1 starts with *"Clone the repository containing the multi-stage
+Dockerfile"*. The Java app above is my own multi-stage build; this section runs
+the one the course actually ships, in
+[`Nency-Ravaliya/devops-heros`](https://github.com/Nency-Ravaliya/devops-heros)
+under `session6-7-docker/multi-stage-dockerfile/` (a Node.js + Express app).
+Full transcript: [`evidence/course-multistage.txt`](evidence/course-multistage.txt).
+
+```console
+$ git clone https://github.com/Nency-Ravaliya/devops-heros.git
+Cloning into 'devops-heros'...
+
+$ cd devops-heros/session6-7-docker/multi-stage-dockerfile && ls -la
+-rw-r--r--@  1 shauryaverma  wheel  429  7 Oct 18:35 Dockerfile
+-rw-r--r--@  1 shauryaverma  wheel  178  7 Oct 18:35 package.json
+-rw-r--r--@  1 shauryaverma  wheel  258  7 Oct 18:35 server.js
+
+$ cat Dockerfile
+# -------------------------
+# Stage 1: Build
+# -------------------------
+FROM node:24-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+# -------------------------
+# Stage 2: Production
+# -------------------------
+FROM node:24-alpine AS production
+WORKDIR /app
+COPY --from=builder /app/package*.json ./
+RUN npm install --omit=dev
+COPY --from=builder /app/server.js ./
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+### Build — both stages visible in the BuildKit log
+
+```console
+$ docker build -t course-multistage:1.0 .
+#5 [builder 1/5] FROM docker.io/library/node:24-alpine@sha256:ebfe2f90...
+#6 [builder 2/5] WORKDIR /app
+#7 [builder 3/5] COPY package*.json ./
+#8 [builder 4/5] RUN npm install
+#9 [builder 5/5] COPY . .
+#10 [production 3/5] COPY --from=builder /app/package*.json ./
+#11 [production 4/5] RUN npm install --omit=dev
+#12 [production 5/5] COPY --from=builder /app/server.js ./
+#13 naming to docker.io/library/course-multistage:1.0 done
+```
+
+### Run on port 8080, access it, verify with `docker ps`
+
+The app listens on 3000 inside the container, so host port **8080** is mapped
+onto it:
+
+```console
+$ docker run -d --name s07-course-multistage -p 8080:3000 course-multistage:1.0
+dba91fc5ea26ccbd4bc9ca85bd9ad5901b85fb84b1fb0523a2b8b2bfaba48611
+
+$ docker ps --filter name=s07-course-multistage --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+NAMES                   IMAGE                   STATUS         PORTS
+s07-course-multistage   course-multistage:1.0   Up 3 seconds   0.0.0.0:8080->3000/tcp, [::]:8080->3000/tcp
+
+$ docker port s07-course-multistage
+3000/tcp -> 0.0.0.0:8080
+3000/tcp -> [::]:8080
+
+$ curl -s http://localhost:8080
+<h1>Hello World from Docker Multi-Stage Build!</h1>
+
+$ curl -s -o /dev/null -w 'HTTP status: %{http_code}\n' http://localhost:8080
+HTTP status: 200
+
+$ docker logs s07-course-multistage
+
+> docker-hello-world@1.0.0 start
+> node server.js
+
+Server running on port 3000
+```
+
+![Course multi-stage app on port 8080](screenshots/course-multistage-8080.png)
+
+### What the second stage kept
+
+```console
+$ docker exec s07-course-multistage ls -la /app
+drwxr-xr-x   67 root     root          4096 Oct  7 13:05 node_modules
+-rw-r--r--    1 root     root         31046 Oct  7 13:05 package-lock.json
+-rw-r--r--    1 root     root           178 Oct  7 13:05 package.json
+-rw-r--r--    1 root     root           258 Oct  7 13:05 server.js
+
+$ docker history course-multistage:1.0 --format 'table {{.CreatedBy}}\t{{.Size}}' | head -6
+CREATED BY                                      SIZE
+CMD ["npm" "start"]                             0B
+EXPOSE [3000/tcp]                               0B
+COPY /app/server.js ./ # buildkit               12.3kB
+RUN /bin/sh -c npm install --omit=dev # buil…   9.45MB
+COPY /app/package*.json ./ # buildkit           45.1kB
+```
+
+The final image holds only `server.js`, the package files and **production**
+dependencies (`npm install --omit=dev`, 9.45 MB). Everything else in the build
+context (`COPY . .` in stage 1) stays behind in the discarded `builder` stage.
+This Dockerfile uses the same base image for both stages, so it saves less space
+than the JDK to JRE switch in my Java version. What it shows is the other reason
+to use multi-stage builds: the runtime layer contains only what you chose to copy
+into it. The page text matches the required message (the course app adds
+capitals and an exclamation mark).
+
+---
+
 ## Task 3 — Deploying multiple application types with Docker
 
 The task asks for at least **3** different types. **Seven** containers across
@@ -336,6 +453,7 @@ docker compose down      # stop and clean up
 
 | Task | Requirement | Status |
 |---|---|---|
+| 1 | Clone the repository with the multi-stage Dockerfile | Done — `devops-heros` cloned, `session6-7-docker/multi-stage-dockerfile` built and run on 8080 ([section](#task-1-as-written--cloning-the-course-repositorys-multi-stage-dockerfile)) |
 | 1 | Multi-stage Dockerfile | Done — [`app/Dockerfile`](app/Dockerfile), 2 stages |
 | 1 | Build the image | Done — `multistage-app:1.0`, 340 MB |
 | 1 | Run a container from it | Done — `docker run -d -p 8080:8080` |

@@ -1,0 +1,130 @@
+$ git clone https://github.com/Nency-Ravaliya/devops-heros.git
+Cloning into 'devops-heros'...
+
+$ cd devops-heros/session6-7-docker/multi-stage-dockerfile && ls -la
+total 24
+drwxr-xr-x@  5 shauryaverma  wheel  160  7 Oct 18:35 .
+drwxr-xr-x@ 12 shauryaverma  wheel  384  7 Oct 18:35 ..
+-rw-r--r--@  1 shauryaverma  wheel  429  7 Oct 18:35 Dockerfile
+-rw-r--r--@  1 shauryaverma  wheel  178  7 Oct 18:35 package.json
+-rw-r--r--@  1 shauryaverma  wheel  258  7 Oct 18:35 server.js
+
+$ cat Dockerfile
+# -------------------------
+# Stage 1: Build
+# -------------------------
+FROM node:24-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+# -------------------------
+# Stage 2: Production
+# -------------------------
+FROM node:24-alpine AS production
+WORKDIR /app
+COPY --from=builder /app/package*.json ./
+RUN npm install --omit=dev
+COPY --from=builder /app/server.js ./
+EXPOSE 3000
+CMD ["npm", "start"]
+$ cat server.js
+const express = require("express");
+
+const app = express();
+const PORT = 3000;
+
+app.get("/", (req, res) => {
+  res.send("<h1>Hello World from Docker Multi-Stage Build!</h1>");
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});$ docker build -t course-multistage:1.0 .
+#1 [internal] load build definition from Dockerfile
+#1 DONE 0.0s
+#2 [internal] load metadata for docker.io/library/node:24-alpine
+#2 DONE 4.6s
+#3 [internal] load .dockerignore
+#3 DONE 0.0s
+#4 [internal] load build context
+#4 DONE 0.0s
+#5 [builder 1/5] FROM docker.io/library/node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
+#5 DONE 22.9s
+#5 [builder 1/5] FROM docker.io/library/node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
+#5 DONE 22.9s
+#6 [builder 2/5] WORKDIR /app
+#6 DONE 0.6s
+#7 [builder 3/5] COPY package*.json ./
+#7 DONE 0.0s
+#8 [builder 4/5] RUN npm install
+#8 DONE 5.0s
+#9 [builder 5/5] COPY . .
+#9 DONE 0.0s
+#10 [production 3/5] COPY --from=builder /app/package*.json ./
+#10 DONE 0.1s
+#11 [production 4/5] RUN npm install --omit=dev
+#11 DONE 2.5s
+#12 [production 5/5] COPY --from=builder /app/server.js ./
+#12 DONE 0.0s
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 0.2s done
+#13 exporting manifest sha256:44fd0f05713943a7aca984ea5afa0b6255cd0130315fd885c605af87bc279888 done
+#13 exporting config sha256:c43cea28dcdfd84facbbbb016606dd5e9309b5efca72dcae9280ff85e720825c done
+#13 exporting attestation manifest sha256:f25a37ca265a0f251e3a2de78063fb9de6b6078ab539bf9890b6ab3ac7ea1f97 done
+#13 exporting manifest list sha256:6a5cfef30b47c75a3ce2fcef14054fa18f4ce976956507b43ce2a901461d561b done
+#13 naming to docker.io/library/course-multistage:1.0 done
+#13 DONE 0.4s
+
+$ docker run -d --name s07-course-multistage -p 8080:3000 course-multistage:1.0
+dba91fc5ea26ccbd4bc9ca85bd9ad5901b85fb84b1fb0523a2b8b2bfaba48611
+
+$ docker ps --filter name=s07-course-multistage --format 'table {{.Names}}	{{.Image}}	{{.Status}}	{{.Ports}}'
+NAMES                   IMAGE                   STATUS         PORTS
+s07-course-multistage   course-multistage:1.0   Up 3 seconds   0.0.0.0:8080->3000/tcp, [::]:8080->3000/tcp
+
+$ docker port s07-course-multistage
+3000/tcp -> 0.0.0.0:8080
+3000/tcp -> [::]:8080
+
+$ curl -s http://localhost:8080
+<h1>Hello World from Docker Multi-Stage Build!</h1>
+
+$ curl -s -o /dev/null -w 'HTTP status: %{http_code}
+' http://localhost:8080
+HTTP status: 200
+
+$ docker logs s07-course-multistage
+
+> docker-hello-world@1.0.0 start
+> node server.js
+
+Server running on port 3000
+
+$ docker images course-multistage:1.0 --format 'table {{.Repository}}	{{.Tag}}	{{.Size}}'
+REPOSITORY          TAG       SIZE
+course-multistage   1.0       249MB
+
+$ docker history course-multistage:1.0 --format 'table {{.CreatedBy}}	{{.Size}}' | head -8
+CREATED BY                                      SIZE
+CMD ["npm" "start"]                             0B
+EXPOSE [3000/tcp]                               0B
+COPY /app/server.js ./ # buildkit               12.3kB
+RUN /bin/sh -c npm install --omit=dev # buil…   9.45MB
+COPY /app/package*.json ./ # buildkit           45.1kB
+WORKDIR /app                                    8.19kB
+CMD ["node"]                                    0B
+
+$ docker exec s07-course-multistage ls -la /app
+total 52
+drwxr-xr-x    1 root     root          4096 Oct  7 13:05 .
+drwxr-xr-x    1 root     root          4096 Oct  7 13:05 ..
+drwxr-xr-x   67 root     root          4096 Oct  7 13:05 node_modules
+-rw-r--r--    1 root     root         31046 Oct  7 13:05 package-lock.json
+-rw-r--r--    1 root     root           178 Oct  7 13:05 package.json
+-rw-r--r--    1 root     root           258 Oct  7 13:05 server.js
+
+$ docker exec s07-course-multistage node --version
+v24.21.0
