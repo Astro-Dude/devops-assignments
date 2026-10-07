@@ -49,3 +49,24 @@ $ curl -s http://tickethub.localtest.me:28080/api/info
 # data survived the rollout (PostgreSQL on the PVC):
 $ curl -s http://tickethub.localtest.me:28080/api/stats
 {"total":34,"open":32,"in_progress":1,"resolved":1,"closed":0,"urgent_open":4}
+
+# later: two more green runs (37638964461 -> a175793, 37639170118 -> 4350724) bumped gitops/ again; final state:
+$ git log --oneline -4 -- DevOps/21-final-devops-project/gitops
+b8e7556 s21 gitops: deploy tickethub 4350724 to kind [skip ci]
+a11c1a6 s21 gitops: deploy tickethub a175793 to kind [skip ci]
+4e92794 s21 gitops: deploy tickethub 0b9665e to kind [skip ci]
+c5e5eef s21 gitops: deploy tickethub 25d4225 to kind [skip ci]
+
+$ kubectl -n argocd get application tickethub -o jsonpath="{range .status.history[*]}{.id} {.deployedAt} {.revisions[1]}{\"
+\"}{end}"
+0 2026-10-07T14:26:34Z c5e5eef4020f5d373c94fe46e0fccf2071d79e5e
+1 2026-10-07T14:31:11Z 2964e8f4429490fc2cda395a991221470d6bba84
+2 2026-10-07T14:48:08Z a11c1a62b2d94c86ddc90d5df18570e2d84a98ed
+3 2026-10-07T14:53:20Z b8e75567612d4ce910736eacf07000bf2f779629
+
+$ kubectl -n argocd get application tickethub
+NAME        SYNC STATUS   HEALTH STATUS
+tickethub   Synced        Healthy
+
+$ curl -s http://tickethub.localtest.me:28080/api/info
+{"service":"TicketHub API","version":"4350724","environment":"kind-gitops","pod":"tickethub-backend-58cb867ccd-kgg9v","default_team":"L1 Support"}
