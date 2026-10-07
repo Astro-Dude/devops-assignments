@@ -149,21 +149,21 @@ jobs:
           fi
           echo "No common sensitive files found."
 
-      - name: Secrets are masked in logs (GITHUB_TOKEN)
+      - name: Secrets are masked in logs (GITHUB_TOKEN + repository secret)
         env:
           # GITHUB_TOKEN is created automatically for every run and expires when the job ends
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # a repository secret that has NOT been configured evaluates to an empty string
-          OPTIONAL_API_KEY: ${{ secrets.S16_DEMO_API_KEY }}
+          # repository secret created in Settings -> Secrets and variables -> Actions
+          DEMO_SECRET: ${{ secrets.S16_DEMO_SECRET }}
         run: |
           echo "Printing the secret directly -> $TOKEN"
           echo "Secret length                -> ${#TOKEN} characters"
           echo "Using it to call the GitHub API as the workflow:"
           curl -fsS -H "Authorization: Bearer $TOKEN" \
             "https://api.github.com/repos/$GITHUB_REPOSITORY" | jq '{full_name, visibility, default_branch}'
-          if [ -z "$OPTIONAL_API_KEY" ]; then
-            echo "S16_DEMO_API_KEY is not configured -> skipping optional integration (secrets never fail open)"
-          fi
+          if [ -z "$DEMO_SECRET" ]; then echo "::warning::S16_DEMO_SECRET not available (e.g. PR from a fork)"; exit 0; fi
+          echo "Repository secret S16_DEMO_SECRET -> $DEMO_SECRET (length ${#DEMO_SECRET})"
+          echo "sha256 prefix of S16_DEMO_SECRET  -> $(printf '%s' "$DEMO_SECRET" | sha256sum | cut -c1-12)"
 
   build:
     name: "CI: Build bundle + Docker image"
