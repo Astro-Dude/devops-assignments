@@ -4,7 +4,7 @@ Session 12. Separating configuration from images, handling secrets, and putting
 a single HTTP entry point in front of many Services.
 
 Command results are **real captured output** from the three-node kind cluster
-built in [assignment 09](../09-kubernetes-fundamentals/README.md), with the
+built in [session 09](../09-kubernetes-fundamentals/README.md), with the
 ingress-nginx controller installed and kind mapping host ports **8080 → 80** and
 **8443 → 443**.
 
@@ -168,6 +168,77 @@ external store (Vault, AWS/GCP secret managers, External Secrets Operator).
 
 Base64 exists so that **binary** values (certificates, keystores) can live in
 JSON. It was never a security feature.
+
+### Why Secrets must not be committed to Git
+
+Three facts from above together explain the rule:
+
+1. **Base64 is reversible by anyone.** One `base64 -d` recovered the plaintext.
+   A Secret manifest in Git is effectively the password in plain text.
+2. **Git history is permanent.** Deleting the file in a later commit does not
+   remove it from earlier commits, which every clone and fork already has.
+3. **This repository is public.** Bots scan public GitHub for credentials
+   within minutes of a push.
+
+Point 2, demonstrated in a throwaway repo (demo password, nothing real):
+
+```console
+$ kubectl create secret generic db-secret --from-literal=DB_PASSWORD='Pr0d-P@ssw0rd' --dry-run=client -o yaml > db-secret.yaml
+$ git add db-secret.yaml && git commit -q -m 'add db secret' && git log --oneline
+9d97621 add db secret
+
+$ git rm -q db-secret.yaml && git commit -q -m 'oops, remove secret' && git log --oneline
+ef9bc02 oops, remove secret
+9d97621 add db secret
+
+$ ls                       # gone from the working tree...
+
+$ git show HEAD~1:db-secret.yaml | awk '/DB_PASSWORD/{print $2}' | base64 -d; echo   # ...but history still has it
+Pr0d-P@ssw0rd
+```
+
+The safe workflow keeps the values in a file Git ignores. The Secret is
+generated from that file at deploy time and never written to the repo:
+
+```console
+$ printf 'DB_USER=app\nDB_PASSWORD=Pr0d-P@ssw0rd\n' > .env
+$ printf '.env\n*.secret.yaml\n' > .gitignore
+
+$ git check-ignore -v .env
+.gitignore:1:.env	.env
+
+$ git status --short --untracked-files=all          # .env is not even offered for commit
+?? .gitignore
+
+$ kubectl create secret generic db-secret --from-env-file=.env --dry-run=client -o yaml   # render only
+apiVersion: v1
+data:
+  DB_PASSWORD: UHIwZC1QQHNzdzByZA==
+  DB_USER: YXBw
+kind: Secret
+metadata:
+  name: db-secret
+
+$ kubectl -n s12-secrets create secret generic db-secret --from-env-file=.env             # or create directly
+secret/db-secret created
+
+$ git log -p | grep -c 'Pr0d'
+0
+```
+
+`--from-env-file` also does the base64 encoding itself, so the `echo` newline
+trap above cannot happen. In real teams, a Secret that has to live in Git is
+encrypted first: **Sealed Secrets** (only the in-cluster controller can
+decrypt), **SOPS** (encrypted with KMS/age keys), or it is not stored in Git at
+all and **External Secrets Operator** pulls it from Vault / AWS / GCP secret
+managers. Full transcript:
+[`evidence/s12-secrets-and-git.txt`](evidence/s12-secrets-and-git.txt).
+
+> **About [`manifests/02-secret.yaml`](manifests/02-secret.yaml) in this
+> repo:** it is committed on purpose, as the object this lab inspects. The
+> values (`admin` / `S3cr3t-P@ss`) are made-up lab credentials that unlock
+> nothing, and the file says so in its first line. A real credential would
+> never be committed like that.
 
 ---
 
@@ -391,7 +462,7 @@ $ curl -s -H 'Host: shop.local' http://localhost:8080/admin
 **One IP, one port, three different applications** — chosen by URL path. That is
 the entire value proposition against giving each service its own LoadBalancer
 (and its own cloud bill, as measured in
-[assignment 11](../11-kubernetes-services/README.md)).
+[session 11](../11-kubernetes-services/README.md)).
 
 ### The rewrite annotation, and reading a 404 correctly
 
@@ -591,6 +662,65 @@ controller to `frontend-svc` is plain HTTP inside the cluster.
 
 ---
 
+## Task 9 — Ingress vs Ingress Controller
+
+Full write-up: [`ingress-vs-controller/README.md`](ingress-vs-controller/README.md).
+The same Ingress was applied twice. With `ingressClassName: no-such-class`
+nothing claimed it: no `ADDRESS`, a 404, zero lines in the controller's
+`nginx.conf`, and a log line saying it was ignored. With
+`ingressClassName: nginx` the controller reloaded, wrote the `ADDRESS`,
+generated a `server_name "demo.s12.local"` block, and served the app:
+
+```console
+$ kubectl -n s12-ingress get ingress demo        # class no-such-class
+NAME   CLASS           HOSTS            ADDRESS   PORTS   AGE
+demo   no-such-class   demo.s12.local             80      20s
+$ curl -s -o /dev/null -w 'HTTP %{http_code}\n' -H 'Host: demo.s12.local' http://localhost:8080/
+HTTP 404
+
+$ kubectl -n s12-ingress get ingress demo        # class nginx
+NAME   CLASS   HOSTS            ADDRESS     PORTS   AGE
+demo   nginx   demo.s12.local   localhost   80      45s
+$ curl -s -w 'HTTP %{http_code}\n' -H 'Host: demo.s12.local' http://localhost:8080/
+hello from the s12-ingress demo app
+HTTP 200
+```
+
+An **Ingress** is only a routing request stored in the API. The **Ingress
+Controller** is the running proxy that turns those requests into real config
+and carries the traffic. Either one alone gives you a 404.
+
+---
+
+## Task 10 — Troubleshooting (the course's troubleshooting folder)
+
+Full write-up, manifests and before/after output:
+[`troubleshooting/README.md`](troubleshooting/README.md). The course folder's
+incident was rebuilt for real: PostgreSQL 16 with a correctly encoded password,
+and an app whose Secret was made with `echo "mypassword" | base64`.
+
+```console
+# before
+$ kubectl -n s12-trouble logs job/app-db-check
+psql: error: connection to server at "postgres" (10.96.185.134), port 5432 failed: FATAL:  password authentication failed for user "yatri_admin"
+
+# investigation: same password, different lengths
+$ kubectl -n s12-trouble describe secret app-db-secret | grep DB_PASSWORD
+DB_PASSWORD:  11 bytes
+$ kubectl -n s12-trouble get secret app-db-secret -o jsonpath='{.data.DB_PASSWORD}' | base64 -d | xxd
+00000000: 6d79 7061 7373 776f 7264 0a              mypassword.
+
+# after re-encoding with echo -n and re-running the app
+$ kubectl -n s12-trouble logs job/app-db-check
+ login ok as yatri_admin
+```
+
+Root cause: `echo` without `-n` encoded a trailing newline (`0a`), so the app
+sent an 11-character password. Fix: `echo -n` / `--from-literal`, then restart
+the consumer, because env vars are read only at container start.
+
+---
+
 ## What I took away
 
 - **`echo` vs `echo -n` is a real, silent bug.** The `xxd` output made the stray
@@ -619,6 +749,7 @@ controller to `frontend-svc` is plain HTTP inside the cluster.
 | 2 | Understand the base64 newline gotcha | Done — proven byte-for-byte with `xxd` |
 | 2 | Create a Secret | Done — `db-secret`, Opaque, 2 keys |
 | 2 | Show Secrets are encoded, not encrypted | Done — plaintext recovered with one command |
+| 2 | Why Secrets must not be committed to Git | Done — secret recovered from a "deleted" commit; `.gitignore` + `--from-env-file` workflow shown |
 | 3 | Consume config as environment variables | Done — decoded automatically by the kubelet |
 | 3 | Consume config as mounted volumes | Done — incl. the `..data` atomic-update symlink farm |
 | 3 | Secret volume characteristics | Done — confirmed `tmpfs`, never on node disk |
@@ -629,6 +760,8 @@ controller to `frontend-svc` is plain HTTP inside the cluster.
 | 6 | Host-based routing | Done — 2 hostnames, same IP/port, unmatched host → 404 |
 | 7 | TLS termination | Done — `kubernetes.io/tls` Secret, correct cert served |
 | 7 | Verify the certificate | Done — incl. the SNI trap and a clean `--cacert` validation |
+| 8 | Ingress vs Ingress Controller README | Done — [`ingress-vs-controller/README.md`](ingress-vs-controller/README.md); same Ingress unclaimed (no ADDRESS, 404) vs claimed (200, generated `nginx.conf`) |
+| 9 | Troubleshooting (course folder) | Done — [`troubleshooting/README.md`](troubleshooting/README.md); PostgreSQL `password authentication failed` traced to a `0a` byte, fixed, before/after captured |
 
 ## Raw evidence
 

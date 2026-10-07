@@ -1,0 +1,159 @@
+########## THE CONTROLLER THAT IS INSTALLED ##########
+$ kubectl get ingressclass
+NAME    CONTROLLER             PARAMETERS   AGE
+nginx   k8s.io/ingress-nginx   <none>       29m
+
+$ kubectl -n ingress-nginx get deploy,svc,pods
+NAME                                       READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/ingress-nginx-controller   1/1     1            1           29m
+
+NAME                                         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+service/ingress-nginx-controller             LoadBalancer   10.96.197.125   <pending>     80:31106/TCP,443:30235/TCP   29m
+service/ingress-nginx-controller-admission   ClusterIP      10.96.48.93     <none>        443/TCP                      29m
+
+NAME                                            READY   STATUS    RESTARTS   AGE
+pod/ingress-nginx-controller-596f5b6bcf-7p6rm   1/1     Running   0          29m
+
+$ kubectl -n ingress-nginx get deploy ingress-nginx-controller -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}{.spec.template.spec.containers[0].args}{"\n"}' | tr ',' '\n'
+registry.k8s.io/ingress-nginx/controller:v1.15.1@sha256:594ceea76b01c592858f803f9ff4d2cb40542cae2060410b2c95f75907d659e1
+["/nginx-ingress-controller"
+"--election-id=ingress-nginx-leader"
+"--controller-class=k8s.io/ingress-nginx"
+"--ingress-class=nginx"
+"--configmap=$(POD_NAMESPACE)/ingress-nginx-controller"
+"--validating-webhook=:8443"
+"--validating-webhook-certificate=/usr/local/certificates/cert"
+"--validating-webhook-key=/usr/local/certificates/key"
+"--watch-ingress-without-class=true"
+"--publish-status-address=localhost"]
+
+########## 1. APP + SERVICE + INGRESS WITH A CLASS NOBODY OWNS ##########
+$ kubectl apply -f app.yaml
+namespace/s12-ingress created
+deployment.apps/hello created
+service/hello created
+
+$ kubectl -n s12-ingress rollout status deploy/hello --timeout=90s
+Waiting for deployment "hello" rollout to finish: 0 of 1 updated replicas are available...
+deployment "hello" successfully rolled out
+
+$ kubectl apply -f ingress-no-controller.yaml
+ingress.networking.k8s.io/demo created
+
+$ kubectl -n s12-ingress get ingress demo
+NAME   CLASS           HOSTS            ADDRESS   PORTS   AGE
+demo   no-such-class   demo.s12.local             80      20s
+
+$ kubectl -n s12-ingress describe ingress demo | sed -n '/^Ingress Class:/p;/^Rules:/,$p'
+Ingress Class:    no-such-class
+Rules:
+  Host            Path  Backends
+  ----            ----  --------
+  demo.s12.local  
+                  /   hello:80 (10.244.0.80:8080)
+Annotations:      <none>
+Events:           <none>
+
+$ curl -s -o /dev/null -w 'HTTP %{http_code}\n' -H 'Host: demo.s12.local' http://localhost:8080/
+HTTP 404
+
+$ curl -s -H 'Host: demo.s12.local' http://localhost:8080/ | grep -o '<title>.*</title>'
+<title>404 Not Found</title>
+
+$ kubectl -n ingress-nginx exec deploy/ingress-nginx-controller -- grep -c 'demo.s12.local' /etc/nginx/nginx.conf || true
+0
+command terminated with exit code 1
+
+$ kubectl -n ingress-nginx logs deploy/ingress-nginx-controller --since=60s | grep -i 'demo' || echo '(no log lines mention s12-ingress/demo)'
+W1007 13:37:17.412561      11 controller.go:352] ignoring ingress demo in s12-ingress based on annotation : no object matching key "no-such-class" in local store
+I1007 13:37:17.412632      11 main.go:107] "successfully validated configuration, accepting" ingress="s12-ingress/demo"
+I1007 13:37:17.418113      11 store.go:439] "Ignoring ingress because of error while validating ingress class" ingress="s12-ingress/demo" error="no object matching key \"no-such-class\" in local store"
+
+########## 2. SAME INGRESS, CLASS nginx ##########
+$ kubectl apply -f ingress-nginx-class.yaml
+ingress.networking.k8s.io/demo configured
+
+$ kubectl -n s12-ingress get ingress demo
+NAME   CLASS   HOSTS            ADDRESS     PORTS   AGE
+demo   nginx   demo.s12.local   localhost   80      45s
+
+$ kubectl -n s12-ingress describe ingress demo | sed -n '/^Ingress Class:/p;/^Rules:/,$p'
+Ingress Class:    nginx
+Rules:
+  Host            Path  Backends
+  ----            ----  --------
+  demo.s12.local  
+                  /   hello:80 (10.244.0.80:8080)
+Annotations:      <none>
+Events:
+  Type    Reason  Age               From                      Message
+  ----    ------  ----              ----                      -------
+  Normal  Sync    9s (x2 over 25s)  nginx-ingress-controller  Scheduled for sync
+
+$ curl -s -w 'HTTP %{http_code}\n' -H 'Host: demo.s12.local' http://localhost:8080/
+hello from the s12-ingress demo app
+HTTP 200
+
+$ curl -s -w 'HTTP %{http_code}\n' --resolve demo.s12.local:8080:127.0.0.1 http://demo.s12.local:8080/
+hello from the s12-ingress demo app
+HTTP 200
+
+$ curl -s -o /dev/null -w 'HTTP %{http_code}\n' -H 'Host: other.s12.local' http://localhost:8080/
+HTTP 404
+
+$ kubectl -n ingress-nginx exec deploy/ingress-nginx-controller -- grep -n -A2 'server_name demo.s12.local' /etc/nginx/nginx.conf
+command terminated with exit code 1
+
+$ kubectl -n ingress-nginx exec deploy/ingress-nginx-controller -- grep -n 'set $service_name' /etc/nginx/nginx.conf | grep hello
+354:			set $service_name   "hello";
+
+$ kubectl -n ingress-nginx logs deploy/ingress-nginx-controller --since=60s | grep -iE 's12-ingress|demo.s12|reload' | tail -8
+I1007 13:37:37.779434      11 event.go:377] Event(v1.ObjectReference{Kind:"Ingress", Namespace:"s12-ingress", Name:"demo", UID:"6dc74385-9c88-4495-a85a-f62ab192580f", APIVersion:"networking.k8s.io/v1", ResourceVersion:"5605", FieldPath:""}): type: 'Normal' reason: 'Sync' Scheduled for sync
+I1007 13:37:37.780930      11 controller.go:217] "Configuration changes detected, backend reload required"
+I1007 13:37:37.807733      11 controller.go:231] "Backend successfully reloaded"
+I1007 13:37:37.807930      11 event.go:377] Event(v1.ObjectReference{Kind:"Pod", Namespace:"ingress-nginx", Name:"ingress-nginx-controller-596f5b6bcf-7p6rm", UID:"177af760-6d7d-4a40-abb4-3db4eab3d29f", APIVersion:"v1", ResourceVersion:"834", FieldPath:""}): type: 'Normal' reason: 'RELOAD' NGINX reload triggered due to a change in configuration
+I1007 13:37:53.133416      11 status.go:311] "updating Ingress status" namespace="s12-ingress" ingress="demo" currentValue=null newValue=[{"hostname":"localhost"}]
+I1007 13:37:53.138537      11 event.go:377] Event(v1.ObjectReference{Kind:"Ingress", Namespace:"s12-ingress", Name:"demo", UID:"6dc74385-9c88-4495-a85a-f62ab192580f", APIVersion:"networking.k8s.io/v1", ResourceVersion:"5634", FieldPath:""}): type: 'Normal' reason: 'Sync' Scheduled for sync
+192.168.65.1 - - [07/Oct/2026:13:38:03 +0000] "GET / HTTP/1.1" 200 36 "-" "curl/8.7.1" 77 0.006 [s12-ingress-hello-80] [] 10.244.0.80:8080 36 0.006 200 19e7316b955f2247632fce65c9ed2a56
+192.168.65.1 - - [07/Oct/2026:13:38:03 +0000] "GET / HTTP/1.1" 200 36 "-" "curl/8.7.1" 82 0.001 [s12-ingress-hello-80] [] 10.244.0.80:8080 36 0.001 200 81d21eed39fffc936548706c7c058dc6
+
+$ kubectl -n ingress-nginx logs deploy/ingress-nginx-controller --since=30s | grep 'demo.s12.local' | tail -2
+
+$ kubectl -n ingress-nginx get svc ingress-nginx-controller -o jsonpath='{.spec.type} ports={range .spec.ports[*]}{.port}->{.nodePort} {end}{"\n"}'
+LoadBalancer ports=80->31106 443->30235 
+
+$ kubectl -n ingress-nginx exec deploy/ingress-nginx-controller -- grep -n 'demo.s12.local' /etc/nginx/nginx.conf
+335:	## start server demo.s12.local
+337:		server_name "demo.s12.local" ;
+448:	## end server demo.s12.local
+
+$ kubectl -n ingress-nginx exec deploy/ingress-nginx-controller -- sed -n '/## start server demo.s12.local/,/location \/ {/p' /etc/nginx/nginx.conf | grep -vE '^\s*$' | head -20
+	## start server demo.s12.local
+	server {
+		server_name "demo.s12.local" ;
+		http2 on;
+		listen 80  ;
+		listen [::]:80  ;
+		listen 443  ssl;
+		listen [::]:443  ssl;
+		set $proxy_upstream_name "-";
+		ssl_certificate_by_lua_file /etc/nginx/lua/nginx/ngx_conf_certificate.lua;
+		location "/" {
+			set $namespace      "s12-ingress";
+			set $ingress_name   "demo";
+			set $service_name   "hello";
+			set $service_port   "80";
+			set $location_path  "/";
+			set $force_ssl_redirect "false";
+			set $ssl_redirect "true";
+			set $force_no_ssl_redirect "false";
+			set $preserve_trailing_slash "false";
+
+$ kubectl -n ingress-nginx exec deploy/ingress-nginx-controller -- grep -n -B2 -A3 'set $service_name   "hello"' /etc/nginx/nginx.conf
+352-			set $namespace      "s12-ingress";
+353-			set $ingress_name   "demo";
+354:			set $service_name   "hello";
+355-			set $service_port   "80";
+356-			set $location_path  "/";
+357-			
+

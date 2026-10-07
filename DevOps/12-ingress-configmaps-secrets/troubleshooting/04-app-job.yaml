@@ -1,0 +1,27 @@
+# The "application": connects to PostgreSQL with the credentials from app-db-secret.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: app-db-check
+  namespace: s12-trouble
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: app
+          image: postgres:16-alpine
+          command: ["sh", "-c"]
+          args:
+            - echo "connecting as $PGUSER to $PGHOST/$PGDATABASE";
+              psql -c "select 'login ok as ' || current_user as result;"
+          env:
+            - { name: PGHOST, value: postgres }
+            - { name: PGDATABASE, value: yatri }
+            - name: PGUSER
+              valueFrom: { secretKeyRef: { name: app-db-secret, key: DB_USER } }
+            - name: PGPASSWORD
+              valueFrom: { secretKeyRef: { name: app-db-secret, key: DB_PASSWORD } }
+          resources:
+            requests: { cpu: 5m, memory: 16Mi }
