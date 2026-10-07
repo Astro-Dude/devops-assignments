@@ -1,0 +1,70 @@
+==================== INSIDE THE DIND HOST: PORT 80 IS FREE ====================
+$ hostname
+7c0a4a777aec
+$ ip -4 addr show eth0 | grep inet
+    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
+$ netstat -tln | grep ':80 ' || echo 'nothing is listening on port 80 yet'
+nothing is listening on port 80 yet
+
+==================== PULL THE APACHE2 IMAGE ====================
+$ docker pull httpd:2.4
+docker.io/library/httpd:2.4
+
+==================== RUN APACHE ON THE HOST NETWORK (no -p flag) ====================
+$ docker run -d --name apache-host --network host httpd:2.4
+8a04f223465819f5fd8f5b37a836a7591eb74e84be4a788b2bbec1ccea54bdb0
+$ docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Networks}}'
+NAMES         IMAGE       STATUS         PORTS     NETWORKS
+apache-host   httpd:2.4   Up 3 seconds             host
+
+$ docker inspect apache-host --format "NetworkMode={{.HostConfig.NetworkMode}}  Networks={{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}  PortBindings={{.HostConfig.PortBindings}}"
+NetworkMode=host  Networks=host  PortBindings=map[]
+
+$ docker logs apache-host 2>&1 | tail -3
+AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 172.17.0.3. Set the 'ServerName' directive globally to suppress this message
+[Wed Oct 07 13:22:46.918143 2026] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.69 (Unix) configured -- resuming normal operations
+[Wed Oct 07 13:22:46.918323 2026] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+
+==================== APACHE NOW OWNS PORT 80 OF THE HOST ITSELF ====================
+$ netstat -tlnp | grep ':80 '
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      920/httpd
+$ ps -o pid,comm | grep httpd | head -3
+  920 httpd
+  936 httpd
+  937 httpd
+
+==================== ACCESS IT DIRECTLY ON PORT 80 ====================
+$ wget -qO- http://127.0.0.1:80/
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>It works! Apache httpd</title>
+</head>
+<body>
+<p>It works!</p>
+</body>
+</html>
+$ wget -S -qO /dev/null http://127.0.0.1:80/ 2>&1 | head -3
+  HTTP/1.1 200 OK
+  Date: Wed, 07 Oct 2026 13:22:49 GMT
+  Server: Apache/2.4.69 (Unix)
+
+==================== THE CONTAINER SEES THE HOST'S INTERFACES ====================
+$ docker run --rm --network host alpine:3.20 ip -4 addr show eth0 | grep inet
+    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
+$ docker run --rm --network host alpine:3.20 hostname
+7c0a4a777aec
+
+==================== FROM macOS: host port 9097 -> port 80 of the dind host ====================
+$ docker ps --filter name=s08-gap-dind --format "table {{.Names}}	{{.Image}}	{{.Ports}}"
+NAMES          IMAGE         PORTS
+s08-gap-dind   docker:dind   0.0.0.0:9097->80/tcp, [::]:9097->80/tcp
+
+$ curl -s -i http://localhost:9097/ | head -4
+HTTP/1.1 200 OK
+Date: Wed, 07 Oct 2026 13:22:55 GMT
+Server: Apache/2.4.69 (Unix)
+Last-Modified: Fri, 07 Nov 2025 08:23:08 GMT
+
+$ curl -s http://localhost:9097/ | grep -o "It works!" | head -1
+It works!

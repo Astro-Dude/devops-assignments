@@ -1,6 +1,6 @@
 # Docker Networking & Volumes — Homework
 
-All four tasks below were performed on a live Docker engine. Every code block is
+All five tasks below were performed on a live Docker engine. Every code block is
 **real captured output**.
 
 ---
@@ -540,6 +540,121 @@ host. There is no isolation left at all.
 > **On native Linux, `--network host` binds the machine's real ports directly
 > and this caveat does not apply.**
 
+### Apache on port 80 for real — a host whose port 80 is free
+
+The attempt above could not use port 80, because the machine's port 80 belongs
+to another container that I was not going to stop. To still do the exercise as
+written (Apache on the host network, reached **directly on port 80**), I used a
+second Docker host whose port 80 *is* free: a Docker-in-Docker container
+(`docker:dind`). It runs its own Docker engine with its own network namespace,
+so from Apache's point of view it is "the host".
+
+```bash
+# a throwaway Docker host; its port 80 is published to macOS as 9097
+docker run -d --privileged --name s08-gap-dind -p 9097:80 docker:dind
+
+# everything below runs INSIDE that host (docker exec s08-gap-dind ...)
+docker pull httpd:2.4
+docker run -d --name apache-host --network host httpd:2.4     # no -p flag
+```
+
+```console
+==================== INSIDE THE DIND HOST: PORT 80 IS FREE ====================
+$ hostname
+7c0a4a777aec
+$ ip -4 addr show eth0 | grep inet
+    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
+$ netstat -tln | grep ':80 ' || echo 'nothing is listening on port 80 yet'
+nothing is listening on port 80 yet
+
+==================== PULL THE APACHE2 IMAGE ====================
+$ docker pull httpd:2.4
+docker.io/library/httpd:2.4
+
+==================== RUN APACHE ON THE HOST NETWORK (no -p flag) ====================
+$ docker run -d --name apache-host --network host httpd:2.4
+8a04f223465819f5fd8f5b37a836a7591eb74e84be4a788b2bbec1ccea54bdb0
+$ docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}\t{{.Networks}}'
+NAMES         IMAGE       STATUS         PORTS     NETWORKS
+apache-host   httpd:2.4   Up 3 seconds             host
+
+$ docker inspect apache-host --format "NetworkMode={{.HostConfig.NetworkMode}}  Networks={{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}  PortBindings={{.HostConfig.PortBindings}}"
+NetworkMode=host  Networks=host  PortBindings=map[]
+
+$ docker logs apache-host 2>&1 | tail -3
+AH00558: httpd: Could not reliably determine the server's fully qualified domain name, using 172.17.0.3. Set the 'ServerName' directive globally to suppress this message
+[Wed Oct 07 13:22:46.918143 2026] [mpm_event:notice] [pid 1:tid 1] AH00489: Apache/2.4.69 (Unix) configured -- resuming normal operations
+[Wed Oct 07 13:22:46.918323 2026] [core:notice] [pid 1:tid 1] AH00094: Command line: 'httpd -D FOREGROUND'
+
+==================== APACHE NOW OWNS PORT 80 OF THE HOST ITSELF ====================
+$ netstat -tlnp | grep ':80 '
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      920/httpd
+$ ps -o pid,comm | grep httpd | head -3
+  920 httpd
+  936 httpd
+  937 httpd
+
+==================== ACCESS IT DIRECTLY ON PORT 80 ====================
+$ wget -qO- http://127.0.0.1:80/
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>It works! Apache httpd</title>
+</head>
+<body>
+<p>It works!</p>
+</body>
+</html>
+$ wget -S -qO /dev/null http://127.0.0.1:80/ 2>&1 | head -3
+  HTTP/1.1 200 OK
+  Date: Wed, 07 Oct 2026 13:22:49 GMT
+  Server: Apache/2.4.69 (Unix)
+
+==================== THE CONTAINER SEES THE HOST'S INTERFACES ====================
+$ docker run --rm --network host alpine:3.20 ip -4 addr show eth0 | grep inet
+    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
+$ docker run --rm --network host alpine:3.20 hostname
+7c0a4a777aec
+
+==================== FROM macOS: host port 9097 -> port 80 of the dind host ====================
+$ docker ps --filter name=s08-gap-dind --format "table {{.Names}}	{{.Image}}	{{.Ports}}"
+NAMES          IMAGE         PORTS
+s08-gap-dind   docker:dind   0.0.0.0:9097->80/tcp, [::]:9097->80/tcp
+
+$ curl -s -i http://localhost:9097/ | head -4
+HTTP/1.1 200 OK
+Date: Wed, 07 Oct 2026 13:22:55 GMT
+Server: Apache/2.4.69 (Unix)
+Last-Modified: Fri, 07 Nov 2025 08:23:08 GMT
+
+$ curl -s http://localhost:9097/ | grep -o "It works!" | head -1
+It works!
+```
+
+![Apache "It works!" served from the host network on port 80](screenshots/apache-host-port80.png)
+
+What this shows:
+
+- **Port 80 was free before, and Apache owns it after.** `netstat` on the host
+  lists `0.0.0.0:80 … LISTEN 920/httpd`, so the Apache process inside the
+  container is bound to the host's own port 80. No `docker-proxy` and no NAT
+  rule sits in between.
+- **Nothing was published.** `PORTS` is empty, `NETWORKS` is `host`, and
+  `PortBindings=map[]`. There was no `-p` flag because there is no separate
+  container network to translate from.
+- **The container is the host, network-wise.** Apache picked `172.17.0.3` as its
+  own name (`AH00558 … using 172.17.0.3`), which is the host's `eth0` address. A
+  second `--network host` container reports the same IP and the same hostname
+  `7c0a4a777aec`.
+- **`http://127.0.0.1:80/` returns `HTTP/1.1 200 OK … It works!`** on the host
+  itself, which is the "access the Apache website directly on port 80" part of
+  the task. The macOS `curl` and the screenshot come in through `9097`, which is
+  only how this lab host is exposed to the laptop. Inside the host, Apache is on
+  port 80 with no mapping.
+
+Raw transcript: [`evidence/s08-host-network-port80.txt`](evidence/s08-host-network-port80.txt).
+The dind host was deleted afterwards.
+
 ### When to use host networking
 
 **Use it for:** maximum network throughput (no NAT overhead — genuinely
@@ -893,6 +1008,242 @@ A misconfigured firewall here is the classic overlay failure: the cluster forms
 
 ---
 
+## Task 5 — Remaining session exercise: the 3-tier demo with a named volume
+
+The submission asks to "complete any remaining exercises from the session". The
+session 8 folder of the course repo has one demo the tasks above did not cover:
+[`demo/`](https://github.com/Nency-Ravaliya/devops-heros/tree/main/session8-docker-networking-volume/demo),
+a Compose app with an **nginx frontend**, a **Flask backend** and **MySQL**. It
+uses two networks and a **named volume** for the database. It is copied into
+[`session-demo/`](session-demo/). The only changes are the host port
+(`8080` → `9098`) and one `depends_on` line, explained below.
+
+```
+ browser ──:9098──► frontend (nginx) ──/api──► backend (Flask :5000) ──► database (MySQL :3306)
+                    └──── frontend_net ────────┘└──────────── backend_net ───────┘
+                                                                 db_data volume ─► /var/lib/mysql
+```
+
+### First run: the course file failed as-is
+
+```console
+$ docker compose -p s08-gap ps -a --format "table {{.Service}}	{{.Image}}	{{.Status}}"
+SERVICE    IMAGE             STATUS
+backend    s08-gap-backend   Up About a minute
+database   mysql:8.0         Up About a minute
+frontend   nginx:latest      Exited (1) About a minute ago
+
+$ docker compose -p s08-gap logs frontend | tail -3
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/10/07 13:21:58 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/default.conf:13
+nginx: [emerg] host not found in upstream "backend" in /etc/nginx/conf.d/default.conf:13
+
+$ grep -n -A12 "^  frontend:" docker-compose.yml | grep -c depends_on || echo "frontend has no depends_on"
+0
+frontend has no depends_on
+```
+
+`nginx` resolves every `proxy_pass` hostname when it **starts**. Compose started
+`frontend` and `database` together, before `backend` existed, so the name
+`backend` did not resolve yet and nginx refused to start. The file gave
+`backend` a `depends_on: database` but gave `frontend` nothing. The fix is to
+add `depends_on: [backend]` to `frontend` in
+[`session-demo/docker-compose.yml`](session-demo/docker-compose.yml). (The
+other common fix is a `resolver 127.0.0.11` line plus a variable in
+`proxy_pass`, which makes nginx resolve the name per request instead.)
+
+### Fixed: all three tiers working, isolation verified
+
+```console
+==================== FIX APPLIED: frontend now depends_on backend ====================
+$ docker compose -p s08-gap up -d
+ Container s08-gap-database-1 Running 
+ Container s08-gap-backend-1 Running 
+ Container s08-gap-frontend-1 Starting 
+ Container s08-gap-frontend-1 Started 
+
+$ docker compose -p s08-gap ps --format "table {{.Service}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+SERVICE    IMAGE             STATUS              PORTS
+backend    s08-gap-backend   Up About a minute   5000/tcp
+database   mysql:8.0         Up About a minute   3306/tcp, 33060/tcp
+frontend   nginx:latest      Up 4 seconds        0.0.0.0:9098->80/tcp, [::]:9098->80/tcp
+
+==================== NETWORKS AND THE NAMED VOLUME ====================
+$ docker network ls --filter name=s08-gap
+NETWORK ID     NAME                   DRIVER    SCOPE
+e30cdaa30958   s08-gap_backend_net    bridge    local
+37e7224065c5   s08-gap_frontend_net   bridge    local
+
+$ docker network inspect s08-gap_frontend_net --format '{{range .Containers}}{{.Name}} {{end}}'
+s08-gap-frontend-1 s08-gap-backend-1 
+$ docker network inspect s08-gap_backend_net  --format '{{range .Containers}}{{.Name}} {{end}}'
+s08-gap-backend-1 s08-gap-database-1 
+$ docker inspect s08-gap-backend-1 --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}={{$v.IPAddress}} {{end}}'
+s08-gap_backend_net=172.21.0.3 s08-gap_frontend_net=172.20.0.3 
+
+$ docker volume ls --filter name=s08-gap
+DRIVER    VOLUME NAME
+local     s08-gap_db_data
+$ docker inspect s08-gap-database-1 --format '{{range .Mounts}}{{.Type}} {{.Name}} -> {{.Destination}}{{end}}'
+volume s08-gap_db_data -> /var/lib/mysql
+
+==================== FRONTEND -> BACKEND -> DATABASE ====================
+$ curl -s http://localhost:9098/ | grep -E "<title>|<h1>"
+    <title>Docker Network Demo</title>
+    <h1>Docker 3-Tier Application</h1>
+$ curl -s http://localhost:9098/api
+{"backend":"Backend is working!","database":"Hello from MySQL!"}
+$ curl -s http://localhost:9098/api
+{"backend":"Backend is working!","database":"Hello from MySQL!"}
+$ curl -s http://localhost:9098/api
+{"backend":"Backend is working!","database":"Hello from MySQL!"}
+
+$ docker compose -p s08-gap exec database mysql -uroot -proot demo -e 'SELECT * FROM messages'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+id	message
+1	Hello from MySQL!
+2	Hello from MySQL!
+3	Hello from MySQL!
+
+==================== ISOLATION: frontend and database share no network ====================
+$ docker compose -p s08-gap exec frontend getent hosts backend
+172.20.0.3      backend
+exit=0
+$ docker compose -p s08-gap exec frontend getent hosts database
+exit=2
+$ docker compose -p s08-gap exec frontend curl -s -m 3 -o /dev/null telnet://172.21.0.2:3306   # database IP, port 3306
+exit=28
+$ docker compose -p s08-gap exec backend python -c "import socket; socket.create_connection((\"database\",3306),3); print(\"backend -> database:3306 OK\")"
+backend -> database:3306 OK
+```
+
+![3-tier demo: button clicked, JSON from backend and MySQL](screenshots/three-tier-demo.png)
+
+- `backend` is the only container on **both** networks (`172.20.0.3` and
+  `172.21.0.3`). This is the same pattern as Task 1, but here Compose created it.
+- Every `/api` call goes browser → nginx → Flask → MySQL and inserts a row. The
+  three `curl`s produced rows 1–3, and clicking the button in the screenshot
+  produced row 4.
+- `frontend` can resolve `backend` but **not** `database` (`getent` exit 2).
+  Even with the database's raw IP, a TCP connection to `3306` times out
+  (`curl` exit 28), while the backend connects to it without any problem.
+
+### The named volume outlives the containers
+
+```console
+==================== ROWS BEFORE TEARDOWN (4 = 3 curls + 1 browser click) ====================
+$ docker compose -p s08-gap exec database mysql -uroot -proot demo -e 'SELECT COUNT(*) AS rows_before FROM messages'
+rows_before
+4
+
+==================== DOWN WITHOUT -v: containers and networks go, the named volume stays ====================
+$ docker compose -p s08-gap down
+ Container s08-gap-frontend-1 Stopping 
+ Container s08-gap-backend-1 Stopping 
+ Container s08-gap-frontend-1 Stopped 
+ Container s08-gap-frontend-1 Removing 
+ Container s08-gap-frontend-1 Removed 
+ Container s08-gap-backend-1 Stopped 
+ Container s08-gap-backend-1 Removing 
+ Container s08-gap-backend-1 Removed 
+ Container s08-gap-database-1 Stopping 
+ Container s08-gap-database-1 Stopped 
+ Container s08-gap-database-1 Removing 
+ Container s08-gap-database-1 Removed 
+ Network s08-gap_backend_net Removing 
+ Network s08-gap_frontend_net Removing 
+ Network s08-gap_backend_net Removed 
+ Network s08-gap_frontend_net Removed 
+$ docker ps -a --filter name=s08-gap --format "{{.Names}}" | wc -l
+       0
+$ docker volume ls --filter name=s08-gap
+DRIVER    VOLUME NAME
+local     s08-gap_db_data
+
+==================== UP AGAIN FROM NOTHING (also proves the depends_on start order) ====================
+$ docker compose -p s08-gap up -d
+ Network s08-gap_frontend_net Creating 
+ Network s08-gap_backend_net Creating 
+ Network s08-gap_backend_net Creating 
+ Network s08-gap_frontend_net Creating 
+ Network s08-gap_frontend_net Created 
+ Network s08-gap_frontend_net Created 
+ Network s08-gap_backend_net Created 
+ Network s08-gap_backend_net Created 
+ Container s08-gap-database-1 Creating 
+ Container s08-gap-database-1 Created 
+ Container s08-gap-backend-1 Creating 
+ Container s08-gap-backend-1 Created 
+ Container s08-gap-frontend-1 Creating 
+ Container s08-gap-frontend-1 Created 
+ Container s08-gap-database-1 Starting 
+ Container s08-gap-database-1 Started 
+ Container s08-gap-backend-1 Starting 
+ Container s08-gap-backend-1 Started 
+ Container s08-gap-frontend-1 Starting 
+ Container s08-gap-frontend-1 Started 
+$ docker compose -p s08-gap ps --format "table {{.Service}}\t{{.Status}}"
+SERVICE    STATUS
+backend    Up 2 seconds
+database   Up 2 seconds
+frontend   Up 2 seconds
+
+$ docker compose -p s08-gap exec database mysql -uroot -proot demo -e 'SELECT * FROM messages'
+id	message
+1	Hello from MySQL!
+2	Hello from MySQL!
+3	Hello from MySQL!
+4	Hello from MySQL!
+5	Hello from MySQL!
+
+$ curl -s http://localhost:9098/api
+{"backend":"Backend is working!","database":"Hello from MySQL!"}
+$ docker compose -p s08-gap exec database mysql -uroot -proot demo -e 'SELECT COUNT(*) AS rows_after FROM messages'
+rows_after
+6
+
+==================== FULL CLEANUP: down -v also deletes the volume ====================
+$ docker compose -p s08-gap down -v
+ Container s08-gap-frontend-1 Stopping 
+ Container s08-gap-frontend-1 Stopped 
+ Container s08-gap-frontend-1 Removing 
+ Container s08-gap-frontend-1 Removed 
+ Container s08-gap-backend-1 Stopping 
+ Container s08-gap-backend-1 Stopped 
+ Container s08-gap-backend-1 Removing 
+ Container s08-gap-backend-1 Removed 
+ Container s08-gap-database-1 Stopping 
+ Container s08-gap-database-1 Stopped 
+ Container s08-gap-database-1 Removing 
+ Container s08-gap-database-1 Removed 
+ Network s08-gap_frontend_net Removing 
+ Network s08-gap_backend_net Removing 
+ Volume s08-gap_db_data Removing 
+ Volume s08-gap_db_data Removed 
+ Network s08-gap_frontend_net Removed 
+ Network s08-gap_backend_net Removed 
+$ docker volume ls --filter name=s08-gap
+DRIVER    VOLUME NAME
+```
+
+- `docker compose down` removed **all three containers and both networks**,
+  but `s08-gap_db_data` stayed.
+- After `up` recreated everything from scratch, rows **1–4 are still there**.
+  MySQL started on a fresh container but found its data directory already
+  populated in the volume. (Row 5 was written by the readiness check in my
+  script, which polls `/api` until the stack answers. Row 6 is the explicit
+  `curl` after it.)
+- Starting from nothing, the frontend came up cleanly this time
+  (`database → backend → frontend` order in the `Started` lines), which confirms
+  the `depends_on` fix.
+- Only `down -v` deletes the volume. That difference between `down` and
+  `down -v` is the whole point of named volumes, and it is also an easy way to
+  lose a database by accident.
+
+Raw transcript: [`evidence/s08-session-demo.txt`](evidence/s08-session-demo.txt).
+
+---
+
 ## Summary
 
 | Task | Requirement | Status |
@@ -905,7 +1256,7 @@ A misconfigured firewall here is the classic overlay failure: the cluster forms
 | 1 | Check connectivity between containers | Done — 5 tests, incl. raw-IP isolation proof |
 | 2 | Pull the Apache2 image | Done — `httpd:2.4` |
 | 2 | Apache container on the host network | Done — `--network host`, NETWORKS=`host` |
-| 2 | Access the Apache website on port 80 | Attempted on 80 (port occupied — error captured); succeeded on 9097 with full host-network evidence |
+| 2 | Access the Apache website on port 80 | Done — on this machine port 80 is taken (error captured), so repeated on a Docker-in-Docker host: Apache bound `0.0.0.0:80` directly, `HTTP 200` on port 80, screenshot |
 | 3 | Create a local folder | Done — `bind-mount-demo/` |
 | 3 | `index.html` containing "Hello students" | Done |
 | 3 | Bind mount it into an Nginx container | Done — `docker inspect` confirms `Type: bind` |
@@ -915,3 +1266,4 @@ A misconfigured firewall here is the classic overlay failure: the cluster forms
 | 4 | Research overlay networks | Done |
 | 4 | Understand their use cases | Done |
 | 4 | Understand how they work across hosts | Done — VXLAN, control plane, ports, MTU |
+| 5 | Remaining session exercise (course 3-tier demo) | Done — nginx + Flask + MySQL on 2 networks; start-order bug found and fixed; isolation verified; named volume survived `down`/`up` |

@@ -1,0 +1,170 @@
+########## FIRST 'docker compose -p s08-gap up -d --build' WITH THE COURSE FILE AS-IS ##########
+$ docker compose -p s08-gap ps -a --format "table {{.Service}}	{{.Image}}	{{.Status}}"
+SERVICE    IMAGE             STATUS
+backend    s08-gap-backend   Up About a minute
+database   mysql:8.0         Up About a minute
+frontend   nginx:latest      Exited (1) About a minute ago
+
+$ docker compose -p s08-gap logs frontend | tail -3
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/10/07 13:21:58 [emerg] 1#1: host not found in upstream "backend" in /etc/nginx/conf.d/default.conf:13
+nginx: [emerg] host not found in upstream "backend" in /etc/nginx/conf.d/default.conf:13
+
+$ grep -n -A12 "^  frontend:" docker-compose.yml | grep -c depends_on || echo "frontend has no depends_on"
+0
+frontend has no depends_on
+
+==================== FIX APPLIED: frontend now depends_on backend ====================
+$ docker compose -p s08-gap up -d
+ Container s08-gap-database-1 Running 
+ Container s08-gap-backend-1 Running 
+ Container s08-gap-frontend-1 Starting 
+ Container s08-gap-frontend-1 Started 
+
+$ docker compose -p s08-gap ps --format "table {{.Service}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+SERVICE    IMAGE             STATUS              PORTS
+backend    s08-gap-backend   Up About a minute   5000/tcp
+database   mysql:8.0         Up About a minute   3306/tcp, 33060/tcp
+frontend   nginx:latest      Up 4 seconds        0.0.0.0:9098->80/tcp, [::]:9098->80/tcp
+
+==================== NETWORKS AND THE NAMED VOLUME ====================
+$ docker network ls --filter name=s08-gap
+NETWORK ID     NAME                   DRIVER    SCOPE
+e30cdaa30958   s08-gap_backend_net    bridge    local
+37e7224065c5   s08-gap_frontend_net   bridge    local
+
+$ docker network inspect s08-gap_frontend_net --format '{{range .Containers}}{{.Name}} {{end}}'
+s08-gap-frontend-1 s08-gap-backend-1 
+$ docker network inspect s08-gap_backend_net  --format '{{range .Containers}}{{.Name}} {{end}}'
+s08-gap-backend-1 s08-gap-database-1 
+$ docker inspect s08-gap-backend-1 --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}={{$v.IPAddress}} {{end}}'
+s08-gap_backend_net=172.21.0.3 s08-gap_frontend_net=172.20.0.3 
+
+$ docker volume ls --filter name=s08-gap
+DRIVER    VOLUME NAME
+local     s08-gap_db_data
+$ docker inspect s08-gap-database-1 --format '{{range .Mounts}}{{.Type}} {{.Name}} -> {{.Destination}}{{end}}'
+volume s08-gap_db_data -> /var/lib/mysql
+
+==================== FRONTEND -> BACKEND -> DATABASE ====================
+$ curl -s http://localhost:9098/ | grep -E "<title>|<h1>"
+    <title>Docker Network Demo</title>
+    <h1>Docker 3-Tier Application</h1>
+$ curl -s http://localhost:9098/api
+{"backend":"Backend is working!","database":"Hello from MySQL!"}
+$ curl -s http://localhost:9098/api
+{"backend":"Backend is working!","database":"Hello from MySQL!"}
+$ curl -s http://localhost:9098/api
+{"backend":"Backend is working!","database":"Hello from MySQL!"}
+
+$ docker compose -p s08-gap exec database mysql -uroot -proot demo -e 'SELECT * FROM messages'
+mysql: [Warning] Using a password on the command line interface can be insecure.
+id	message
+1	Hello from MySQL!
+2	Hello from MySQL!
+3	Hello from MySQL!
+
+==================== ISOLATION: frontend and database share no network ====================
+$ docker compose -p s08-gap exec frontend getent hosts backend
+172.20.0.3      backend
+exit=0
+$ docker compose -p s08-gap exec frontend getent hosts database
+exit=2
+$ docker compose -p s08-gap exec frontend curl -s -m 3 -o /dev/null telnet://172.21.0.2:3306   # database IP, port 3306
+exit=28
+$ docker compose -p s08-gap exec backend python -c "import socket; socket.create_connection((\"database\",3306),3); print(\"backend -> database:3306 OK\")"
+backend -> database:3306 OK
+
+==================== ROWS BEFORE TEARDOWN (4 = 3 curls + 1 browser click) ====================
+$ docker compose -p s08-gap exec database mysql -uroot -proot demo -e 'SELECT COUNT(*) AS rows_before FROM messages'
+rows_before
+4
+
+==================== DOWN WITHOUT -v: containers and networks go, the named volume stays ====================
+$ docker compose -p s08-gap down
+ Container s08-gap-frontend-1 Stopping 
+ Container s08-gap-backend-1 Stopping 
+ Container s08-gap-frontend-1 Stopped 
+ Container s08-gap-frontend-1 Removing 
+ Container s08-gap-frontend-1 Removed 
+ Container s08-gap-backend-1 Stopped 
+ Container s08-gap-backend-1 Removing 
+ Container s08-gap-backend-1 Removed 
+ Container s08-gap-database-1 Stopping 
+ Container s08-gap-database-1 Stopped 
+ Container s08-gap-database-1 Removing 
+ Container s08-gap-database-1 Removed 
+ Network s08-gap_backend_net Removing 
+ Network s08-gap_frontend_net Removing 
+ Network s08-gap_backend_net Removed 
+ Network s08-gap_frontend_net Removed 
+$ docker ps -a --filter name=s08-gap --format "{{.Names}}" | wc -l
+       0
+$ docker volume ls --filter name=s08-gap
+DRIVER    VOLUME NAME
+local     s08-gap_db_data
+
+==================== UP AGAIN FROM NOTHING (also proves the depends_on start order) ====================
+$ docker compose -p s08-gap up -d
+ Network s08-gap_frontend_net Creating 
+ Network s08-gap_backend_net Creating 
+ Network s08-gap_backend_net Creating 
+ Network s08-gap_frontend_net Creating 
+ Network s08-gap_frontend_net Created 
+ Network s08-gap_frontend_net Created 
+ Network s08-gap_backend_net Created 
+ Network s08-gap_backend_net Created 
+ Container s08-gap-database-1 Creating 
+ Container s08-gap-database-1 Created 
+ Container s08-gap-backend-1 Creating 
+ Container s08-gap-backend-1 Created 
+ Container s08-gap-frontend-1 Creating 
+ Container s08-gap-frontend-1 Created 
+ Container s08-gap-database-1 Starting 
+ Container s08-gap-database-1 Started 
+ Container s08-gap-backend-1 Starting 
+ Container s08-gap-backend-1 Started 
+ Container s08-gap-frontend-1 Starting 
+ Container s08-gap-frontend-1 Started 
+$ docker compose -p s08-gap ps --format "table {{.Service}}\t{{.Status}}"
+SERVICE    STATUS
+backend    Up 2 seconds
+database   Up 2 seconds
+frontend   Up 2 seconds
+
+$ docker compose -p s08-gap exec database mysql -uroot -proot demo -e 'SELECT * FROM messages'
+id	message
+1	Hello from MySQL!
+2	Hello from MySQL!
+3	Hello from MySQL!
+4	Hello from MySQL!
+5	Hello from MySQL!
+
+$ curl -s http://localhost:9098/api
+{"backend":"Backend is working!","database":"Hello from MySQL!"}
+$ docker compose -p s08-gap exec database mysql -uroot -proot demo -e 'SELECT COUNT(*) AS rows_after FROM messages'
+rows_after
+6
+
+==================== FULL CLEANUP: down -v also deletes the volume ====================
+$ docker compose -p s08-gap down -v
+ Container s08-gap-frontend-1 Stopping 
+ Container s08-gap-frontend-1 Stopped 
+ Container s08-gap-frontend-1 Removing 
+ Container s08-gap-frontend-1 Removed 
+ Container s08-gap-backend-1 Stopping 
+ Container s08-gap-backend-1 Stopped 
+ Container s08-gap-backend-1 Removing 
+ Container s08-gap-backend-1 Removed 
+ Container s08-gap-database-1 Stopping 
+ Container s08-gap-database-1 Stopped 
+ Container s08-gap-database-1 Removing 
+ Container s08-gap-database-1 Removed 
+ Network s08-gap_frontend_net Removing 
+ Network s08-gap_backend_net Removing 
+ Volume s08-gap_db_data Removing 
+ Volume s08-gap_db_data Removed 
+ Network s08-gap_frontend_net Removed 
+ Network s08-gap_backend_net Removed 
+$ docker volume ls --filter name=s08-gap
+DRIVER    VOLUME NAME
