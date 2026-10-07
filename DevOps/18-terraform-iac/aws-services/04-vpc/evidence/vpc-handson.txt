@@ -1,0 +1,164 @@
+# VPC
+$ aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications ResourceType=vpc,Tags=[{Key=Name,Value=s18-vpc}] --query Vpc.VpcId --output text
+vpc-3063ec3332b392c96
+
+# Subnets (two public, two private, in two AZs)
+$ aws ec2 create-subnet --vpc-id vpc-3063ec3332b392c96 --cidr-block 10.0.1.0/24 --availability-zone ap-south-1a --tag-specifications ResourceType=subnet,Tags=[{Key=Name,Value=public-a}] --query Subnet.SubnetId --output text
+subnet-74faecc42a1671314
+
+$ aws ec2 create-subnet --vpc-id vpc-3063ec3332b392c96 --cidr-block 10.0.2.0/24 --availability-zone ap-south-1b --tag-specifications ResourceType=subnet,Tags=[{Key=Name,Value=public-b}] --query Subnet.SubnetId --output text
+subnet-09ee94ea805516ede
+
+$ aws ec2 create-subnet --vpc-id vpc-3063ec3332b392c96 --cidr-block 10.0.11.0/24 --availability-zone ap-south-1a --tag-specifications ResourceType=subnet,Tags=[{Key=Name,Value=private-a}] --query Subnet.SubnetId --output text
+subnet-b625d2292bd23505a
+
+$ aws ec2 create-subnet --vpc-id vpc-3063ec3332b392c96 --cidr-block 10.0.12.0/24 --availability-zone ap-south-1b --tag-specifications ResourceType=subnet,Tags=[{Key=Name,Value=private-b}] --query Subnet.SubnetId --output text
+subnet-c9741e805f1b8061e
+
+$ aws ec2 modify-subnet-attribute --subnet-id subnet-74faecc42a1671314 --map-public-ip-on-launch
+
+$ aws ec2 modify-subnet-attribute --subnet-id subnet-09ee94ea805516ede --map-public-ip-on-launch
+
+# a subnet that is not inside the VPC CIDR is rejected
+$ aws ec2 create-subnet --vpc-id vpc-3063ec3332b392c96 --cidr-block 10.1.0.0/24
+
+aws: [ERROR]: An error occurred (InvalidSubnet.Range) when calling the CreateSubnet operation: The CIDR '10.1.0.0/24' is invalid.
+[exit code: 254]
+
+# Internet Gateway
+$ aws ec2 create-internet-gateway --query InternetGateway.InternetGatewayId --output text
+igw-a92adf35cb92b8c3d
+
+$ aws ec2 attach-internet-gateway --internet-gateway-id igw-a92adf35cb92b8c3d --vpc-id vpc-3063ec3332b392c96
+
+# Public route table: 0.0.0.0/0 -> IGW
+$ aws ec2 create-route-table --vpc-id vpc-3063ec3332b392c96 --query RouteTable.RouteTableId --output text
+rtb-ff2c1baffe8ee701a
+
+$ aws ec2 create-route --route-table-id rtb-ff2c1baffe8ee701a --destination-cidr-block 0.0.0.0/0 --gateway-id igw-a92adf35cb92b8c3d
+{
+    "Return": true
+}
+
+$ aws ec2 associate-route-table --route-table-id rtb-ff2c1baffe8ee701a --subnet-id subnet-74faecc42a1671314 --query AssociationState.State
+"associated"
+
+$ aws ec2 associate-route-table --route-table-id rtb-ff2c1baffe8ee701a --subnet-id subnet-09ee94ea805516ede --query AssociationState.State
+"associated"
+
+# NAT Gateway (needs an Elastic IP, lives in a PUBLIC subnet)
+$ aws ec2 allocate-address --domain vpc --query AllocationId --output text
+eipalloc-4ac851e37c8c7e6f3
+
+$ aws ec2 create-nat-gateway --subnet-id subnet-74faecc42a1671314 --allocation-id eipalloc-4ac851e37c8c7e6f3 --query NatGateway.NatGatewayId --output text
+nat-761fbaee539b0385c
+
+# Private route table: 0.0.0.0/0 -> NAT
+$ aws ec2 create-route-table --vpc-id vpc-3063ec3332b392c96 --query RouteTable.RouteTableId --output text
+rtb-3e483b10daa5c4e5e
+
+$ aws ec2 create-route --route-table-id rtb-3e483b10daa5c4e5e --destination-cidr-block 0.0.0.0/0 --nat-gateway-id nat-761fbaee539b0385c
+{
+    "Return": true
+}
+
+$ aws ec2 associate-route-table --route-table-id rtb-3e483b10daa5c4e5e --subnet-id subnet-b625d2292bd23505a --query AssociationState.State
+"associated"
+
+$ aws ec2 associate-route-table --route-table-id rtb-3e483b10daa5c4e5e --subnet-id subnet-c9741e805f1b8061e --query AssociationState.State
+"associated"
+
+$ aws ec2 describe-route-tables --route-table-ids rtb-ff2c1baffe8ee701a rtb-3e483b10daa5c4e5e --query RouteTables[].{RouteTable:RouteTableId,Routes:Routes[].[DestinationCidrBlock,GatewayId||NatGatewayId],Subnets:Associations[].SubnetId}
+[
+    {
+        "RouteTable": "rtb-ff2c1baffe8ee701a",
+        "Routes": [
+            [
+                "10.0.0.0/16",
+                "local"
+            ],
+            [
+                "0.0.0.0/0",
+                "igw-a92adf35cb92b8c3d"
+            ]
+        ],
+        "Subnets": [
+            "subnet-74faecc42a1671314",
+            "subnet-09ee94ea805516ede"
+        ]
+    },
+    {
+        "RouteTable": "rtb-3e483b10daa5c4e5e",
+        "Routes": [
+            [
+                "10.0.0.0/16",
+                "local"
+            ],
+            [
+                "0.0.0.0/0",
+                "nat-761fbaee539b0385c"
+            ]
+        ],
+        "Subnets": [
+            "subnet-b625d2292bd23505a",
+            "subnet-c9741e805f1b8061e"
+        ]
+    }
+]
+
+$ aws ec2 describe-subnets --filters Name=vpc-id,Values=vpc-3063ec3332b392c96 --query sort_by(Subnets,&CidrBlock)[].[Tags[?Key==`Name`]|[0].Value,CidrBlock,AvailabilityZone,MapPublicIpOnLaunch,AvailableIpAddressCount] --output table
+--------------------------------------------------------------
+|                       DescribeSubnets                      |
++-----------+----------------+---------------+--------+------+
+|  public-a |  10.0.1.0/24   |  ap-south-1a  |  True  |  250 |
+|  private-a|  10.0.11.0/24  |  ap-south-1a  |  False |  251 |
+|  private-b|  10.0.12.0/24  |  ap-south-1b  |  False |  251 |
+|  public-b |  10.0.2.0/24   |  ap-south-1b  |  True  |  251 |
++-----------+----------------+---------------+--------+------+
+
+# Security group (stateful): web tier allows 443 from anywhere; db tier allows 5432 only from the web SG
+$ aws ec2 create-security-group --vpc-id vpc-3063ec3332b392c96 --group-name web-sg --description web tier --query GroupId --output text
+sg-66eff1d853a7a3a15
+
+$ aws ec2 create-security-group --vpc-id vpc-3063ec3332b392c96 --group-name db-sg --description db tier --query GroupId --output text
+sg-1d810a9ee881adac8
+
+$ aws ec2 authorize-security-group-ingress --group-id sg-66eff1d853a7a3a15 --protocol tcp --port 443 --cidr 0.0.0.0/0 --query Return
+true
+
+$ aws ec2 authorize-security-group-ingress --group-id sg-1d810a9ee881adac8 --protocol tcp --port 5432 --source-group sg-66eff1d853a7a3a15 --query Return
+true
+
+$ aws ec2 describe-security-groups --group-ids sg-1d810a9ee881adac8 --query SecurityGroups[0].IpPermissions[].{Port:FromPort,FromSG:UserIdGroupPairs[0].GroupId}
+[
+    {
+        "Port": 5432,
+        "FromSG": "sg-66eff1d853a7a3a15"
+    }
+]
+
+# Network ACL (stateless): rules are numbered and evaluated lowest-first; return traffic needs its own rule
+$ aws ec2 create-network-acl --vpc-id vpc-3063ec3332b392c96 --query NetworkAcl.NetworkAclId --output text
+acl-f2b3ebab3f72ec8fa
+
+$ aws ec2 create-network-acl-entry --network-acl-id acl-f2b3ebab3f72ec8fa --ingress --rule-number 100 --protocol tcp --port-range From=443,To=443 --cidr-block 0.0.0.0/0 --rule-action allow
+
+$ aws ec2 create-network-acl-entry --network-acl-id acl-f2b3ebab3f72ec8fa --ingress --rule-number 90 --protocol tcp --port-range From=443,To=443 --cidr-block 198.51.100.0/24 --rule-action deny
+
+$ aws ec2 create-network-acl-entry --network-acl-id acl-f2b3ebab3f72ec8fa --egress --rule-number 100 --protocol tcp --port-range From=1024,To=65535 --cidr-block 0.0.0.0/0 --rule-action allow
+
+$ aws ec2 describe-network-acls --network-acl-ids acl-f2b3ebab3f72ec8fa --query NetworkAcls[0].Entries[].[Egress,RuleNumber,Protocol,PortRange.From,PortRange.To,CidrBlock,RuleAction] --output table
+--------------------------------------------------------------------
+|                        DescribeNetworkAcls                       |
++-------+------+----+-------+--------+-------------------+---------+
+|  False|  100 |  6 |  443  |  443   |  0.0.0.0/0        |  allow  |
+|  False|  90  |  6 |  443  |  443   |  198.51.100.0/24  |  deny   |
+|  True |  100 |  6 |  1024 |  65535 |  0.0.0.0/0        |  allow  |
++-------+------+----+-------+--------+-------------------+---------+
+
+# cleanup (reverse order)
+$ aws ec2 delete-vpc --vpc-id vpc-3063ec3332b392c96
+
+$ aws ec2 describe-vpcs --filters Name=tag:Name,Values=s18-vpc --query Vpcs
+[]
+

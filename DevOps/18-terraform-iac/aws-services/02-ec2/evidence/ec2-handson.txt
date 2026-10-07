@@ -1,0 +1,139 @@
+# AMI: find the latest Amazon Linux 2023 x86_64 image (the emulator ships a catalogue of real AMI IDs)
+$ aws ec2 describe-images --owners amazon --filters Name=name,Values=al2023-ami-2023*-x86_64 --query sort_by(Images,&CreationDate)[-1].{ImageId:ImageId,Name:Name,Arch:Architecture,RootDevice:RootDeviceType}
+{
+    "ImageId": "ami-00d2dbb426772b03a",
+    "Name": "al2023-ami-2023.12.20260727.0-kernel-6.18-x86_64",
+    "Arch": "x86_64",
+    "RootDevice": "ebs"
+}
+
+# Instance types: compare a burstable, a compute-optimised and a memory-optimised type
+$ aws ec2 describe-instance-types --instance-types t3.micro c6i.large r6i.large --query InstanceTypes[].[InstanceType,VCpuInfo.DefaultVCpus,MemoryInfo.SizeInMiB,BurstablePerformanceSupported] --output table
+--------------------------------------
+|        DescribeInstanceTypes       |
++-----------+----+---------+---------+
+|  c6i.large|  2 |  4096   |  False  |
+|  r6i.large|  2 |  16384  |  False  |
+|  t3.micro |  2 |  1024   |  True   |
++-----------+----+---------+---------+
+
+# Key pair: only the fingerprint is printed; the private key would be shown ONCE and must be saved by you
+$ aws ec2 create-key-pair --key-name s18-demo-key --key-type ed25519 --query {KeyName:KeyName,Fingerprint:KeyFingerprint,KeyPairId:KeyPairId}
+{
+    "KeyName": "s18-demo-key",
+    "Fingerprint": "93:54:ee:45:f9:6e:3b:c4:8f:ed:21:23:cd:ba:5b:22:9a:15:ac:f4:ee:8b:09:ac:b6:48:d3:10:f1:92:23:77",
+    "KeyPairId": "key-3d3a629499834d31d"
+}
+
+# Security group: allow SSH only from one IP and HTTP from anywhere
+$ aws ec2 create-security-group --group-name s18-web-sg --description "web server SG" --vpc-id vpc-0753771c9cec6919c --query GroupId --output text
+sg-c45ffdbfec1bfd34c
+
+$ aws ec2 authorize-security-group-ingress --group-id sg-c45ffdbfec1bfd34c --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=203.0.113.10/32,Description=admin-laptop}] IpProtocol=tcp,FromPort=80,ToPort=80,IpRanges=[{CidrIp=0.0.0.0/0,Description=http}] --query Return
+true
+
+$ aws ec2 describe-security-group-rules --filters Name=group-id,Values=sg-c45ffdbfec1bfd34c --query SecurityGroupRules[].[IsEgress,IpProtocol,FromPort,ToPort,CidrIpv4,Description] --output table
+-----------------------------------------------------------------
+|                  DescribeSecurityGroupRules                   |
++-------+------+-----+-----+-------------------+----------------+
+|  True |  -1  |  -1 |  -1 |  0.0.0.0/0        |  None          |
+|  False|  tcp |  22 |  22 |  203.0.113.10/32  |  admin-laptop  |
+|  False|  tcp |  80 |  80 |  0.0.0.0/0        |  http          |
++-------+------+-----+-----+-------------------+----------------+
+
+# Launch an instance (AMI + type + key + SG + 20 GiB gp3 root EBS volume)
+$ aws ec2 run-instances --image-id ami-00d2dbb426772b03a --instance-type t3.micro --key-name s18-demo-key --security-group-ids sg-c45ffdbfec1bfd34c --block-device-mappings DeviceName=/dev/xvda,Ebs={VolumeSize=20,VolumeType=gp3,DeleteOnTermination=true} --tag-specifications ResourceType=instance,Tags=[{Key=Name,Value=s18-web-1}] --query Instances[0].{InstanceId:InstanceId,State:State.Name,Type:InstanceType,PrivateIp:PrivateIpAddress,Ami:ImageId}
+{
+    "InstanceId": "i-375f4ae752b18b194",
+    "State": "pending",
+    "Type": "t3.micro",
+    "PrivateIp": "10.137.161.174",
+    "Ami": "ami-00d2dbb426772b03a"
+}
+
+# Public vs private IP of the instance
+$ aws ec2 describe-instances --instance-ids i-375f4ae752b18b194 --query Reservations[0].Instances[0].{PrivateIp:PrivateIpAddress,PrivateDns:PrivateDnsName,PublicIp:PublicIpAddress,PublicDns:PublicDnsName,Subnet:SubnetId}
+{
+    "PrivateIp": "10.137.161.174",
+    "PrivateDns": "ip-10-137-161-174.ap-south-1.compute.internal",
+    "PublicIp": "54.214.9.176",
+    "PublicDns": "ec2-54-214-9-176.ap-south-1.compute.amazonaws.com",
+    "Subnet": "subnet-b7902bf06bf36f411"
+}
+
+# EBS: the root volume created from the block-device mapping
+$ aws ec2 describe-volumes --filters Name=attachment.instance-id,Values=i-375f4ae752b18b194 --query Volumes[].[VolumeId,Size,VolumeType,Attachments[0].Device,State] --output table
+---------------------------------------------------------------
+|                       DescribeVolumes                       |
++------------------------+-----+------+------------+----------+
+|  vol-821b27b52b3a60cca |  20 |  gp3 |  /dev/xvda |  in-use  |
++------------------------+-----+------+------------+----------+
+
+# EBS: an extra 10 GiB data volume, attached as /dev/sdf, then snapshotted
+$ aws ec2 create-volume --availability-zone ap-south-1a --size 10 --volume-type gp3 --query VolumeId --output text
+vol-63575e78aadc1862f
+
+$ aws ec2 attach-volume --volume-id vol-63575e78aadc1862f --instance-id i-375f4ae752b18b194 --device /dev/sdf --query {Volume:VolumeId,Device:Device,State:State}
+{
+    "Volume": "vol-63575e78aadc1862f",
+    "Device": "/dev/sdf",
+    "State": "attaching"
+}
+
+$ aws ec2 create-snapshot --volume-id vol-63575e78aadc1862f --description s18 data backup --query {SnapshotId:SnapshotId,State:State,VolumeSize:VolumeSize}
+{
+    "SnapshotId": "snap-38dcda31591f804eb",
+    "State": "completed",
+    "VolumeSize": 10
+}
+
+# Instance lifecycle: running -> stopping -> stopped -> pending -> running -> shutting-down -> terminated
+$ aws ec2 stop-instances --instance-ids i-375f4ae752b18b194 --query StoppingInstances[0].{From:PreviousState.Name,To:CurrentState.Name}
+{
+    "From": "running",
+    "To": "stopping"
+}
+
+$ aws ec2 describe-instances --instance-ids i-375f4ae752b18b194 --query Reservations[0].Instances[0].State.Name
+"stopped"
+
+$ aws ec2 start-instances --instance-ids i-375f4ae752b18b194 --query StartingInstances[0].{From:PreviousState.Name,To:CurrentState.Name}
+{
+    "From": "stopped",
+    "To": "pending"
+}
+
+$ aws ec2 describe-instances --instance-ids i-375f4ae752b18b194 --query Reservations[0].Instances[0].State.Name
+"running"
+
+$ aws ec2 terminate-instances --instance-ids i-375f4ae752b18b194 --query TerminatingInstances[0].{From:PreviousState.Name,To:CurrentState.Name}
+{
+    "From": "running",
+    "To": "shutting-down"
+}
+
+$ aws ec2 describe-instances --instance-ids i-375f4ae752b18b194 --query Reservations[0].Instances[0].State.Name
+"terminated"
+
+# after termination: what happened to the two volumes?
+$ aws ec2 describe-volumes --volume-ids vol-821b27b52b3a60cca --query Volumes[0].{VolumeId:VolumeId,State:State}
+
+aws: [ERROR]: An error occurred (InvalidVolume.NotFound) when calling the DescribeVolumes operation: The volume '{'vol-821b27b52b3a60cca'}' does not exist.
+[exit code: 254]
+
+$ aws ec2 describe-volumes --volume-ids vol-63575e78aadc1862f --query Volumes[0].{VolumeId:VolumeId,State:State}
+{
+    "VolumeId": "vol-63575e78aadc1862f",
+    "State": "available"
+}
+
+# cleanup
+$ aws ec2 delete-snapshot --snapshot-id snap-38dcda31591f804eb
+
+$ aws ec2 delete-volume --volume-id vol-63575e78aadc1862f
+
+$ aws ec2 delete-key-pair --key-name s18-demo-key --query Return
+true
+
+$ aws ec2 delete-security-group --group-id sg-c45ffdbfec1bfd34c
+

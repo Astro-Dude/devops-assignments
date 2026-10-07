@@ -1,0 +1,35 @@
+# The DenyInsecureTransport statement is being enforced: the emulator endpoint is plain http://, so aws:SecureTransport=false
+$ aws s3api get-object --bucket astro-dude-s18-research --key reports/2026/q3.txt /dev/stdout
+
+aws: [ERROR]: An error occurred (403) when calling the GetObject operation: Forbidden
+[exit code: 254]
+
+# remove the policy (in real AWS the account root user can always delete a bucket policy that locks everyone out)
+$ aws s3api delete-bucket-policy --bucket astro-dude-s18-research
+
+$ aws s3api get-object --bucket astro-dude-s18-research --key reports/2026/q3.txt /dev/stdout --query ContentLength
+report body v2
+15
+
+# cleanup (versioned bucket: delete every version, then the bucket)
+$ aws s3 rb s3://astro-dude-s18-research --force
+delete: s3://astro-dude-s18-research/archive/2019-audit.txt
+delete: s3://astro-dude-s18-research/logs/app-2026-07-01.log
+delete: s3://astro-dude-s18-research/reports/2026/q3.txt
+delete: s3://astro-dude-s18-research/reports/2026/q4.txt
+remove_bucket failed: s3://astro-dude-s18-research An error occurred (BucketNotEmpty) when calling the DeleteBucket operation: The bucket you tried to delete is not empty
+[exit code: 1]
+
+# 'rb --force' only deletes CURRENT versions; noncurrent versions and delete markers still count as content
+$ aws s3api list-object-versions --bucket astro-dude-s18-research --query {Versions:length(Versions || `[]`),DeleteMarkers:length(DeleteMarkers || `[]`)}
+{
+    "Versions": 5,
+    "DeleteMarkers": 4
+}
+
+$ (loop) aws s3api delete-object --bucket astro-dude-s18-research --key <key> --version-id <id>   # for every version and delete marker
+
+$ aws s3api delete-bucket --bucket astro-dude-s18-research
+
+$ aws s3 ls
+

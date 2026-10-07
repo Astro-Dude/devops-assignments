@@ -1,0 +1,13 @@
+$ python3 cidr_math.py
+VPC 10.0.0.0/16: netmask 255.255.0.0, 65536 addresses (10.0.0.0 - 10.0.255.255)
+/16 split into /24s -> 256 subnets of 256 addresses
+public-a  (ap-south-1a)  10.0.1.0/24    total=256  usable in AWS=251  first usable=10.0.1.4  last usable=10.0.1.254
+public-b  (ap-south-1b)  10.0.2.0/24    total=256  usable in AWS=251  first usable=10.0.2.4  last usable=10.0.2.254
+private-a (ap-south-1a)  10.0.11.0/24   total=256  usable in AWS=251  first usable=10.0.11.4  last usable=10.0.11.254
+private-b (ap-south-1b)  10.0.12.0/24   total=256  usable in AWS=251  first usable=10.0.12.4  last usable=10.0.12.254
+reserved in 10.0.1.0/24: 10.0.1.0, 10.0.1.1, 10.0.1.2, 10.0.1.3, 10.0.1.255
+10.0.1.25    in VPC? True   -> public-a  (ap-south-1a)
+10.0.12.200  in VPC? True   -> private-b (ap-south-1b)
+10.1.0.5     in VPC? False  -> not in any subnet
+overlap 10.0.0.0/16 vs 10.0.128.0/17 : True
+overlap 10.0.0.0/16 vs 10.1.0.0/16   : False

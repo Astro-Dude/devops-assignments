@@ -1,0 +1,101 @@
+# setup (not shown in full): a VPC 10.30.0.0/16 with two PRIVATE subnets in two AZs, and SG sg-f15800655c674a131 allowing 5432 only from the app subnet 10.30.1.0/24
+# DB subnet group: which (private) subnets RDS may place the primary and standby in
+$ aws rds create-db-subnet-group --db-subnet-group-name s18-db-subnets --db-subnet-group-description private subnets --subnet-ids subnet-798e9d94db9d4bbc5 subnet-09f3ce9d29d08fca1 --query DBSubnetGroup.{Name:DBSubnetGroupName,Subnets:Subnets[].SubnetAvailabilityZone.Name}
+{
+    "Name": "s18-db-subnets",
+    "Subnets": [
+        "ap-south-1a",
+        "ap-south-1b"
+    ]
+}
+
+# DB instance: PostgreSQL, Multi-AZ, encrypted, not public, 7-day automated backups
+$ aws rds create-db-instance --db-instance-identifier s18-postgres --engine postgres --engine-version 16.4 --db-instance-class db.t4g.micro --allocated-storage 20 --storage-type gp3 --master-username appadmin --manage-master-user-password --db-subnet-group-name s18-db-subnets --vpc-security-group-ids sg-f15800655c674a131 --no-publicly-accessible --multi-az --storage-encrypted --backup-retention-period 7 --preferred-backup-window 20:00-21:00 --deletion-protection --query DBInstance.{Id:DBInstanceIdentifier,Engine:Engine,Version:EngineVersion,Class:DBInstanceClass,Status:DBInstanceStatus,MultiAZ:MultiAZ,Encrypted:StorageEncrypted,Public:PubliclyAccessible,BackupDays:BackupRetentionPeriod}
+{
+    "Id": "s18-postgres",
+    "Engine": "postgres",
+    "Version": "16.4",
+    "Class": "db.t4g.micro",
+    "Status": "available",
+    "MultiAZ": true,
+    "Encrypted": true,
+    "Public": false,
+    "BackupDays": 7
+}
+
+$ aws rds describe-db-instances --db-instance-identifier s18-postgres --query DBInstances[0].{Status:DBInstanceStatus,Endpoint:Endpoint.Address,Port:Endpoint.Port,AZ:AvailabilityZone,DeletionProtection:DeletionProtection}
+{
+    "Status": "available",
+    "Endpoint": "s18-postgres.aaaaaaaaaa.ap-south-1.rds.amazonaws.com",
+    "Port": 5432,
+    "AZ": "ap-south-1a",
+    "DeletionProtection": true
+}
+
+# Read replica: asynchronous copy for read-only traffic
+$ aws rds create-db-instance-read-replica --db-instance-identifier s18-postgres-replica-1 --source-db-instance-identifier s18-postgres --db-instance-class db.t4g.micro --query DBInstance.{Id:DBInstanceIdentifier,Source:ReadReplicaSourceDBInstanceIdentifier}
+{
+    "Id": "s18-postgres-replica-1",
+    "Source": "s18-postgres"
+}
+
+$ aws rds describe-db-instances --db-instance-identifier s18-postgres --query DBInstances[0].ReadReplicaDBInstanceIdentifiers
+[
+    "s18-postgres-replica-1"
+]
+
+# Manual snapshot (kept until you delete it, unlike automated backups)
+$ aws rds create-db-snapshot --db-instance-identifier s18-postgres --db-snapshot-identifier s18-before-migration --query DBSnapshot.{Snapshot:DBSnapshotIdentifier,Status:Status,Type:SnapshotType,Encrypted:Encrypted}
+{
+    "Snapshot": "s18-before-migration",
+    "Status": "available",
+    "Type": "manual",
+    "Encrypted": true
+}
+
+# Deletion protection blocks an accidental delete
+$ aws rds delete-db-instance --db-instance-identifier s18-postgres --skip-final-snapshot
+
+aws: [ERROR]: An error occurred (InvalidParameterCombination) when calling the DeleteDBInstance operation: Cannot delete protected DB Instance, please disable deletion protection and try again.
+[exit code: 254]
+
+# cleanup
+$ aws rds delete-db-instance --db-instance-identifier s18-postgres-replica-1 --skip-final-snapshot --query DBInstance.DBInstanceStatus
+
+aws: [ERROR]: An error occurred (InvalidParameterCombination) when calling the DeleteDBInstance operation: Cannot delete protected DB Instance, please disable deletion protection and try again.
+[exit code: 254]
+
+$ aws rds modify-db-instance --db-instance-identifier s18-postgres --no-deletion-protection --apply-immediately --query DBInstance.DeletionProtection
+false
+
+$ aws rds delete-db-instance --db-instance-identifier s18-postgres --final-db-snapshot-identifier s18-final --query DBInstance.DBInstanceStatus
+"deleting"
+
+$ aws rds describe-db-snapshots --query DBSnapshots[].[DBSnapshotIdentifier,SnapshotType] --output table
+------------------------------------
+|        DescribeDBSnapshots       |
++-----------------------+----------+
+|  s18-before-migration |  manual  |
+|  s18-final            |  manual  |
++-----------------------+----------+
+
+# the replica copied the deletion-protection flag from its source in this emulator, so turn it off there too
+$ aws rds modify-db-instance --db-instance-identifier s18-postgres-replica-1 --no-deletion-protection --apply-immediately --query DBInstance.DeletionProtection
+false
+
+$ aws rds delete-db-instance --db-instance-identifier s18-postgres-replica-1 --skip-final-snapshot --query DBInstance.DBInstanceStatus
+
+aws: [ERROR]: An error occurred (DBInstanceNotFound) when calling the DeleteDBInstance operation: DBInstance s18-postgres not found.
+[exit code: 254]
+
+$ aws rds delete-db-snapshot --db-snapshot-identifier s18-before-migration --query DBSnapshot.Status
+"available"
+
+$ aws rds delete-db-snapshot --db-snapshot-identifier s18-final --query DBSnapshot.Status
+"available"
+
+$ aws rds delete-db-subnet-group --db-subnet-group-name s18-db-subnets
+
+$ aws rds describe-db-instances --query DBInstances[].DBInstanceIdentifier
+[]
+

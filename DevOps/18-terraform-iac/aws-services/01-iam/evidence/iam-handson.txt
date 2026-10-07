@@ -1,0 +1,155 @@
+# 1. a group for people who only need to read reports
+$ aws iam create-group --group-name report-readers
+{
+    "Group": {
+        "Path": "/",
+        "GroupName": "report-readers",
+        "GroupId": "da7ha8e2uehczdr0plmm",
+        "Arn": "arn:aws:iam::123456789012:group/report-readers",
+        "CreateDate": "2026-10-07T14:18:11.798214+00:00"
+    }
+}
+
+# 2. a customer-managed, least-privilege policy (file: s3-readonly-one-bucket.json)
+$ aws iam create-policy --policy-name S3ReadOneBucket --policy-document file://s3-readonly-one-bucket.json --description Read-only access to the astro-dude-reports bucket
+{
+    "Policy": {
+        "PolicyName": "S3ReadOneBucket",
+        "PolicyId": "AIPLOWBDNW8IDC4ACH2BD",
+        "Arn": "arn:aws:iam::123456789012:policy/S3ReadOneBucket",
+        "Path": "/",
+        "DefaultVersionId": "v1",
+        "AttachmentCount": 0,
+        "IsAttachable": true,
+        "CreateDate": "2026-10-07T14:18:12.006746+00:00",
+        "UpdateDate": "2026-10-07T14:18:12.006747+00:00"
+    }
+}
+
+$ aws iam attach-group-policy --group-name report-readers --policy-arn arn:aws:iam::123456789012:policy/S3ReadOneBucket
+
+# 3. a user who gets permissions only through the group
+$ aws iam create-user --user-name shaurya-analyst --tags Key=Team,Value=Analytics
+{
+    "User": {
+        "Path": "/",
+        "UserName": "shaurya-analyst",
+        "UserId": "i4kuuiqyjotl75okexdp",
+        "Arn": "arn:aws:iam::123456789012:user/shaurya-analyst",
+        "CreateDate": "2026-10-07T14:18:12.406226+00:00",
+        "Tags": [
+            {
+                "Key": "Team",
+                "Value": "Analytics"
+            }
+        ]
+    }
+}
+
+$ aws iam add-user-to-group --user-name shaurya-analyst --group-name report-readers
+
+$ aws iam list-groups-for-user --user-name shaurya-analyst --query Groups[].GroupName
+[
+    "report-readers"
+]
+
+$ aws iam list-attached-group-policies --group-name report-readers
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "S3ReadOneBucket",
+            "PolicyArn": "arn:aws:iam::123456789012:policy/S3ReadOneBucket"
+        }
+    ]
+}
+
+$ aws iam list-attached-user-policies --user-name shaurya-analyst
+{
+    "AttachedPolicies": []
+}
+
+# 4. a role that EC2 instances can assume (trust policy: ec2-trust-policy.json)
+$ aws iam create-role --role-name app-server-role --assume-role-policy-document file://ec2-trust-policy.json
+{
+    "Role": {
+        "Path": "/",
+        "RoleName": "app-server-role",
+        "RoleId": "AROARZPUZDIKKP4BFUTPQ",
+        "Arn": "arn:aws:iam::123456789012:role/app-server-role",
+        "CreateDate": "2026-10-07T14:18:13.420751+00:00",
+        "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {
+                        "Service": "ec2.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                }
+            ]
+        },
+        "MaxSessionDuration": 3600,
+        "RoleLastUsed": {}
+    }
+}
+
+$ aws iam attach-role-policy --role-name app-server-role --policy-arn arn:aws:iam::123456789012:policy/S3ReadOneBucket
+
+$ aws iam create-instance-profile --instance-profile-name app-server-profile
+{
+    "InstanceProfile": {
+        "Path": "/",
+        "InstanceProfileName": "app-server-profile",
+        "InstanceProfileId": "0542mvoypllb00qsd1xi",
+        "Arn": "arn:aws:iam::123456789012:instance-profile/app-server-profile",
+        "CreateDate": "2026-10-07T14:18:13.822334+00:00",
+        "Roles": [],
+        "Tags": []
+    }
+}
+
+$ aws iam add-role-to-instance-profile --instance-profile-name app-server-profile --role-name app-server-role
+
+$ aws iam get-instance-profile --instance-profile-name app-server-profile --query InstanceProfile.{Profile:InstanceProfileName,Roles:Roles[].RoleName}
+{
+    "Profile": "app-server-profile",
+    "Roles": [
+        "app-server-role"
+    ]
+}
+
+# 5. assume the role and receive temporary credentials (secret parts not printed)
+$ aws sts assume-role --role-arn arn:aws:iam::123456789012:role/app-server-role --role-session-name demo --query {AssumedRole:AssumedRoleUser.Arn,Expires:Credentials.Expiration,KeyIdPrefix:Credentials.AccessKeyId}
+{
+    "AssumedRole": "arn:aws:sts::123456789012:assumed-role/app-server-role/demo",
+    "Expires": "2026-10-07T15:18:14.421762+00:00",
+    "KeyIdPrefix": "ASIARZPUZDIKOKZIUU5X"
+}
+
+# 6. ask IAM which actions this user would be allowed (policy simulator)
+$ aws iam simulate-principal-policy --policy-source-arn arn:aws:iam::123456789012:user/shaurya-analyst --action-names s3:GetObject s3:PutObject s3:DeleteBucket --resource-arns arn:aws:s3:::astro-dude-reports/* --query EvaluationResults[].{Action:EvalActionName,Decision:EvalDecision} --output table
+
+aws: [ERROR]: Unable to parse response (syntax error: line 1, column 0), invalid XML received. Further retries may succeed:
+b'<!doctype html>\n<html lang=en>\n<title>500 Internal Server Error</title>\n<h1>Internal Server Error</h1>\n<p>The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.</p>\n'
+[exit code: 255]
+
+# 7. account password policy (a best practice)
+$ aws iam update-account-password-policy --minimum-password-length 14 --require-symbols --require-numbers --require-uppercase-characters --require-lowercase-characters --max-password-age 90 --password-reuse-prevention 5
+
+$ aws iam get-account-password-policy
+{
+    "PasswordPolicy": {
+        "MinimumPasswordLength": 14,
+        "RequireSymbols": true,
+        "RequireNumbers": true,
+        "RequireUppercaseCharacters": true,
+        "RequireLowercaseCharacters": true,
+        "AllowUsersToChangePassword": false,
+        "ExpirePasswords": true,
+        "MaxPasswordAge": 90,
+        "PasswordReusePrevention": 5,
+        "HardExpiry": false
+    }
+}
+

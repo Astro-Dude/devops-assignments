@@ -1,0 +1,175 @@
+# Bucket: create in ap-south-1 (outside us-east-1 a LocationConstraint is required)
+$ aws s3api create-bucket --bucket astro-dude-s18-research --create-bucket-configuration LocationConstraint=ap-south-1
+{
+    "Location": "/astro-dude-s18-research"
+}
+
+# Objects: key = full 'path', prefixes only look like folders. Upload with different storage classes
+$ aws s3api put-object --bucket astro-dude-s18-research --key reports/2026/q3.txt --body r.txt --storage-class STANDARD --query {ETag:ETag}
+{
+    "ETag": "\"856175bbfb75a5c7264b14141237836f\""
+}
+
+$ aws s3api put-object --bucket astro-dude-s18-research --key logs/app-2026-07-01.log --body l.txt --storage-class STANDARD_IA --query {ETag:ETag}
+{
+    "ETag": "\"26cf5d0aae70ed73cca70cd2be014a89\""
+}
+
+$ aws s3api put-object --bucket astro-dude-s18-research --key archive/2019-audit.txt --body l.txt --storage-class GLACIER --query {ETag:ETag}
+{
+    "ETag": "\"26cf5d0aae70ed73cca70cd2be014a89\""
+}
+
+$ aws s3api list-objects-v2 --bucket astro-dude-s18-research --query Contents[].[Key,Size,StorageClass] --output table
+--------------------------------------------------
+|                  ListObjectsV2                 |
++--------------------------+-----+---------------+
+|  archive/2019-audit.txt  |  9  |  GLACIER      |
+|  logs/app-2026-07-01.log |  9  |  STANDARD_IA  |
+|  reports/2026/q3.txt     |  12 |  STANDARD     |
++--------------------------+-----+---------------+
+
+$ aws s3api list-objects-v2 --bucket astro-dude-s18-research --prefix reports/ --delimiter / --query CommonPrefixes
+[
+    {
+        "Prefix": "reports/2026/"
+    }
+]
+
+$ aws s3api head-object --bucket astro-dude-s18-research --key reports/2026/q3.txt --query {ContentLength:ContentLength,ContentType:ContentType,ETag:ETag,LastModified:LastModified}
+{
+    "ContentLength": 12,
+    "ContentType": "binary/octet-stream",
+    "ETag": "\"856175bbfb75a5c7264b14141237836f\"",
+    "LastModified": "2026-10-07T14:19:42+00:00"
+}
+
+# Versioning: enable, overwrite, delete -> delete marker, then restore
+$ aws s3api put-bucket-versioning --bucket astro-dude-s18-research --versioning-configuration Status=Enabled
+
+$ aws s3api put-object --bucket astro-dude-s18-research --key reports/2026/q3.txt --body r.txt --query VersionId
+"816bf178-b1dc-44fe-9a6a-ebe0c58bf2b5"
+
+$ aws s3api delete-object --bucket astro-dude-s18-research --key reports/2026/q3.txt
+{
+    "DeleteMarker": true,
+    "VersionId": "bdcbc386-8e15-432b-b3a3-38b3f1a90c01"
+}
+
+$ aws s3api list-object-versions --bucket astro-dude-s18-research --prefix reports/ --query {Versions:Versions[].[Key,VersionId,IsLatest,Size],DeleteMarkers:DeleteMarkers[].[Key,VersionId,IsLatest]}
+{
+    "Versions": [
+        [
+            "reports/2026/q3.txt",
+            "816bf178-b1dc-44fe-9a6a-ebe0c58bf2b5",
+            false,
+            15
+        ],
+        [
+            "reports/2026/q3.txt",
+            "null",
+            false,
+            12
+        ]
+    ],
+    "DeleteMarkers": [
+        [
+            "reports/2026/q3.txt",
+            "bdcbc386-8e15-432b-b3a3-38b3f1a90c01",
+            true
+        ]
+    ]
+}
+
+# remove the delete marker -> the object is back
+$ aws s3api delete-object --bucket astro-dude-s18-research --key reports/2026/q3.txt --version-id bdcbc386-8e15-432b-b3a3-38b3f1a90c01
+{
+    "VersionId": "bdcbc386-8e15-432b-b3a3-38b3f1a90c01"
+}
+
+$ aws s3 cp s3://astro-dude-s18-research/reports/2026/q3.txt -
+report body v2
+
+# Lifecycle policy (file: lifecycle.json)
+$ aws s3api put-bucket-lifecycle-configuration --bucket astro-dude-s18-research --lifecycle-configuration file://lifecycle.json
+
+$ aws s3api get-bucket-lifecycle-configuration --bucket astro-dude-s18-research --query Rules[].{ID:ID,Status:Status,Transitions:Transitions[].[Days,StorageClass],Expiration:Expiration.Days}
+[
+    {
+        "ID": "logs-tiering",
+        "Status": "Enabled",
+        "Transitions": [
+            [
+                30,
+                "STANDARD_IA"
+            ],
+            [
+                90,
+                "GLACIER_IR"
+            ],
+            [
+                180,
+                "DEEP_ARCHIVE"
+            ]
+        ],
+        "Expiration": 365
+    },
+    {
+        "ID": "trim-old-versions",
+        "Status": "Enabled",
+        "Transitions": null,
+        "Expiration": null
+    }
+]
+
+# Encryption: default SSE-S3 for the bucket, and the per-object result
+$ aws s3api put-bucket-encryption --bucket astro-dude-s18-research --server-side-encryption-configuration {"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}
+
+$ aws s3api put-object --bucket astro-dude-s18-research --key reports/2026/q4.txt --body r.txt --query {ServerSideEncryption:ServerSideEncryption}
+{
+    "ServerSideEncryption": "AES256"
+}
+
+# Bucket policy (file: bucket-policy.json)
+$ aws s3api put-bucket-policy --bucket astro-dude-s18-research --policy file://bucket-policy.json
+
+$ aws s3api get-bucket-policy --bucket astro-dude-s18-research --query Policy --output text
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyInsecureTransport",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::astro-dude-s18-research",
+        "arn:aws:s3:::astro-dude-s18-research/*"
+      ],
+      "Condition": { "Bool": { "aws:SecureTransport": "false" } }
+    },
+    {
+      "Sid": "AllowAppRoleRead",
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::123456789012:role/app-server-role" },
+      "Action": ["s3:GetObject"],
+      "Resource": "arn:aws:s3:::astro-dude-s18-research/reports/*"
+    }
+  ]
+}
+
+
+# Pre-signed URL: temporary, signed GET link (expires in 300 s)
+$ aws s3 presign s3://astro-dude-s18-research/reports/2026/q3.txt --expires-in 300 | sed 's/Signature=.*/Signature=<redacted>/'
+http://localhost:4566/astro-dude-s18-research/reports/2026/q3.txt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=test%2F20261007%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Date=20261007T141946Z&X-Amz-Expires=300&X-Amz-SignedHeaders=host&X-Amz-Signature=<redacted>
+
+# cleanup
+$ aws s3 rb s3://astro-dude-s18-research --force
+delete failed: s3://astro-dude-s18-research/logs/app-2026-07-01.log An error occurred (403) when calling the DeleteObject operation: Forbidden
+delete failed: s3://astro-dude-s18-research/archive/2019-audit.txt An error occurred (403) when calling the DeleteObject operation: Forbidden
+delete failed: s3://astro-dude-s18-research/reports/2026/q3.txt An error occurred (403) when calling the DeleteObject operation: Forbidden
+delete failed: s3://astro-dude-s18-research/reports/2026/q4.txt An error occurred (403) when calling the DeleteObject operation: Forbidden
+
+aws: [ERROR]: remove_bucket failed: Unable to delete all objects in the bucket, bucket will not be deleted.
+[exit code: 255]
+
