@@ -1,0 +1,60 @@
+## IDENTIFY
+$ kubectl -n tickethub-broken get hpa tickethub-backend
+NAME                REFERENCE                      TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+tickethub-backend   Deployment/tickethub-backend   cpu: <unknown>/70%   1         3         1          5m24s
+
+## INVESTIGATE
+$ kubectl -n tickethub-broken describe hpa tickethub-backend | sed -n '/^Conditions:/,$p' | cut -c1-220
+Conditions:
+  Type           Status  Reason                   Message
+  ----           ------  ------                   -------
+  AbleToScale    True    SucceededGetScale        the HPA controller was able to get the target's current scale
+  ScalingActive  False   FailedGetResourceMetric  the HPA was unable to compute the replica count: failed to get cpu utilization: missing request for cpu in container backend of Pod tickethub-backend-67d6db5695-4hztw
+Events:
+  Type     Reason                        Age                     From                       Message
+  ----     ------                        ----                    ----                       -------
+  Warning  FailedComputeMetricsReplicas  3m9s (x10 over 5m24s)   horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: un
+  Warning  FailedGetResourceMetric       2m39s (x2 over 2m54s)   horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  2m39s (x2 over 2m54s)   horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: di
+  Warning  FailedGetResourceMetric       2m24s (x11 over 5m24s)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       24s (x7 over 114s)      horizontal-pod-autoscaler  failed to get cpu utilization: missing request for cpu in container backend of Pod tickethub-backend-67d6db5695-4hztw
+
+$ kubectl top pod -n tickethub-broken
+NAME                                  CPU(cores)   MEMORY(bytes)   
+tickethub-backend-67d6db5695-4hztw    5m           86Mi            
+tickethub-frontend-6fffd56df7-jnzxq   1m           9Mi             
+tickethub-postgres-6db7f7c9ff-g4nrd   4m           28Mi            
+
+$ kubectl -n tickethub-broken get deploy tickethub-backend -o jsonpath='{.spec.template.spec.containers[0].resources}{"\n"}'
+{}
+
+## ROOT CAUSE: metrics-server has numbers (kubectl top works), but CPU *utilization* = usage / request,
+## and the backend container declares no requests -> the HPA cannot compute a percentage and never scales.
+## FIX: give the backend containers requests/limits (same values as the real chart)
+$ kubectl -n tickethub-broken set resources deploy/tickethub-backend -c backend --requests=cpu=50m,memory=128Mi --limits=cpu=500m,memory=256Mi
+deployment.apps/tickethub-backend resource requirements updated
+
+$ kubectl -n tickethub-broken set resources deploy/tickethub-backend -c migrate --requests=cpu=50m,memory=128Mi --limits=cpu=500m,memory=256Mi
+deployment.apps/tickethub-backend resource requirements updated
+
+$ kubectl -n tickethub-broken rollout status deploy/tickethub-backend --timeout=180s
+Waiting for deployment "tickethub-backend" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "tickethub-backend" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "tickethub-backend" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "tickethub-backend" rollout to finish: 1 old replicas are pending termination...
+deployment "tickethub-backend" successfully rolled out
+
+## VERIFY (metrics-server needs one or two scrape cycles for the new pod)
+$ kubectl -n tickethub-broken get hpa tickethub-backend
+NAME                REFERENCE                      TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+tickethub-backend   Deployment/tickethub-backend   cpu: 12%/70%   1         3         1          6m6s
+
+$ kubectl -n tickethub-broken describe hpa tickethub-backend | sed -n '/^Conditions:/,/^Events:/p' | cut -c1-200
+Conditions:
+  Type            Status  Reason              Message
+  ----            ------  ------              -------
+  AbleToScale     True    ReadyForNewScale    recommended size matches current size
+  ScalingActive   True    ValidMetricFound    the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  False   DesiredWithinRange  the desired count is within the acceptable range
+Events:
+

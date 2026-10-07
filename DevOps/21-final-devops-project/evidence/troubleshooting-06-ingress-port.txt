@@ -1,0 +1,45 @@
+## IDENTIFY: UI loads now, but the API through the ingress does not
+$ curl -s -w "\nHTTP %{http_code}\n" http://broken.tickethub.localtest.me:28080/api/stats
+<html>
+<head><title>503 Service Temporarily Unavailable</title></head>
+<body>
+<center><h1>503 Service Temporarily Unavailable</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+
+HTTP 503
+
+## INVESTIGATE
+$ kubectl -n tickethub-broken describe ingress tickethub | sed -n '/Rules:/,/Annotations:/p'
+Rules:
+  Host                           Path  Backends
+  ----                           ----  --------
+  broken.tickethub.localtest.me  
+                                 /api   tickethub-backend:8080 ()
+                                 /      tickethub-frontend:80 (10.244.0.56:8080)
+Annotations:                     troubleshooting/resync: 1791384108
+
+$ kubectl -n tickethub-broken get svc tickethub-backend
+NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+tickethub-backend   ClusterIP   10.96.165.250   <none>        8000/TCP   5m10s
+
+$ kubectl -n ingress-nginx logs deploy/ingress-nginx-controller --since=15m | grep -E 'tickethub-broken/tickethub-backend' | grep -v 'active Endpoint' | tail -2 | cut -c1-220
+
+$ kubectl -n ingress-nginx logs deploy/ingress-nginx-controller --since=1m | grep 'broken.*api/stats' | tail -1 | cut -c1-220
+
+## ROOT CAUSE: the /api rule targets port 8080 on tickethub-backend; that Service only exposes 8000, so the
+## controller builds an upstream with no endpoints and answers 503 itself.
+## FIX: reference the Service port by NAME so a port renumbering can never break the Ingress again
+$ kubectl -n tickethub-broken patch ingress tickethub --type=json -p '[{"op":"replace","path":"/spec/rules/0/http/paths/0/backend/service/port","value":{"name":"http"}}]'
+ingress.networking.k8s.io/tickethub patched
+
+## VERIFY
+$ curl -s -w "\nHTTP %{http_code}\n" http://broken.tickethub.localtest.me:28080/api/stats
+{"total":0,"open":0,"in_progress":0,"resolved":0,"closed":0,"urgent_open":0}
+HTTP 200
+
+$ curl -s -w '\nHTTP %{http_code}\n' -X POST http://broken.tickethub.localtest.me:28080/api/tickets -H 'content-type: application/json' -d '{"subject":"Troubleshooting verified","requester":"sre@corp.example","priority":"LOW"}'
+{"id":1,"subject":"Troubleshooting verified","description":"","requester":"sre@corp.example","category":"GENERAL","priority":"LOW","status":"OPEN","team":"L1 Support","created_at":"2026-10-07T14:42:33.726350Z","updated_at":"2026-10-07T14:42:33.726405Z"}
+HTTP 201
+

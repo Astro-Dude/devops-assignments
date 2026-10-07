@@ -1,0 +1,67 @@
+# All seven fixes were applied live with kubectl. Commit them back to the manifest (fixed-stack.yaml)
+# and prove the file matches what is running: apply is a no-op except for objects we patched imperatively.
+$ diff -u troubleshooting/broken-stack.yaml troubleshooting/fixed-stack.yaml | grep -E '^[-+] '
++  DB_HOST: tickethub-postgres          # FIX 3: key was missing -> app fell back to localhost
++  DEFAULT_TEAM: L1 Support
+-              valueFrom: {secretKeyRef: {name: tickethub-db, key: password}}
++              valueFrom: {secretKeyRef: {name: tickethub-db, key: DB_PASSWORD}}   # FIX 1: key 'password' does not exist
+-          image: ghcr.io/astro-dude/s21-tickethub-backend:latest
++          image: ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5   # FIX 2: no :latest tag exists
++          resources:                          # FIX 7
++            requests: {cpu: 50m, memory: 128Mi}
++            limits: {cpu: 500m, memory: 256Mi}
+-          image: ghcr.io/astro-dude/s21-tickethub-backend:latest
++          image: ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5   # FIX 2
+-            httpGet: {path: /readyz, port: http}
++            httpGet: {path: /ready, port: http}   # FIX 4: /readyz returned 404
++          resources:                          # FIX 7: HPA needs requests to compute utilization
++            requests: {cpu: 50m, memory: 128Mi}
++            limits: {cpu: 500m, memory: 256Mi}
+-  ports: [{name: http, port: 80, targetPort: 80}]
++  ports: [{name: http, port: 80, targetPort: 8080}]   # FIX 5: nginx-unprivileged listens on 8080
+-              service: {name: tickethub-backend, port: {number: 8080}}
++              service: {name: tickethub-backend, port: {name: http}}   # FIX 6: Service exposes 8000, refer by name
+
+$ kubectl apply -f troubleshooting/fixed-stack.yaml
+configmap/tickethub-config configured
+persistentvolumeclaim/tickethub-postgres-data unchanged
+deployment.apps/tickethub-postgres configured
+service/tickethub-postgres unchanged
+deployment.apps/tickethub-backend configured
+service/tickethub-backend unchanged
+deployment.apps/tickethub-frontend unchanged
+service/tickethub-frontend configured
+ingress.networking.k8s.io/tickethub configured
+horizontalpodautoscaler.autoscaling/tickethub-backend unchanged
+
+$ kubectl -n tickethub-broken get pods,svc,endpoints,ingress,hpa
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME                                      READY   STATUS    RESTARTS   AGE
+pod/tickethub-backend-79448dc7b7-87d68    1/1     Running   0          61s
+pod/tickethub-frontend-6fffd56df7-jnzxq   1/1     Running   0          6m26s
+pod/tickethub-postgres-6db7f7c9ff-g4nrd   1/1     Running   0          5m33s
+
+NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/tickethub-backend    ClusterIP   10.96.165.250   <none>        8000/TCP   6m26s
+service/tickethub-frontend   ClusterIP   10.96.148.221   <none>        80/TCP     6m26s
+service/tickethub-postgres   ClusterIP   10.96.128.120   <none>        5432/TCP   6m26s
+
+NAME                           ENDPOINTS          AGE
+endpoints/tickethub-backend    10.244.0.63:8000   6m26s
+endpoints/tickethub-frontend   10.244.0.56:8080   6m26s
+endpoints/tickethub-postgres   10.244.0.59:5432   6m26s
+
+NAME                                  CLASS   HOSTS                           ADDRESS     PORTS   AGE
+ingress.networking.k8s.io/tickethub   nginx   broken.tickethub.localtest.me   localhost   80      6m26s
+
+NAME                                                    REFERENCE                      TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/tickethub-backend   Deployment/tickethub-backend   cpu: 10%/70%   1         3         1          6m26s
+
+$ curl -s -o /dev/null -w "GET /          -> %{http_code}\n" http://broken.tickethub.localtest.me:28080/
+GET /          -> 200
+
+$ curl -s -o /dev/null -w "GET /api/stats -> %{http_code}\n" http://broken.tickethub.localtest.me:28080/api/stats
+GET /api/stats -> 200
+
+$ curl -s http://broken.tickethub.localtest.me:28080/api/info
+{"service":"TicketHub API","version":"0b9665e","environment":"troubleshooting","pod":"tickethub-backend-79448dc7b7-87d68","default_team":"L1 Support"}
