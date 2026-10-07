@@ -1,0 +1,47 @@
+$ kubectl apply -f kubernetes/namespace.yaml
+namespace/tickethub unchanged
+
+# the DB secret is created out-of-band; Git only references it by name (database.existingSecret)
+$ kubectl -n tickethub create secret generic tickethub-db --from-literal=DB_USER=tickethub --from-literal=DB_PASSWORD="$(openssl rand -hex 16)"
+secret/tickethub-db created
+
+$ kubectl apply -f gitops/argocd/application.yaml
+Warning: metadata.finalizers: "resources-finalizer.argocd.argoproj.io": prefer a domain-qualified finalizer name including a path (/) to avoid accidental conflicts with other finalizer writers
+application.argoproj.io/tickethub created
+
+$ kubectl -n argocd get application tickethub -o wide
+NAME        SYNC STATUS   HEALTH STATUS   REVISION   PROJECT
+tickethub   Synced        Healthy                    default
+
+$ kubectl -n tickethub get deploy,pods,svc,ingress,hpa,pvc
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/tickethub-backend    2/2     2            2           46s
+deployment.apps/tickethub-frontend   2/2     2            2           46s
+deployment.apps/tickethub-postgres   1/1     1            1           46s
+
+NAME                                      READY   STATUS    RESTARTS   AGE
+pod/tickethub-backend-d7dccf8fb-8c8b8     1/1     Running   0          46s
+pod/tickethub-backend-d7dccf8fb-q2kvz     1/1     Running   0          45s
+pod/tickethub-frontend-9c9588fc4-bclmc    1/1     Running   0          46s
+pod/tickethub-frontend-9c9588fc4-npc9r    1/1     Running   0          46s
+pod/tickethub-postgres-6c7cb8894f-jxtkr   1/1     Running   0          46s
+
+NAME                         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+service/tickethub-backend    ClusterIP   10.96.19.43    <none>        8000/TCP   46s
+service/tickethub-frontend   ClusterIP   10.96.78.79    <none>        80/TCP     46s
+service/tickethub-postgres   ClusterIP   10.96.10.251   <none>        5432/TCP   46s
+
+NAME                                  CLASS   HOSTS                    ADDRESS     PORTS   AGE
+ingress.networking.k8s.io/tickethub   nginx   tickethub.localtest.me   localhost   80      46s
+
+NAME                                                    REFERENCE                      TARGETS                         MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/tickethub-backend   Deployment/tickethub-backend   cpu: 13%/70%, memory: 67%/85%   2         4         2          46s
+
+NAME                                            STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/tickethub-postgres-data   Bound    pvc-d0109b06-05be-400e-a647-b1c6f8cfa12e   1Gi        RWO            standard       <unset>                 46s
+
+$ kubectl -n tickethub get deploy tickethub-backend -o jsonpath="{.spec.template.spec.containers[0].image}"
+ghcr.io/astro-dude/s21-tickethub-backend:25d422506213bc43a6177ea19bdd3efd2c504156
+
+$ curl -s http://tickethub.localtest.me:28080/api/info
+{"service":"TicketHub API","version":"25d4225","environment":"kind-gitops","pod":"tickethub-backend-d7dccf8fb-q2kvz","default_team":"L1 Support"}
