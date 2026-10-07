@@ -1,0 +1,99 @@
+$ terraform output -no-color
+artifacts_bucket = "tickethub-dev-artifacts-24bcs10151"
+ecr_repository_urls = {
+  "backend" = "123456789012.dkr.ecr.ap-south-1.amazonaws.com/tickethub/backend"
+  "frontend" = "123456789012.dkr.ecr.ap-south-1.amazonaws.com/tickethub/frontend"
+}
+eks_cluster_endpoint = "https://ukWwFD9tOjUZNpg1HmI1.xFi.ap-south-1.eks.amazonaws.com/"
+eks_cluster_name = "tickethub-dev-eks"
+eks_node_group_status = "ACTIVE"
+kubeconfig_command = "aws eks update-kubeconfig --region ap-south-1 --name tickethub-dev-eks"
+private_subnet_ids = [
+  "subnet-8ac9caf6bd34ca506",
+  "subnet-279f33b0c68a44cdb",
+]
+public_subnet_ids = [
+  "subnet-82063607557d972a8",
+  "subnet-5bf5943747eec8e8a",
+]
+vpc_id = "vpc-e44f08820d44d45d9"
+
+$ terraform state list | wc -l
+      45
+
+# Verify against the emulator API directly with the AWS CLI
+$ aws --endpoint-url http://localhost:4567 ec2 describe-vpcs --filters Name=tag:Project,Values=tickethub --query 'Vpcs[].{id:VpcId,cidr:CidrBlock,name:Tags[?Key==`Name`]|[0].Value}' --output table
+----------------------------------------------------------------
+|                         DescribeVpcs                         |
++--------------+-------------------------+---------------------+
+|     cidr     |           id            |        name         |
++--------------+-------------------------+---------------------+
+|  10.21.0.0/16|  vpc-e44f08820d44d45d9  |  tickethub-dev-vpc  |
++--------------+-------------------------+---------------------+
+
+$ aws --endpoint-url http://localhost:4567 ec2 describe-subnets --filters Name=tag:Project,Values=tickethub --query 'Subnets[].[Tags[?Key==`Name`]|[0].Value,CidrBlock,AvailabilityZone]' --output table
+------------------------------------------------------------------------
+|                            DescribeSubnets                           |
++------------------------------------+------------------+--------------+
+|  tickethub-dev-private-ap-south-1a |  10.21.128.0/20  |  ap-south-1a |
+|  tickethub-dev-public-ap-south-1a  |  10.21.0.0/20    |  ap-south-1a |
+|  tickethub-dev-public-ap-south-1b  |  10.21.16.0/20   |  ap-south-1b |
+|  tickethub-dev-private-ap-south-1b |  10.21.144.0/20  |  ap-south-1b |
++------------------------------------+------------------+--------------+
+
+$ aws --endpoint-url http://localhost:4567 ec2 describe-nat-gateways --query 'NatGateways[].[NatGatewayId,State,SubnetId]' --output table
+--------------------------------------------------------------------
+|                        DescribeNatGateways                       |
++------------------------+------------+----------------------------+
+|  nat-d9be93426fb513db0 |  available |  subnet-82063607557d972a8  |
++------------------------+------------+----------------------------+
+
+$ aws --endpoint-url http://localhost:4567 ec2 describe-security-groups --filters Name=tag:Project,Values=tickethub --query 'SecurityGroups[].[GroupName,Description]' --output table
+-------------------------------------------------------------------------------------
+|                              DescribeSecurityGroups                               |
++----------------------+------------------------------------------------------------+
+|  tickethub-dev-alb   |  Public HTTP/HTTPS to the TicketHub ingress load balancer  |
+|  tickethub-dev-nodes |  EKS worker nodes                                          |
++----------------------+------------------------------------------------------------+
+
+$ aws --endpoint-url http://localhost:4567 eks describe-cluster --name tickethub-dev-eks --query 'cluster.{name:name,version:version,status:status,publicEndpoint:resourcesVpcConfig.endpointPublicAccess,encryptedSecrets:encryptionConfig[0].resources}'
+{
+    "name": "tickethub-dev-eks",
+    "version": "1.33",
+    "status": "ACTIVE",
+    "publicEndpoint": false,
+    "encryptedSecrets": [
+        "secrets"
+    ]
+}
+
+$ aws --endpoint-url http://localhost:4567 eks describe-nodegroup --cluster-name tickethub-dev-eks --nodegroup-name tickethub-dev-workers --query 'nodegroup.{status:status,instanceTypes:instanceTypes,scaling:scalingConfig,subnets:length(subnets)}'
+{
+    "status": "ACTIVE",
+    "instanceTypes": [
+        "t3.medium"
+    ],
+    "scaling": {
+        "minSize": 2,
+        "maxSize": 4,
+        "desiredSize": 2
+    },
+    "subnets": 2
+}
+
+$ aws --endpoint-url http://localhost:4567 ecr describe-repositories --query 'repositories[].[repositoryName,imageTagMutability,imageScanningConfiguration.scanOnPush]' --output table
+---------------------------------------------
+|           DescribeRepositories            |
++---------------------+-------------+-------+
+|  tickethub/frontend |  IMMUTABLE  |  True |
+|  tickethub/backend  |  IMMUTABLE  |  True |
++---------------------+-------------+-------+
+
+$ aws --endpoint-url http://localhost:4567 s3 ls
+2026-10-07 19:16:33 tickethub-tfstate-24bcs10151
+2026-10-07 19:17:02 tickethub-dev-artifacts-24bcs10151
+
+# remote state lives in the bucket created by ./bootstrap
+$ aws --endpoint-url http://localhost:4567 s3 ls s3://tickethub-tfstate-24bcs10151/dev/
+2026-10-07 19:17:59      78225 terraform.tfstate
+

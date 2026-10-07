@@ -1,8 +1,8 @@
 # Copy to terraform.tfvars (git-ignored) and adjust. Never put AWS keys in here.
-project      = "tickethub"
-environment  = "dev"
-region       = "ap-south-1"
-azs          = ["ap-south-1a", "ap-south-1b"]
+project     = "tickethub"
+environment = "dev"
+region      = "ap-south-1"
+azs         = ["ap-south-1a", "ap-south-1b"]
 
 # Local emulator (moto on host port 4567). Set to "" to target a real AWS account.
 aws_endpoint = "http://localhost:4567"

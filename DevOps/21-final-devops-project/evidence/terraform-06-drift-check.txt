@@ -1,0 +1,13 @@
+$ terraform plan -detailed-exitcode   # drift check right after apply
+exit code: 2
+  # aws_eks_node_group.main must be replaced
+      - remote_access { # forces replacement
+          - ec2_ssh_key               = "eksKeypair" -> null # forces replacement
+  # aws_s3_bucket.artifacts will be updated in-place
+  # aws_vpc_security_group_egress_rule.alb_to_nodes will be updated in-place
+      ~ referenced_security_group_id = "123456789012/sg-979ecbda645c835c7" -> "sg-979ecbda645c835c7"
+  # aws_vpc_security_group_ingress_rule.nodes_from_alb will be updated in-place
+      ~ referenced_security_group_id = "123456789012/sg-07aa5cb1b1a1511dc" -> "sg-07aa5cb1b1a1511dc"
+  # aws_vpc_security_group_ingress_rule.nodes_self will be updated in-place
+      ~ referenced_security_group_id = "123456789012/sg-979ecbda645c835c7" -> "sg-979ecbda645c835c7"
+Plan: 1 to add, 4 to change, 1 to destroy.

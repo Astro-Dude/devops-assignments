@@ -1,0 +1,1522 @@
+$ terraform destroy -auto-approve
+data.aws_iam_policy_document.eks_assume: Reading...
+aws_eip.nat: Refreshing state... [id=eipalloc-581b3761a484a5678]
+data.aws_iam_policy_document.ec2_assume: Reading...
+aws_vpc.main: Refreshing state... [id=vpc-e44f08820d44d45d9]
+aws_kms_key.main: Refreshing state... [id=ddfa19dd-3112-4636-baa6-f0de70ff4055]
+aws_s3_bucket.artifacts: Refreshing state... [id=tickethub-dev-artifacts-24bcs10151]
+data.aws_iam_policy_document.eks_assume: Read complete after 0s [id=3552664922]
+data.aws_iam_policy_document.ec2_assume: Read complete after 0s [id=2851119427]
+aws_iam_role.eks_cluster: Refreshing state... [id=tickethub-dev-eks-cluster]
+aws_iam_role.eks_nodes: Refreshing state... [id=tickethub-dev-eks-nodes]
+aws_iam_role_policy_attachment.eks_cluster: Refreshing state... [id=tickethub-dev-eks-cluster/arn:aws:iam::aws:policy/AmazonEKSClusterPolicy]
+aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"]: Refreshing state... [id=tickethub-dev-eks-nodes/arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy]
+aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"]: Refreshing state... [id=tickethub-dev-eks-nodes/arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy]
+aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"]: Refreshing state... [id=tickethub-dev-eks-nodes/arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly]
+aws_kms_alias.main: Refreshing state... [id=alias/tickethub-dev]
+aws_ecr_repository.app["backend"]: Refreshing state... [id=tickethub/backend]
+aws_ecr_repository.app["frontend"]: Refreshing state... [id=tickethub/frontend]
+aws_ecr_lifecycle_policy.app["frontend"]: Refreshing state... [id=tickethub/frontend]
+aws_ecr_lifecycle_policy.app["backend"]: Refreshing state... [id=tickethub/backend]
+aws_internet_gateway.main: Refreshing state... [id=igw-2da424a22b4b9518c]
+aws_security_group.nodes: Refreshing state... [id=sg-979ecbda645c835c7]
+aws_security_group.alb: Refreshing state... [id=sg-07aa5cb1b1a1511dc]
+aws_subnet.private[0]: Refreshing state... [id=subnet-8ac9caf6bd34ca506]
+aws_subnet.public[0]: Refreshing state... [id=subnet-82063607557d972a8]
+aws_subnet.private[1]: Refreshing state... [id=subnet-279f33b0c68a44cdb]
+aws_subnet.public[1]: Refreshing state... [id=subnet-5bf5943747eec8e8a]
+aws_route_table.public: Refreshing state... [id=rtb-eed46d2920ee866ef]
+aws_vpc_security_group_ingress_rule.nodes_self: Refreshing state... [id=sgr-0ad03baf87a701417]
+aws_vpc_security_group_egress_rule.nodes_in_vpc: Refreshing state... [id=sgr-19c0568caa46002af]
+aws_vpc_security_group_egress_rule.nodes_https: Refreshing state... [id=sgr-514a7fbcfee61610e]
+aws_vpc_security_group_ingress_rule.alb_https: Refreshing state... [id=sgr-fdeaa615aaa09946d]
+aws_vpc_security_group_egress_rule.alb_to_nodes: Refreshing state... [id=sgr-df7988d858c8dde6a]
+aws_vpc_security_group_ingress_rule.nodes_from_alb: Refreshing state... [id=sgr-ae7097e1dd8ba8db2]
+aws_vpc_security_group_ingress_rule.alb_http: Refreshing state... [id=sgr-12270fccfa0439e17]
+aws_eks_cluster.main: Refreshing state... [id=tickethub-dev-eks]
+aws_nat_gateway.main: Refreshing state... [id=nat-d9be93426fb513db0]
+aws_route_table_association.public[1]: Refreshing state... [id=rtbassoc-7af08b5aa9f6c36ef]
+aws_route_table_association.public[0]: Refreshing state... [id=rtbassoc-61309a8f4b3bdf59d]
+aws_eks_node_group.main: Refreshing state... [id=tickethub-dev-eks:tickethub-dev-workers]
+aws_route_table.private: Refreshing state... [id=rtb-60f6c2f1ee49530e6]
+aws_route_table_association.private[1]: Refreshing state... [id=rtbassoc-e100311ecfbf47a5d]
+aws_route_table_association.private[0]: Refreshing state... [id=rtbassoc-6b8c130123f185a22]
+aws_s3_bucket_public_access_block.artifacts: Refreshing state... [id=tickethub-dev-artifacts-24bcs10151]
+aws_s3_bucket_versioning.artifacts: Refreshing state... [id=tickethub-dev-artifacts-24bcs10151]
+aws_s3_bucket_server_side_encryption_configuration.artifacts: Refreshing state... [id=tickethub-dev-artifacts-24bcs10151]
+aws_flow_log.vpc: Refreshing state... [id=fl-203fc5535c69d4e97]
+aws_s3_bucket_lifecycle_configuration.artifacts: Refreshing state... [id=tickethub-dev-artifacts-24bcs10151]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_ecr_lifecycle_policy.app["backend"] will be destroyed
+  - resource "aws_ecr_lifecycle_policy" "app" {
+      - id          = "tickethub/backend" -> null
+      - policy      = jsonencode(
+            {
+              - rules = [
+                  - {
+                      - action       = {
+                          - type = "expire"
+                        }
+                      - description  = "keep the last 30 images"
+                      - rulePriority = 1
+                      - selection    = {
+                          - countNumber = 30
+                          - countType   = "imageCountMoreThan"
+                          - tagStatus   = "any"
+                        }
+                    },
+                ]
+            }
+        ) -> null
+      - region      = "ap-south-1" -> null
+      - registry_id = "123456789012" -> null
+      - repository  = "tickethub/backend" -> null
+    }
+
+  # aws_ecr_lifecycle_policy.app["frontend"] will be destroyed
+  - resource "aws_ecr_lifecycle_policy" "app" {
+      - id          = "tickethub/frontend" -> null
+      - policy      = jsonencode(
+            {
+              - rules = [
+                  - {
+                      - action       = {
+                          - type = "expire"
+                        }
+                      - description  = "keep the last 30 images"
+                      - rulePriority = 1
+                      - selection    = {
+                          - countNumber = 30
+                          - countType   = "imageCountMoreThan"
+                          - tagStatus   = "any"
+                        }
+                    },
+                ]
+            }
+        ) -> null
+      - region      = "ap-south-1" -> null
+      - registry_id = "123456789012" -> null
+      - repository  = "tickethub/frontend" -> null
+    }
+
+  # aws_ecr_repository.app["backend"] will be destroyed
+  - resource "aws_ecr_repository" "app" {
+      - arn                  = "arn:aws:ecr:ap-south-1:123456789012:repository/tickethub/backend" -> null
+      - id                   = "tickethub/backend" -> null
+      - image_tag_mutability = "IMMUTABLE" -> null
+      - name                 = "tickethub/backend" -> null
+      - region               = "ap-south-1" -> null
+      - registry_id          = "123456789012" -> null
+      - repository_url       = "123456789012.dkr.ecr.ap-south-1.amazonaws.com/tickethub/backend" -> null
+      - tags                 = {} -> null
+      - tags_all             = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+
+      - encryption_configuration {
+          - encryption_type = "KMS" -> null
+          - kms_key         = "arn:aws:kms:ap-south-1:123456789012:key/ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+        }
+
+      - image_scanning_configuration {
+          - scan_on_push = true -> null
+        }
+    }
+
+  # aws_ecr_repository.app["frontend"] will be destroyed
+  - resource "aws_ecr_repository" "app" {
+      - arn                  = "arn:aws:ecr:ap-south-1:123456789012:repository/tickethub/frontend" -> null
+      - id                   = "tickethub/frontend" -> null
+      - image_tag_mutability = "IMMUTABLE" -> null
+      - name                 = "tickethub/frontend" -> null
+      - region               = "ap-south-1" -> null
+      - registry_id          = "123456789012" -> null
+      - repository_url       = "123456789012.dkr.ecr.ap-south-1.amazonaws.com/tickethub/frontend" -> null
+      - tags                 = {} -> null
+      - tags_all             = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+
+      - encryption_configuration {
+          - encryption_type = "KMS" -> null
+          - kms_key         = "arn:aws:kms:ap-south-1:123456789012:key/ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+        }
+
+      - image_scanning_configuration {
+          - scan_on_push = true -> null
+        }
+    }
+
+  # aws_eip.nat will be destroyed
+  - resource "aws_eip" "nat" {
+      - allocation_id            = "eipalloc-581b3761a484a5678" -> null
+      - arn                      = "arn:aws:ec2:ap-south-1::elastic-ip/eipalloc-581b3761a484a5678" -> null
+      - association_id           = "eipassoc-ad5acad29d131d710" -> null
+      - domain                   = "vpc" -> null
+      - id                       = "eipalloc-581b3761a484a5678" -> null
+      - network_interface        = "eni-b29ed93f636f00898" -> null
+      - private_dns              = "ip-10-133-116-3.ap-south-1.compute.internal" -> null
+      - private_ip               = "10.133.116.3" -> null
+      - public_dns               = "ec2-127-87-126-140.ap-south-1.compute.amazonaws.com" -> null
+      - public_ip                = "127.87.126.140" -> null
+      - region                   = "ap-south-1" -> null
+      - tags                     = {
+          - "Name" = "tickethub-dev-nat-eip"
+        } -> null
+      - tags_all                 = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "tickethub-dev-nat-eip"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+        # (8 unchanged attributes hidden)
+    }
+
+  # aws_eks_cluster.main will be destroyed
+  - resource "aws_eks_cluster" "main" {
+      - arn                           = "arn:aws:eks:ap-south-1:123456789012:cluster/tickethub-dev-eks" -> null
+      - bootstrap_self_managed_addons = true -> null
+      - certificate_authority         = [
+          - {
+              - data = "bgG9U3LKC44hzp0Ox5fc7pQfVERkmEhh99NVUfbzRyQVlYBSojIBIHKglJpMpYAZ1FB2oXmHiaMKC8S9lPw5n2qftFkNVAzBrKUoweFeMGNdrvBS4tlDOIwxZ1wiTCztBNvBVBYPjZ80H9XZll00vd2RhAtNvrlm3tvrXZ2pgN6zprGsTV6vjguP71ut0O1JfYGXtoQ35cc2tMq8VfWFvLJTrtRowKdpZYRclC9jnJ47F9ghDEYbIFuLMj0Xf0obMMZU2MAsss63sEf0Dw5ozLRPpH9zkOjQuJuxrLT2Rjy71J4mlpEHlIdpxC8cItRAaeW2ssoTnTRJ8zay2Th9aI97f4O5gfs29euWFEJ0hjT4JaBtTDwskNeqsxwoqdAHk2TtOANJOksnXVmokDbzDbaLO0xqRy83Nug3kk5457R8vfsFuoxfzECwt2dzAqBXAyFMNTyvjAPf1zj70raol8kjpDvtS0fkCcCFEup7swt7kykZfPJxeXZqEpWDbqcwFMMvBMTNaHMKyrjfhHzfVGgrnjK5o1vuWXYcb9vmve3eWjhOrtSEAhUDiFXS6ahxeuVWKNeMVcdP2fiAASVUuspZjWGNAwMQfnm02Q8BaNsKhtmmJLdEdgX02KIAdJfZNpwUFdcaXWwo03f5BAzqdl8ptkI47ghXce1E3uKHjlsc6MeEGd2Qp3RTVfOQgU7nlB0U9EbuPTJ9lzWibgEmCJ5OeUnVZuXL9KOkWvq3CW7gpkjB3f2ZPy1Gw1vNWZ6uDDoUoNrTxBtvxSm9nxmNFk2UDHwno3oA4Ujmo8aKWXkXnwyzS4S9gxDR1KgjzO2OxbBNSzFG1Elfcjot7kavZruGMRrrpGNIcf6G9kJqSrJcOv10wyzBWHQsSJb8T5HbxhDn7G2xABqmaM1cm4OvVoA6OZGekDVhbuflHJx6EJoBJgvbpUg8aKSv7iPCD7bbn3mpKRgZv4VmoLWj05Wc42LiS3sJGj0cFLdRytrzBwUNnJli6YZPMSba2uCwePIUIl7hts5ychcmyv7ZawZIOAnWR9ChHR5VkWjrw7E06VXycB58xlBYoXlOnhG5MHojtwnIY7myoOMP3shKuMswpGQnciYwSd5mG3vS7Ss80HIPt1tOV510Mw6VMPyPt1usQJoIuj3Yao3zPhE0G0sYgD5AgqmweCuzxQzKhCrnhQ6fzP0DVIcTYXDkphB3I5BBvrMT8mFM3ojVIuPCd5DAH3Osb5aeLxB5tPZrj6cYtHpa5hODaBvz4LfaEwaGTTjdigrRIys5Hip3OtdGNILp9XwmIiZvbg2uC7tBm6qsQcCmV0yjxnbnmSVxoCB7lcSHYZXS9ZElyAIYV2VAMlkRxZmUysNjPpeN1T1xRmvB9lSsTmQkr6TPr0fY"
+            },
+        ] -> null
+      - created_at                    = "2026-10-07T13:47:13Z" -> null
+      - deletion_protection           = false -> null
+      - enabled_cluster_log_types     = [
+          - "api",
+          - "audit",
+          - "authenticator",
+          - "controllerManager",
+          - "scheduler",
+        ] -> null
+      - endpoint                      = "https://ukWwFD9tOjUZNpg1HmI1.xFi.ap-south-1.eks.amazonaws.com/" -> null
+      - id                            = "tickethub-dev-eks" -> null
+      - identity                      = [
+          - {
+              - oidc = [
+                  - {
+                      - issuer = "https://oidc.eks.ap-south-1.amazonaws.com/id/GRekMSZyNN"
+                    },
+                ]
+            },
+        ] -> null
+      - name                          = "tickethub-dev-eks" -> null
+      - platform_version              = "eks.4" -> null
+      - region                        = "ap-south-1" -> null
+      - role_arn                      = "arn:aws:iam::123456789012:role/tickethub-dev-eks-cluster" -> null
+      - status                        = "ACTIVE" -> null
+      - tags                          = {} -> null
+      - tags_all                      = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - version                       = "1.33" -> null
+
+      - encryption_config {
+          - resources = [
+              - "secrets",
+            ] -> null
+
+          - provider {
+              - key_arn = "arn:aws:kms:ap-south-1:123456789012:key/ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+            }
+        }
+
+      - kubernetes_network_config {
+            # (3 unchanged attributes hidden)
+
+          - elastic_load_balancing {
+              - enabled = false -> null
+            }
+        }
+
+      - vpc_config {
+          - endpoint_private_access   = true -> null
+          - endpoint_public_access    = false -> null
+          - public_access_cidrs       = [] -> null
+          - security_group_ids        = [
+              - "sg-979ecbda645c835c7",
+            ] -> null
+          - subnet_ids                = [
+              - "subnet-279f33b0c68a44cdb",
+              - "subnet-5bf5943747eec8e8a",
+              - "subnet-82063607557d972a8",
+              - "subnet-8ac9caf6bd34ca506",
+            ] -> null
+            # (3 unchanged attributes hidden)
+        }
+    }
+
+  # aws_eks_node_group.main will be destroyed
+  - resource "aws_eks_node_group" "main" {
+      - ami_type               = "AL2_x86_64" -> null
+      - arn                    = "arn:aws:eks:ap-south-1:123456789012:nodegroup/tickethub-dev-eks/tickethub-dev-workers/64fdfcd4-a18a-4cc4-913d-959c04fcb7b6" -> null
+      - capacity_type          = "ON_DEMAND" -> null
+      - cluster_name           = "tickethub-dev-eks" -> null
+      - disk_size              = 20 -> null
+      - id                     = "tickethub-dev-eks:tickethub-dev-workers" -> null
+      - instance_types         = [
+          - "t3.medium",
+        ] -> null
+      - labels                 = {
+          - "workload" = "tickethub"
+        } -> null
+      - node_group_name        = "tickethub-dev-workers" -> null
+      - node_role_arn          = "arn:aws:iam::123456789012:role/tickethub-dev-eks-nodes" -> null
+      - region                 = "ap-south-1" -> null
+      - release_version        = "1.19.8-20210414" -> null
+      - resources              = [
+          - {
+              - autoscaling_groups              = [
+                  - {
+                      - name = "eks-64fdfcd4-a18a-4cc4-913d-959c04fcb7b6"
+                    },
+                ]
+              - remote_access_security_group_id = "sg-yrzglhnyi9rkjkjql"
+            },
+        ] -> null
+      - status                 = "ACTIVE" -> null
+      - subnet_ids             = [
+          - "subnet-279f33b0c68a44cdb",
+          - "subnet-8ac9caf6bd34ca506",
+        ] -> null
+      - tags                   = {} -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - version                = "1.19" -> null
+        # (1 unchanged attribute hidden)
+
+      - remote_access {
+          - ec2_ssh_key               = "eksKeypair" -> null
+          - source_security_group_ids = [] -> null
+        }
+
+      - scaling_config {
+          - desired_size = 2 -> null
+          - max_size     = 4 -> null
+          - min_size     = 2 -> null
+        }
+    }
+
+  # aws_flow_log.vpc will be destroyed
+  - resource "aws_flow_log" "vpc" {
+      - arn                        = "arn:aws:ec2:ap-south-1::vpc-flow-log/fl-203fc5535c69d4e97" -> null
+      - id                         = "fl-203fc5535c69d4e97" -> null
+      - log_destination            = "arn:aws:s3:::tickethub-dev-artifacts-24bcs10151" -> null
+      - log_destination_type       = "s3" -> null
+      - log_format                 = "${version} ${account-id} ${interface-id} ${srcaddr} ${dstaddr} ${srcport} ${dstport} ${protocol} ${packets} ${bytes} ${start} ${end} ${action} ${log-status}" -> null
+      - max_aggregation_interval   = 600 -> null
+      - region                     = "ap-south-1" -> null
+      - tags                       = {} -> null
+      - tags_all                   = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - traffic_type               = "ALL" -> null
+      - vpc_id                     = "vpc-e44f08820d44d45d9" -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_iam_role.eks_cluster will be destroyed
+  - resource "aws_iam_role" "eks_cluster" {
+      - arn                   = "arn:aws:iam::123456789012:role/tickethub-dev-eks-cluster" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "eks.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-10-07T13:47:02Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "tickethub-dev-eks-cluster" -> null
+      - managed_policy_arns   = [
+          - "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy",
+        ] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "tickethub-dev-eks-cluster" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - unique_id             = "AROARZPUZDIKDUJQU4UXX" -> null
+        # (3 unchanged attributes hidden)
+    }
+
+  # aws_iam_role.eks_nodes will be destroyed
+  - resource "aws_iam_role" "eks_nodes" {
+      - arn                   = "arn:aws:iam::123456789012:role/tickethub-dev-eks-nodes" -> null
+      - assume_role_policy    = jsonencode(
+            {
+              - Statement = [
+                  - {
+                      - Action    = "sts:AssumeRole"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - Service = "ec2.amazonaws.com"
+                        }
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - create_date           = "2026-10-07T13:47:03Z" -> null
+      - force_detach_policies = false -> null
+      - id                    = "tickethub-dev-eks-nodes" -> null
+      - managed_policy_arns   = [
+          - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly",
+          - "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy",
+          - "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy",
+        ] -> null
+      - max_session_duration  = 3600 -> null
+      - name                  = "tickethub-dev-eks-nodes" -> null
+      - path                  = "/" -> null
+      - tags                  = {} -> null
+      - tags_all              = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - unique_id             = "AROARZPUZDIKPVMFJTIC5" -> null
+        # (3 unchanged attributes hidden)
+    }
+
+  # aws_iam_role_policy_attachment.eks_cluster will be destroyed
+  - resource "aws_iam_role_policy_attachment" "eks_cluster" {
+      - id         = "tickethub-dev-eks-cluster/arn:aws:iam::aws:policy/AmazonEKSClusterPolicy" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy" -> null
+      - role       = "tickethub-dev-eks-cluster" -> null
+    }
+
+  # aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"] will be destroyed
+  - resource "aws_iam_role_policy_attachment" "eks_nodes" {
+      - id         = "tickethub-dev-eks-nodes/arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly" -> null
+      - role       = "tickethub-dev-eks-nodes" -> null
+    }
+
+  # aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"] will be destroyed
+  - resource "aws_iam_role_policy_attachment" "eks_nodes" {
+      - id         = "tickethub-dev-eks-nodes/arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy" -> null
+      - role       = "tickethub-dev-eks-nodes" -> null
+    }
+
+  # aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"] will be destroyed
+  - resource "aws_iam_role_policy_attachment" "eks_nodes" {
+      - id         = "tickethub-dev-eks-nodes/arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy" -> null
+      - policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy" -> null
+      - role       = "tickethub-dev-eks-nodes" -> null
+    }
+
+  # aws_internet_gateway.main will be destroyed
+  - resource "aws_internet_gateway" "main" {
+      - arn      = "arn:aws:ec2:ap-south-1:123456789012:internet-gateway/igw-2da424a22b4b9518c" -> null
+      - id       = "igw-2da424a22b4b9518c" -> null
+      - owner_id = "123456789012" -> null
+      - region   = "ap-south-1" -> null
+      - tags     = {
+          - "Name" = "tickethub-dev-igw"
+        } -> null
+      - tags_all = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "tickethub-dev-igw"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - vpc_id   = "vpc-e44f08820d44d45d9" -> null
+    }
+
+  # aws_kms_alias.main will be destroyed
+  - resource "aws_kms_alias" "main" {
+      - arn            = "arn:aws:kms:ap-south-1:123456789012:alias/tickethub-dev" -> null
+      - id             = "alias/tickethub-dev" -> null
+      - name           = "alias/tickethub-dev" -> null
+      - region         = "ap-south-1" -> null
+      - target_key_arn = "arn:aws:kms:ap-south-1:123456789012:key/ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+      - target_key_id  = "ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_kms_key.main will be destroyed
+  - resource "aws_kms_key" "main" {
+      - arn                                = "arn:aws:kms:ap-south-1:123456789012:key/ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+      - bypass_policy_lockout_safety_check = false -> null
+      - customer_master_key_spec           = "SYMMETRIC_DEFAULT" -> null
+      - deletion_window_in_days            = 7 -> null
+      - description                        = "tickethub-dev secrets + bucket encryption" -> null
+      - enable_key_rotation                = true -> null
+      - id                                 = "ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+      - is_enabled                         = true -> null
+      - key_id                             = "ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+      - key_usage                          = "ENCRYPT_DECRYPT" -> null
+      - multi_region                       = false -> null
+      - policy                             = jsonencode(
+            {
+              - Id        = "key-default-1"
+              - Statement = [
+                  - {
+                      - Action    = "kms:*"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - AWS = "arn:aws:iam::123456789012:root"
+                        }
+                      - Resource  = "*"
+                      - Sid       = "Enable IAM User Permissions"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - region                             = "ap-south-1" -> null
+      - rotation_period_in_days            = 0 -> null
+      - tags                               = {} -> null
+      - tags_all                           = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_nat_gateway.main will be destroyed
+  - resource "aws_nat_gateway" "main" {
+      - allocation_id                  = "eipalloc-581b3761a484a5678" -> null
+      - connectivity_type              = "public" -> null
+      - id                             = "nat-d9be93426fb513db0" -> null
+      - region                         = "ap-south-1" -> null
+      - regional_nat_gateway_address   = [] -> null
+      - secondary_allocation_ids       = [] -> null
+      - secondary_private_ip_addresses = [] -> null
+      - subnet_id                      = "subnet-82063607557d972a8" -> null
+      - tags                           = {
+          - "Name" = "tickethub-dev-nat"
+        } -> null
+      - tags_all                       = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "tickethub-dev-nat"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - vpc_id                         = "vpc-e44f08820d44d45d9" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table.private will be destroyed
+  - resource "aws_route_table" "private" {
+      - arn              = "arn:aws:ec2:ap-south-1:123456789012:route-table/rtb-60f6c2f1ee49530e6" -> null
+      - id               = "rtb-60f6c2f1ee49530e6" -> null
+      - owner_id         = "123456789012" -> null
+      - propagating_vgws = [] -> null
+      - region           = "ap-south-1" -> null
+      - route            = [
+          - {
+              - cidr_block                 = "0.0.0.0/0"
+              - nat_gateway_id             = "nat-d9be93426fb513db0"
+                # (12 unchanged attributes hidden)
+            },
+        ] -> null
+      - tags             = {
+          - "Name" = "tickethub-dev-private-rt"
+        } -> null
+      - tags_all         = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "tickethub-dev-private-rt"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - vpc_id           = "vpc-e44f08820d44d45d9" -> null
+    }
+
+  # aws_route_table.public will be destroyed
+  - resource "aws_route_table" "public" {
+      - arn              = "arn:aws:ec2:ap-south-1:123456789012:route-table/rtb-eed46d2920ee866ef" -> null
+      - id               = "rtb-eed46d2920ee866ef" -> null
+      - owner_id         = "123456789012" -> null
+      - propagating_vgws = [] -> null
+      - region           = "ap-south-1" -> null
+      - route            = [
+          - {
+              - cidr_block                 = "0.0.0.0/0"
+              - gateway_id                 = "igw-2da424a22b4b9518c"
+                # (12 unchanged attributes hidden)
+            },
+        ] -> null
+      - tags             = {
+          - "Name" = "tickethub-dev-public-rt"
+        } -> null
+      - tags_all         = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "tickethub-dev-public-rt"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - vpc_id           = "vpc-e44f08820d44d45d9" -> null
+    }
+
+  # aws_route_table_association.private[0] will be destroyed
+  - resource "aws_route_table_association" "private" {
+      - id             = "rtbassoc-6b8c130123f185a22" -> null
+      - region         = "ap-south-1" -> null
+      - route_table_id = "rtb-60f6c2f1ee49530e6" -> null
+      - subnet_id      = "subnet-8ac9caf6bd34ca506" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.private[1] will be destroyed
+  - resource "aws_route_table_association" "private" {
+      - id             = "rtbassoc-e100311ecfbf47a5d" -> null
+      - region         = "ap-south-1" -> null
+      - route_table_id = "rtb-60f6c2f1ee49530e6" -> null
+      - subnet_id      = "subnet-279f33b0c68a44cdb" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.public[0] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-61309a8f4b3bdf59d" -> null
+      - region         = "ap-south-1" -> null
+      - route_table_id = "rtb-eed46d2920ee866ef" -> null
+      - subnet_id      = "subnet-82063607557d972a8" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_route_table_association.public[1] will be destroyed
+  - resource "aws_route_table_association" "public" {
+      - id             = "rtbassoc-7af08b5aa9f6c36ef" -> null
+      - region         = "ap-south-1" -> null
+      - route_table_id = "rtb-eed46d2920ee866ef" -> null
+      - subnet_id      = "subnet-5bf5943747eec8e8a" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_s3_bucket.artifacts will be destroyed
+  - resource "aws_s3_bucket" "artifacts" {
+      - arn                         = "arn:aws:s3:::tickethub-dev-artifacts-24bcs10151" -> null
+      - bucket                      = "tickethub-dev-artifacts-24bcs10151" -> null
+      - bucket_domain_name          = "tickethub-dev-artifacts-24bcs10151.s3.amazonaws.com" -> null
+      - bucket_namespace            = "global" -> null
+      - bucket_region               = "ap-south-1" -> null
+      - bucket_regional_domain_name = "tickethub-dev-artifacts-24bcs10151.s3.ap-south-1.amazonaws.com" -> null
+      - force_destroy               = true -> null
+      - hosted_zone_id              = "Z11RGJOFQNVJUP" -> null
+      - id                          = "tickethub-dev-artifacts-24bcs10151" -> null
+      - object_lock_enabled         = false -> null
+      - region                      = "ap-south-1" -> null
+      - tags                        = {} -> null
+      - tags_all                    = {} -> null
+        # (4 unchanged attributes hidden)
+
+      - grant {
+          - id          = "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a" -> null
+          - permissions = [
+              - "FULL_CONTROL",
+            ] -> null
+          - type        = "CanonicalUser" -> null
+            # (1 unchanged attribute hidden)
+        }
+
+      - lifecycle_rule {
+          - abort_incomplete_multipart_upload_days = 0 -> null
+          - enabled                                = true -> null
+          - id                                     = "expire-old-artifacts" -> null
+          - tags                                   = {} -> null
+            # (1 unchanged attribute hidden)
+
+          - expiration {
+              - days                         = 90 -> null
+              - expired_object_delete_marker = false -> null
+                # (1 unchanged attribute hidden)
+            }
+
+          - noncurrent_version_expiration {
+              - days = 30 -> null
+            }
+        }
+
+      - server_side_encryption_configuration {
+          - rule {
+              - bucket_key_enabled = false -> null
+
+              - apply_server_side_encryption_by_default {
+                  - kms_master_key_id = "arn:aws:kms:ap-south-1:123456789012:key/ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+                  - sse_algorithm     = "aws:kms" -> null
+                }
+            }
+        }
+
+      - versioning {
+          - enabled    = true -> null
+          - mfa_delete = false -> null
+        }
+    }
+
+  # aws_s3_bucket_lifecycle_configuration.artifacts will be destroyed
+  - resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
+      - bucket                                 = "tickethub-dev-artifacts-24bcs10151" -> null
+      - id                                     = "tickethub-dev-artifacts-24bcs10151" -> null
+      - region                                 = "ap-south-1" -> null
+      - transition_default_minimum_object_size = "all_storage_classes_128K" -> null
+        # (1 unchanged attribute hidden)
+
+      - rule {
+          - id     = "expire-old-artifacts" -> null
+          - status = "Enabled" -> null
+            # (1 unchanged attribute hidden)
+
+          - expiration {
+              - days                         = 90 -> null
+              - expired_object_delete_marker = false -> null
+            }
+
+          - filter {
+                # (1 unchanged attribute hidden)
+            }
+
+          - noncurrent_version_expiration {
+              - noncurrent_days = 30 -> null
+            }
+        }
+    }
+
+  # aws_s3_bucket_public_access_block.artifacts will be destroyed
+  - resource "aws_s3_bucket_public_access_block" "artifacts" {
+      - block_public_acls       = true -> null
+      - block_public_policy     = true -> null
+      - bucket                  = "tickethub-dev-artifacts-24bcs10151" -> null
+      - id                      = "tickethub-dev-artifacts-24bcs10151" -> null
+      - ignore_public_acls      = true -> null
+      - region                  = "ap-south-1" -> null
+      - restrict_public_buckets = true -> null
+    }
+
+  # aws_s3_bucket_server_side_encryption_configuration.artifacts will be destroyed
+  - resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts" {
+      - bucket                = "tickethub-dev-artifacts-24bcs10151" -> null
+      - id                    = "tickethub-dev-artifacts-24bcs10151" -> null
+      - region                = "ap-south-1" -> null
+        # (1 unchanged attribute hidden)
+
+      - rule {
+          - blocked_encryption_types = [] -> null
+          - bucket_key_enabled       = false -> null
+
+          - apply_server_side_encryption_by_default {
+              - kms_master_key_id = "arn:aws:kms:ap-south-1:123456789012:key/ddfa19dd-3112-4636-baa6-f0de70ff4055" -> null
+              - sse_algorithm     = "aws:kms" -> null
+            }
+        }
+    }
+
+  # aws_s3_bucket_versioning.artifacts will be destroyed
+  - resource "aws_s3_bucket_versioning" "artifacts" {
+      - bucket                = "tickethub-dev-artifacts-24bcs10151" -> null
+      - id                    = "tickethub-dev-artifacts-24bcs10151" -> null
+      - region                = "ap-south-1" -> null
+        # (1 unchanged attribute hidden)
+
+      - versioning_configuration {
+          - mfa_delete = "Disabled" -> null
+          - status     = "Enabled" -> null
+        }
+    }
+
+  # aws_security_group.alb will be destroyed
+  - resource "aws_security_group" "alb" {
+      - arn                    = "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-07aa5cb1b1a1511dc" -> null
+      - description            = "Public HTTP/HTTPS to the TicketHub ingress load balancer" -> null
+      - egress                 = [
+          - {
+              - cidr_blocks      = []
+              - description      = "Forward to ingress NodePorts on the worker nodes"
+              - from_port        = 30000
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = [
+                  - "sg-979ecbda645c835c7",
+                ]
+              - self             = false
+              - to_port          = 32767
+            },
+        ] -> null
+      - id                     = "sg-07aa5cb1b1a1511dc" -> null
+      - ingress                = [
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "HTTP from the internet, redirected to HTTPS by ingress-nginx"
+              - from_port        = 80
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 80
+            },
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "HTTPS from the internet (public web app)"
+              - from_port        = 443
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 443
+            },
+        ] -> null
+      - name                   = "tickethub-dev-alb" -> null
+      - owner_id               = "123456789012" -> null
+      - region                 = "ap-south-1" -> null
+      - revoke_rules_on_delete = false -> null
+      - tags                   = {
+          - "Name" = "tickethub-dev-alb-sg"
+        } -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "tickethub-dev-alb-sg"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - vpc_id                 = "vpc-e44f08820d44d45d9" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_security_group.nodes will be destroyed
+  - resource "aws_security_group" "nodes" {
+      - arn                    = "arn:aws:ec2:ap-south-1:123456789012:security-group/sg-979ecbda645c835c7" -> null
+      - description            = "EKS worker nodes" -> null
+      - egress                 = [
+          - {
+              - cidr_blocks      = [
+                  - "0.0.0.0/0",
+                ]
+              - description      = "HTTPS only: pull images from GHCR/ECR, reach AWS APIs (via NAT)"
+              - from_port        = 443
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 443
+            },
+          - {
+              - cidr_blocks      = [
+                  - "10.21.0.0/16",
+                ]
+              - description      = "Anything inside the VPC (DNS resolver, pods, control plane ENIs)"
+              - from_port        = 0
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "-1"
+              - security_groups  = []
+              - self             = false
+              - to_port          = 0
+            },
+        ] -> null
+      - id                     = "sg-979ecbda645c835c7" -> null
+      - ingress                = [
+          - {
+              - cidr_blocks      = []
+              - description      = "NodePorts from the load balancer only"
+              - from_port        = 30000
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "tcp"
+              - security_groups  = [
+                  - "sg-07aa5cb1b1a1511dc",
+                ]
+              - self             = false
+              - to_port          = 32767
+            },
+          - {
+              - cidr_blocks      = []
+              - description      = "Pod-to-pod / node-to-node traffic"
+              - from_port        = 0
+              - ipv6_cidr_blocks = []
+              - prefix_list_ids  = []
+              - protocol         = "-1"
+              - security_groups  = []
+              - self             = true
+              - to_port          = 0
+            },
+        ] -> null
+      - name                   = "tickethub-dev-nodes" -> null
+      - owner_id               = "123456789012" -> null
+      - region                 = "ap-south-1" -> null
+      - revoke_rules_on_delete = false -> null
+      - tags                   = {
+          - "Name" = "tickethub-dev-nodes-sg"
+        } -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "tickethub-dev-nodes-sg"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - vpc_id                 = "vpc-e44f08820d44d45d9" -> null
+        # (1 unchanged attribute hidden)
+    }
+
+  # aws_subnet.private[0] will be destroyed
+  - resource "aws_subnet" "private" {
+      - arn                                            = "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-8ac9caf6bd34ca506" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "ap-south-1a" -> null
+      - availability_zone_id                           = "aps1-az1" -> null
+      - cidr_block                                     = "10.21.128.0/20" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-8ac9caf6bd34ca506" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = false -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "ap-south-1" -> null
+      - tags                                           = {
+          - "Name"                                    = "tickethub-dev-private-ap-south-1a"
+          - "kubernetes.io/cluster/tickethub-dev-eks" = "shared"
+          - "kubernetes.io/role/internal-elb"         = "1"
+        } -> null
+      - tags_all                                       = {
+          - "Environment"                             = "dev"
+          - "ManagedBy"                               = "terraform"
+          - "Name"                                    = "tickethub-dev-private-ap-south-1a"
+          - "Owner"                                   = "24BCS10151"
+          - "Project"                                 = "tickethub"
+          - "kubernetes.io/cluster/tickethub-dev-eks" = "shared"
+          - "kubernetes.io/role/internal-elb"         = "1"
+        } -> null
+      - vpc_id                                         = "vpc-e44f08820d44d45d9" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.private[1] will be destroyed
+  - resource "aws_subnet" "private" {
+      - arn                                            = "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-279f33b0c68a44cdb" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "ap-south-1b" -> null
+      - availability_zone_id                           = "aps1-az3" -> null
+      - cidr_block                                     = "10.21.144.0/20" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-279f33b0c68a44cdb" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = false -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "ap-south-1" -> null
+      - tags                                           = {
+          - "Name"                                    = "tickethub-dev-private-ap-south-1b"
+          - "kubernetes.io/cluster/tickethub-dev-eks" = "shared"
+          - "kubernetes.io/role/internal-elb"         = "1"
+        } -> null
+      - tags_all                                       = {
+          - "Environment"                             = "dev"
+          - "ManagedBy"                               = "terraform"
+          - "Name"                                    = "tickethub-dev-private-ap-south-1b"
+          - "Owner"                                   = "24BCS10151"
+          - "Project"                                 = "tickethub"
+          - "kubernetes.io/cluster/tickethub-dev-eks" = "shared"
+          - "kubernetes.io/role/internal-elb"         = "1"
+        } -> null
+      - vpc_id                                         = "vpc-e44f08820d44d45d9" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.public[0] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-82063607557d972a8" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "ap-south-1a" -> null
+      - availability_zone_id                           = "aps1-az1" -> null
+      - cidr_block                                     = "10.21.0.0/20" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-82063607557d972a8" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = false -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "ap-south-1" -> null
+      - tags                                           = {
+          - "Name"                                    = "tickethub-dev-public-ap-south-1a"
+          - "kubernetes.io/cluster/tickethub-dev-eks" = "shared"
+          - "kubernetes.io/role/elb"                  = "1"
+        } -> null
+      - tags_all                                       = {
+          - "Environment"                             = "dev"
+          - "ManagedBy"                               = "terraform"
+          - "Name"                                    = "tickethub-dev-public-ap-south-1a"
+          - "Owner"                                   = "24BCS10151"
+          - "Project"                                 = "tickethub"
+          - "kubernetes.io/cluster/tickethub-dev-eks" = "shared"
+          - "kubernetes.io/role/elb"                  = "1"
+        } -> null
+      - vpc_id                                         = "vpc-e44f08820d44d45d9" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_subnet.public[1] will be destroyed
+  - resource "aws_subnet" "public" {
+      - arn                                            = "arn:aws:ec2:ap-south-1:123456789012:subnet/subnet-5bf5943747eec8e8a" -> null
+      - assign_ipv6_address_on_creation                = false -> null
+      - availability_zone                              = "ap-south-1b" -> null
+      - availability_zone_id                           = "aps1-az3" -> null
+      - cidr_block                                     = "10.21.16.0/20" -> null
+      - enable_dns64                                   = false -> null
+      - enable_lni_at_device_index                     = 0 -> null
+      - enable_resource_name_dns_a_record_on_launch    = false -> null
+      - enable_resource_name_dns_aaaa_record_on_launch = false -> null
+      - id                                             = "subnet-5bf5943747eec8e8a" -> null
+      - ipv6_native                                    = false -> null
+      - map_customer_owned_ip_on_launch                = false -> null
+      - map_public_ip_on_launch                        = false -> null
+      - owner_id                                       = "123456789012" -> null
+      - private_dns_hostname_type_on_launch            = "ip-name" -> null
+      - region                                         = "ap-south-1" -> null
+      - tags                                           = {
+          - "Name"                                    = "tickethub-dev-public-ap-south-1b"
+          - "kubernetes.io/cluster/tickethub-dev-eks" = "shared"
+          - "kubernetes.io/role/elb"                  = "1"
+        } -> null
+      - tags_all                                       = {
+          - "Environment"                             = "dev"
+          - "ManagedBy"                               = "terraform"
+          - "Name"                                    = "tickethub-dev-public-ap-south-1b"
+          - "Owner"                                   = "24BCS10151"
+          - "Project"                                 = "tickethub"
+          - "kubernetes.io/cluster/tickethub-dev-eks" = "shared"
+          - "kubernetes.io/role/elb"                  = "1"
+        } -> null
+      - vpc_id                                         = "vpc-e44f08820d44d45d9" -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_vpc.main will be destroyed
+  - resource "aws_vpc" "main" {
+      - arn                                  = "arn:aws:ec2:ap-south-1:123456789012:vpc/vpc-e44f08820d44d45d9" -> null
+      - assign_generated_ipv6_cidr_block     = false -> null
+      - cidr_block                           = "10.21.0.0/16" -> null
+      - default_network_acl_id               = "acl-0d99de3503abcabbb" -> null
+      - default_route_table_id               = "rtb-203b1d4197c035329" -> null
+      - default_security_group_id            = "sg-c8491de61664938d3" -> null
+      - dhcp_options_id                      = "default" -> null
+      - enable_dns_hostnames                 = true -> null
+      - enable_dns_support                   = true -> null
+      - enable_network_address_usage_metrics = false -> null
+      - id                                   = "vpc-e44f08820d44d45d9" -> null
+      - instance_tenancy                     = "default" -> null
+      - ipv6_netmask_length                  = 0 -> null
+      - main_route_table_id                  = "rtb-203b1d4197c035329" -> null
+      - owner_id                             = "123456789012" -> null
+      - region                               = "ap-south-1" -> null
+      - tags                                 = {
+          - "Name" = "tickethub-dev-vpc"
+        } -> null
+      - tags_all                             = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Name"        = "tickethub-dev-vpc"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+        # (4 unchanged attributes hidden)
+    }
+
+  # aws_vpc_security_group_egress_rule.alb_to_nodes will be destroyed
+  - resource "aws_vpc_security_group_egress_rule" "alb_to_nodes" {
+      - arn                          = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-df7988d858c8dde6a" -> null
+      - from_port                    = 30000 -> null
+      - id                           = "sgr-df7988d858c8dde6a" -> null
+      - ip_protocol                  = "tcp" -> null
+      - referenced_security_group_id = "123456789012/sg-979ecbda645c835c7" -> null
+      - region                       = "ap-south-1" -> null
+      - security_group_id            = "sg-07aa5cb1b1a1511dc" -> null
+      - security_group_rule_id       = "sgr-df7988d858c8dde6a" -> null
+      - tags_all                     = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - to_port                      = 32767 -> null
+    }
+
+  # aws_vpc_security_group_egress_rule.nodes_https will be destroyed
+  - resource "aws_vpc_security_group_egress_rule" "nodes_https" {
+      - arn                    = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-514a7fbcfee61610e" -> null
+      - cidr_ipv4              = "0.0.0.0/0" -> null
+      - description            = "HTTPS only: pull images from GHCR/ECR, reach AWS APIs (via NAT)" -> null
+      - from_port              = 443 -> null
+      - id                     = "sgr-514a7fbcfee61610e" -> null
+      - ip_protocol            = "tcp" -> null
+      - region                 = "ap-south-1" -> null
+      - security_group_id      = "sg-979ecbda645c835c7" -> null
+      - security_group_rule_id = "sgr-514a7fbcfee61610e" -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - to_port                = 443 -> null
+    }
+
+  # aws_vpc_security_group_egress_rule.nodes_in_vpc will be destroyed
+  - resource "aws_vpc_security_group_egress_rule" "nodes_in_vpc" {
+      - arn                    = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-19c0568caa46002af" -> null
+      - cidr_ipv4              = "10.21.0.0/16" -> null
+      - description            = "Anything inside the VPC (DNS resolver, pods, control plane ENIs)" -> null
+      - id                     = "sgr-19c0568caa46002af" -> null
+      - ip_protocol            = "-1" -> null
+      - region                 = "ap-south-1" -> null
+      - security_group_id      = "sg-979ecbda645c835c7" -> null
+      - security_group_rule_id = "sgr-19c0568caa46002af" -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.alb_http will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "alb_http" {
+      - arn                    = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-12270fccfa0439e17" -> null
+      - cidr_ipv4              = "0.0.0.0/0" -> null
+      - description            = "HTTP from the internet, redirected to HTTPS by ingress-nginx" -> null
+      - from_port              = 80 -> null
+      - id                     = "sgr-12270fccfa0439e17" -> null
+      - ip_protocol            = "tcp" -> null
+      - region                 = "ap-south-1" -> null
+      - security_group_id      = "sg-07aa5cb1b1a1511dc" -> null
+      - security_group_rule_id = "sgr-12270fccfa0439e17" -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - to_port                = 80 -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.alb_https will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "alb_https" {
+      - arn                    = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-fdeaa615aaa09946d" -> null
+      - cidr_ipv4              = "0.0.0.0/0" -> null
+      - description            = "HTTPS from the internet (public web app)" -> null
+      - from_port              = 443 -> null
+      - id                     = "sgr-fdeaa615aaa09946d" -> null
+      - ip_protocol            = "tcp" -> null
+      - region                 = "ap-south-1" -> null
+      - security_group_id      = "sg-07aa5cb1b1a1511dc" -> null
+      - security_group_rule_id = "sgr-fdeaa615aaa09946d" -> null
+      - tags_all               = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - to_port                = 443 -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.nodes_from_alb will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "nodes_from_alb" {
+      - arn                          = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-ae7097e1dd8ba8db2" -> null
+      - from_port                    = 30000 -> null
+      - id                           = "sgr-ae7097e1dd8ba8db2" -> null
+      - ip_protocol                  = "tcp" -> null
+      - referenced_security_group_id = "123456789012/sg-07aa5cb1b1a1511dc" -> null
+      - region                       = "ap-south-1" -> null
+      - security_group_id            = "sg-979ecbda645c835c7" -> null
+      - security_group_rule_id       = "sgr-ae7097e1dd8ba8db2" -> null
+      - tags_all                     = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+      - to_port                      = 32767 -> null
+    }
+
+  # aws_vpc_security_group_ingress_rule.nodes_self will be destroyed
+  - resource "aws_vpc_security_group_ingress_rule" "nodes_self" {
+      - arn                          = "arn:aws:ec2:ap-south-1::security-group-rule/sgr-0ad03baf87a701417" -> null
+      - id                           = "sgr-0ad03baf87a701417" -> null
+      - ip_protocol                  = "-1" -> null
+      - referenced_security_group_id = "123456789012/sg-979ecbda645c835c7" -> null
+      - region                       = "ap-south-1" -> null
+      - security_group_id            = "sg-979ecbda645c835c7" -> null
+      - security_group_rule_id       = "sgr-0ad03baf87a701417" -> null
+      - tags_all                     = {
+          - "Environment" = "dev"
+          - "ManagedBy"   = "terraform"
+          - "Owner"       = "24BCS10151"
+          - "Project"     = "tickethub"
+        } -> null
+    }
+
+Plan: 0 to add, 0 to change, 43 to destroy.
+
+Changes to Outputs:
+  - artifacts_bucket      = "tickethub-dev-artifacts-24bcs10151" -> null
+  - ecr_repository_urls   = {
+      - backend  = "123456789012.dkr.ecr.ap-south-1.amazonaws.com/tickethub/backend"
+      - frontend = "123456789012.dkr.ecr.ap-south-1.amazonaws.com/tickethub/frontend"
+    } -> null
+  - eks_cluster_endpoint  = "https://ukWwFD9tOjUZNpg1HmI1.xFi.ap-south-1.eks.amazonaws.com/" -> null
+  - eks_cluster_name      = "tickethub-dev-eks" -> null
+  - eks_node_group_status = "ACTIVE" -> null
+  - kubeconfig_command    = "aws eks update-kubeconfig --region ap-south-1 --name tickethub-dev-eks" -> null
+  - private_subnet_ids    = [
+      - "subnet-8ac9caf6bd34ca506",
+      - "subnet-279f33b0c68a44cdb",
+    ] -> null
+  - public_subnet_ids     = [
+      - "subnet-82063607557d972a8",
+      - "subnet-5bf5943747eec8e8a",
+    ] -> null
+  - vpc_id                = "vpc-e44f08820d44d45d9" -> null
+aws_route_table_association.private[0]: Destroying... [id=rtbassoc-6b8c130123f185a22]
+aws_ecr_lifecycle_policy.app["backend"]: Destroying... [id=tickethub/backend]
+aws_route_table_association.public[0]: Destroying... [id=rtbassoc-61309a8f4b3bdf59d]
+aws_vpc_security_group_egress_rule.nodes_in_vpc: Destroying... [id=sgr-19c0568caa46002af]
+aws_kms_alias.main: Destroying... [id=alias/tickethub-dev]
+aws_s3_bucket_server_side_encryption_configuration.artifacts: Destroying... [id=tickethub-dev-artifacts-24bcs10151]
+aws_vpc_security_group_ingress_rule.alb_http: Destroying... [id=sgr-12270fccfa0439e17]
+aws_s3_bucket_versioning.artifacts: Destroying... [id=tickethub-dev-artifacts-24bcs10151]
+aws_ecr_lifecycle_policy.app["frontend"]: Destroying... [id=tickethub/frontend]
+aws_eks_node_group.main: Destroying... [id=tickethub-dev-eks:tickethub-dev-workers]
+aws_s3_bucket_server_side_encryption_configuration.artifacts: Destruction complete after 1s
+aws_s3_bucket_public_access_block.artifacts: Destroying... [id=tickethub-dev-artifacts-24bcs10151]
+aws_vpc_security_group_ingress_rule.alb_http: Destruction complete after 1s
+aws_route_table_association.private[1]: Destroying... [id=rtbassoc-e100311ecfbf47a5d]
+aws_kms_alias.main: Destruction complete after 1s
+aws_vpc_security_group_ingress_rule.nodes_self: Destroying... [id=sgr-0ad03baf87a701417]
+aws_s3_bucket_versioning.artifacts: Destruction complete after 1s
+aws_vpc_security_group_ingress_rule.alb_https: Destroying... [id=sgr-fdeaa615aaa09946d]
+aws_ecr_lifecycle_policy.app["backend"]: Destruction complete after 1s
+aws_flow_log.vpc: Destroying... [id=fl-203fc5535c69d4e97]
+aws_ecr_lifecycle_policy.app["frontend"]: Destruction complete after 1s
+aws_route_table_association.public[1]: Destroying... [id=rtbassoc-7af08b5aa9f6c36ef]
+aws_vpc_security_group_egress_rule.nodes_in_vpc: Destruction complete after 1s
+aws_vpc_security_group_ingress_rule.nodes_from_alb: Destroying... [id=sgr-ae7097e1dd8ba8db2]
+aws_eks_node_group.main: Destruction complete after 1s
+aws_vpc_security_group_egress_rule.alb_to_nodes: Destroying... [id=sgr-df7988d858c8dde6a]
+aws_route_table_association.public[0]: Destruction complete after 1s
+aws_s3_bucket_lifecycle_configuration.artifacts: Destroying... [id=tickethub-dev-artifacts-24bcs10151]
+aws_vpc_security_group_ingress_rule.nodes_self: Destruction complete after 0s
+aws_vpc_security_group_egress_rule.nodes_https: Destroying... [id=sgr-514a7fbcfee61610e]
+aws_vpc_security_group_ingress_rule.alb_https: Destruction complete after 0s
+aws_ecr_repository.app["frontend"]: Destroying... [id=tickethub/frontend]
+aws_flow_log.vpc: Destruction complete after 0s
+aws_ecr_repository.app["backend"]: Destroying... [id=tickethub/backend]
+aws_route_table_association.private[0]: Destruction complete after 1s
+aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"]: Destroying... [id=tickethub-dev-eks-nodes/arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy]
+aws_vpc_security_group_ingress_rule.nodes_from_alb: Destruction complete after 0s
+aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"]: Destroying... [id=tickethub-dev-eks-nodes/arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly]
+aws_vpc_security_group_egress_rule.alb_to_nodes: Destruction complete after 0s
+aws_eks_cluster.main: Destroying... [id=tickethub-dev-eks]
+aws_s3_bucket_public_access_block.artifacts: Destruction complete after 0s
+aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"]: Destroying... [id=tickethub-dev-eks-nodes/arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy]
+aws_route_table_association.private[1]: Destruction complete after 0s
+aws_security_group.alb: Destroying... [id=sg-07aa5cb1b1a1511dc]
+aws_vpc_security_group_egress_rule.nodes_https: Destruction complete after 0s
+aws_route_table.private: Destroying... [id=rtb-60f6c2f1ee49530e6]
+aws_route_table_association.public[1]: Destruction complete after 0s
+aws_route_table.public: Destroying... [id=rtb-eed46d2920ee866ef]
+aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"]: Destruction complete after 0s
+aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"]: Destruction complete after 0s
+aws_iam_role_policy_attachment.eks_nodes["arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"]: Destruction complete after 0s
+aws_iam_role.eks_nodes: Destroying... [id=tickethub-dev-eks-nodes]
+aws_s3_bucket_lifecycle_configuration.artifacts: Destruction complete after 0s
+aws_s3_bucket.artifacts: Destroying... [id=tickethub-dev-artifacts-24bcs10151]
+aws_s3_bucket.artifacts: Destruction complete after 0s
+aws_iam_role.eks_nodes: Destruction complete after 0s
+aws_ecr_repository.app["frontend"]: Destruction complete after 0s
+aws_ecr_repository.app["backend"]: Destruction complete after 0s
+aws_security_group.alb: Destruction complete after 0s
+aws_route_table.public: Destruction complete after 0s
+aws_route_table.private: Destruction complete after 0s
+aws_nat_gateway.main: Destroying... [id=nat-d9be93426fb513db0]
+aws_eks_cluster.main: Still destroying... [id=tickethub-dev-eks, 00m10s elapsed]
+aws_nat_gateway.main: Still destroying... [id=nat-d9be93426fb513db0, 00m10s elapsed]
+aws_eks_cluster.main: Still destroying... [id=tickethub-dev-eks, 00m20s elapsed]
+aws_nat_gateway.main: Still destroying... [id=nat-d9be93426fb513db0, 00m20s elapsed]
+aws_nat_gateway.main: Destruction complete after 20s
+aws_internet_gateway.main: Destroying... [id=igw-2da424a22b4b9518c]
+aws_eip.nat: Destroying... [id=eipalloc-581b3761a484a5678]
+aws_eip.nat: Destruction complete after 0s
+aws_internet_gateway.main: Destruction complete after 0s
+aws_eks_cluster.main: Still destroying... [id=tickethub-dev-eks, 00m30s elapsed]
+aws_eks_cluster.main: Still destroying... [id=tickethub-dev-eks, 00m40s elapsed]
+aws_eks_cluster.main: Still destroying... [id=tickethub-dev-eks, 00m50s elapsed]
+aws_eks_cluster.main: Still destroying... [id=tickethub-dev-eks, 01m00s elapsed]
+aws_eks_cluster.main: Destruction complete after 1m4s
+aws_iam_role_policy_attachment.eks_cluster: Destroying... [id=tickethub-dev-eks-cluster/arn:aws:iam::aws:policy/AmazonEKSClusterPolicy]
+aws_subnet.private[1]: Destroying... [id=subnet-279f33b0c68a44cdb]
+aws_subnet.public[1]: Destroying... [id=subnet-5bf5943747eec8e8a]
+aws_subnet.private[0]: Destroying... [id=subnet-8ac9caf6bd34ca506]
+aws_kms_key.main: Destroying... [id=ddfa19dd-3112-4636-baa6-f0de70ff4055]
+aws_subnet.public[0]: Destroying... [id=subnet-82063607557d972a8]
+aws_security_group.nodes: Destroying... [id=sg-979ecbda645c835c7]
+aws_iam_role_policy_attachment.eks_cluster: Destruction complete after 1s
+aws_iam_role.eks_cluster: Destroying... [id=tickethub-dev-eks-cluster]
+aws_subnet.public[1]: Destruction complete after 1s
+aws_subnet.public[0]: Destruction complete after 1s
+aws_subnet.private[0]: Destruction complete after 1s
+aws_subnet.private[1]: Destruction complete after 1s
+aws_kms_key.main: Destruction complete after 1s
+aws_security_group.nodes: Destruction complete after 1s
+aws_vpc.main: Destroying... [id=vpc-e44f08820d44d45d9]
+aws_iam_role.eks_cluster: Destruction complete after 0s
+aws_vpc.main: Destruction complete after 0s
+
+Destroy complete! Resources: 43 destroyed.
+$ cd bootstrap && terraform destroy -auto-approve -var aws_endpoint=http://localhost:4567
+aws_kms_key.tfstate: Refreshing state... [id=67ad2052-28c6-49d2-8fed-f4b1fc5808bc]
+aws_s3_bucket.tfstate: Refreshing state... [id=tickethub-tfstate-24bcs10151]
+aws_s3_bucket_public_access_block.tfstate: Refreshing state... [id=tickethub-tfstate-24bcs10151]
+aws_s3_bucket_versioning.tfstate: Refreshing state... [id=tickethub-tfstate-24bcs10151]
+aws_s3_bucket_server_side_encryption_configuration.tfstate: Refreshing state... [id=tickethub-tfstate-24bcs10151]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+Terraform will perform the following actions:
+
+  # aws_kms_key.tfstate will be destroyed
+  - resource "aws_kms_key" "tfstate" {
+      - arn                                = "arn:aws:kms:ap-south-1:123456789012:key/67ad2052-28c6-49d2-8fed-f4b1fc5808bc" -> null
+      - bypass_policy_lockout_safety_check = false -> null
+      - customer_master_key_spec           = "SYMMETRIC_DEFAULT" -> null
+      - deletion_window_in_days            = 7 -> null
+      - description                        = "tickethub terraform state encryption" -> null
+      - enable_key_rotation                = true -> null
+      - id                                 = "67ad2052-28c6-49d2-8fed-f4b1fc5808bc" -> null
+      - is_enabled                         = true -> null
+      - key_id                             = "67ad2052-28c6-49d2-8fed-f4b1fc5808bc" -> null
+      - key_usage                          = "ENCRYPT_DECRYPT" -> null
+      - multi_region                       = false -> null
+      - policy                             = jsonencode(
+            {
+              - Id        = "key-default-1"
+              - Statement = [
+                  - {
+                      - Action    = "kms:*"
+                      - Effect    = "Allow"
+                      - Principal = {
+                          - AWS = "arn:aws:iam::123456789012:root"
+                        }
+                      - Resource  = "*"
+                      - Sid       = "Enable IAM User Permissions"
+                    },
+                ]
+              - Version   = "2012-10-17"
+            }
+        ) -> null
+      - region                             = "ap-south-1" -> null
+      - rotation_period_in_days            = 0 -> null
+      - tags                               = {} -> null
+      - tags_all                           = {} -> null
+        # (2 unchanged attributes hidden)
+    }
+
+  # aws_s3_bucket.tfstate will be destroyed
+  - resource "aws_s3_bucket" "tfstate" {
+      - arn                         = "arn:aws:s3:::tickethub-tfstate-24bcs10151" -> null
+      - bucket                      = "tickethub-tfstate-24bcs10151" -> null
+      - bucket_domain_name          = "tickethub-tfstate-24bcs10151.s3.amazonaws.com" -> null
+      - bucket_namespace            = "global" -> null
+      - bucket_region               = "ap-south-1" -> null
+      - bucket_regional_domain_name = "tickethub-tfstate-24bcs10151.s3.ap-south-1.amazonaws.com" -> null
+      - force_destroy               = true -> null
+      - hosted_zone_id              = "Z11RGJOFQNVJUP" -> null
+      - id                          = "tickethub-tfstate-24bcs10151" -> null
+      - object_lock_enabled         = false -> null
+      - region                      = "ap-south-1" -> null
+      - tags                        = {} -> null
+      - tags_all                    = {} -> null
+        # (4 unchanged attributes hidden)
+
+      - grant {
+          - id          = "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a" -> null
+          - permissions = [
+              - "FULL_CONTROL",
+            ] -> null
+          - type        = "CanonicalUser" -> null
+            # (1 unchanged attribute hidden)
+        }
+
+      - server_side_encryption_configuration {
+          - rule {
+              - bucket_key_enabled = false -> null
+
+              - apply_server_side_encryption_by_default {
+                  - kms_master_key_id = "arn:aws:kms:ap-south-1:123456789012:key/67ad2052-28c6-49d2-8fed-f4b1fc5808bc" -> null
+                  - sse_algorithm     = "aws:kms" -> null
+                }
+            }
+        }
+
+      - versioning {
+          - enabled    = true -> null
+          - mfa_delete = false -> null
+        }
+    }
+
+  # aws_s3_bucket_public_access_block.tfstate will be destroyed
+  - resource "aws_s3_bucket_public_access_block" "tfstate" {
+      - block_public_acls       = true -> null
+      - block_public_policy     = true -> null
+      - bucket                  = "tickethub-tfstate-24bcs10151" -> null
+      - id                      = "tickethub-tfstate-24bcs10151" -> null
+      - ignore_public_acls      = true -> null
+      - region                  = "ap-south-1" -> null
+      - restrict_public_buckets = true -> null
+    }
+
+  # aws_s3_bucket_server_side_encryption_configuration.tfstate will be destroyed
+  - resource "aws_s3_bucket_server_side_encryption_configuration" "tfstate" {
+      - bucket                = "tickethub-tfstate-24bcs10151" -> null
+      - id                    = "tickethub-tfstate-24bcs10151" -> null
+      - region                = "ap-south-1" -> null
+        # (1 unchanged attribute hidden)
+
+      - rule {
+          - blocked_encryption_types = [] -> null
+          - bucket_key_enabled       = false -> null
+
+          - apply_server_side_encryption_by_default {
+              - kms_master_key_id = "arn:aws:kms:ap-south-1:123456789012:key/67ad2052-28c6-49d2-8fed-f4b1fc5808bc" -> null
+              - sse_algorithm     = "aws:kms" -> null
+            }
+        }
+    }
+
+  # aws_s3_bucket_versioning.tfstate will be destroyed
+  - resource "aws_s3_bucket_versioning" "tfstate" {
+      - bucket                = "tickethub-tfstate-24bcs10151" -> null
+      - id                    = "tickethub-tfstate-24bcs10151" -> null
+      - region                = "ap-south-1" -> null
+        # (1 unchanged attribute hidden)
+
+      - versioning_configuration {
+          - mfa_delete = "Disabled" -> null
+          - status     = "Enabled" -> null
+        }
+    }
+
+Plan: 0 to add, 0 to change, 5 to destroy.
+
+Changes to Outputs:
+  - state_bucket = "tickethub-tfstate-24bcs10151" -> null
+aws_s3_bucket_versioning.tfstate: Destroying... [id=tickethub-tfstate-24bcs10151]
+aws_s3_bucket_server_side_encryption_configuration.tfstate: Destroying... [id=tickethub-tfstate-24bcs10151]
+aws_s3_bucket_public_access_block.tfstate: Destroying... [id=tickethub-tfstate-24bcs10151]
+aws_s3_bucket_versioning.tfstate: Destruction complete after 0s
+aws_s3_bucket_server_side_encryption_configuration.tfstate: Destruction complete after 0s
+aws_kms_key.tfstate: Destroying... [id=67ad2052-28c6-49d2-8fed-f4b1fc5808bc]
+aws_s3_bucket_public_access_block.tfstate: Destruction complete after 0s
+aws_s3_bucket.tfstate: Destroying... [id=tickethub-tfstate-24bcs10151]
+aws_kms_key.tfstate: Destruction complete after 0s
+aws_s3_bucket.tfstate: Still destroying... [id=tickethub-tfstate-24bcs10151, 00m10s elapsed]
+aws_s3_bucket.tfstate: Still destroying... [id=tickethub-tfstate-24bcs10151, 00m20s elapsed]
+... (50 identical "Still destroying" lines omitted) ...
+aws_s3_bucket.tfstate: Still destroying... [id=tickethub-tfstate-24bcs10151, 08m50s elapsed]
+Stopping operation...
+
+Interrupt received.
+Please wait for Terraform to exit or data loss may occur.
+Gracefully shutting down...
+
+
+Error: emptying S3 Bucket (tickethub-tfstate-24bcs10151): deleting S3 bucket (tickethub-tfstate-24bcs10151) object versions: operation error S3: DeleteObjects, request canceled, context canceled
+
+
+Error: execution halted
+
+
+Error: execution halted
+
+
+# ^ the destroy above was interrupted (Ctrl-C) after ~9 minutes. The emulator log shows why:
+$ docker logs hw-localstack-s21 2>&1 | grep -B3 "FakeDeleteMarker" | tail -6
+AttributeError: 'FakeDeleteMarker' object has no attribute 'dispose'
+--
+  File "/moto/moto/s3/utils.py", line 131, in pop
+    version.dispose()
+    ^^^^^^^^^^^^^^^
+AttributeError: 'FakeDeleteMarker' object has no attribute 'dispose'
+
+# moto crashes deleting the S3 *delete markers* that `use_lockfile = true` leaves behind in the
+# versioned state bucket, so force_destroy retries forever. Real S3 does not have this bug.
+# Everything else is gone:
+$ aws --endpoint-url http://localhost:4567 eks list-clusters
+{
+    "clusters": []
+}
+$ aws --endpoint-url http://localhost:4567 ec2 describe-vpcs --filters Name=tag:Project,Values=tickethub --query "Vpcs[].VpcId"
+[]
+$ aws --endpoint-url http://localhost:4567 ecr describe-repositories --query "repositories[].repositoryName"
+[]
+$ aws --endpoint-url http://localhost:4567 s3 ls
+2026-10-07 19:16:33 tickethub-tfstate-24bcs10151
+$ cd bootstrap && terraform state list
+aws_s3_bucket.tfstate

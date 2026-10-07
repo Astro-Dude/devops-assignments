@@ -1,8 +1,8 @@
 $ terraform plan -out=tfplan
-data.aws_iam_policy_document.eks_assume: Reading...
 data.aws_iam_policy_document.ec2_assume: Reading...
-data.aws_iam_policy_document.eks_assume: Read complete after 0s [id=3552664922]
+data.aws_iam_policy_document.eks_assume: Reading...
 data.aws_iam_policy_document.ec2_assume: Read complete after 0s [id=2851119427]
+data.aws_iam_policy_document.eks_assume: Read complete after 0s [id=3552664922]
 
 Terraform used the selected providers to generate the following execution
 plan. Resource actions are indicated with the following symbols:
@@ -209,10 +209,8 @@ Terraform will perform the following actions:
           + cluster_security_group_id = (known after apply)
           + control_plane_egress_mode = (known after apply)
           + endpoint_private_access   = true
-          + endpoint_public_access    = true
-          + public_access_cidrs       = [
-              + "203.0.113.10/32",
-            ]
+          + endpoint_public_access    = false
+          + public_access_cidrs       = (known after apply)
           + security_group_ids        = (known after apply)
           + subnet_ids                = (known after apply)
           + vpc_id                    = (known after apply)
@@ -909,11 +907,31 @@ Terraform will perform the following actions:
       + to_port                      = 32767
     }
 
-  # aws_vpc_security_group_egress_rule.nodes_egress will be created
-  + resource "aws_vpc_security_group_egress_rule" "nodes_egress" {
+  # aws_vpc_security_group_egress_rule.nodes_https will be created
+  + resource "aws_vpc_security_group_egress_rule" "nodes_https" {
       + arn                    = (known after apply)
       + cidr_ipv4              = "0.0.0.0/0"
-      + description            = "Pull images from GHCR/ECR and reach AWS APIs via the NAT gateway"
+      + description            = "HTTPS only: pull images from GHCR/ECR, reach AWS APIs (via NAT)"
+      + from_port              = 443
+      + id                     = (known after apply)
+      + ip_protocol            = "tcp"
+      + region                 = "ap-south-1"
+      + security_group_id      = (known after apply)
+      + security_group_rule_id = (known after apply)
+      + tags_all               = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "terraform"
+          + "Owner"       = "24BCS10151"
+          + "Project"     = "tickethub"
+        }
+      + to_port                = 443
+    }
+
+  # aws_vpc_security_group_egress_rule.nodes_in_vpc will be created
+  + resource "aws_vpc_security_group_egress_rule" "nodes_in_vpc" {
+      + arn                    = (known after apply)
+      + cidr_ipv4              = "10.21.0.0/16"
+      + description            = "Anything inside the VPC (DNS resolver, pods, control plane ENIs)"
       + id                     = (known after apply)
       + ip_protocol            = "-1"
       + region                 = "ap-south-1"
@@ -1005,7 +1023,7 @@ Terraform will perform the following actions:
         }
     }
 
-Plan: 42 to add, 0 to change, 0 to destroy.
+Plan: 43 to add, 0 to change, 0 to destroy.
 
 Changes to Outputs:
   + artifacts_bucket      = "tickethub-dev-artifacts-24bcs10151"

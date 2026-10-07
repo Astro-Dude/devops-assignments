@@ -253,7 +253,8 @@ jobs:
         run: |
           kubectl apply -f "$APP_DIR/kubernetes/cluster/ingress-nginx-kind-v1.15.1.yaml"
           kubectl -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=180s
-          kubectl -n ingress-nginx wait --for=condition=complete job --all --timeout=120s
+          # admission webhook must answer before the first Ingress object is created
+          kubectl -n ingress-nginx wait --for=jsonpath='{.subsets[0].addresses[0].ip}' endpoints/ingress-nginx-controller-admission --timeout=60s
       - name: Namespace, GHCR pull secret, DB secret (generated, never stored in git)
         run: |
           kubectl apply -f "$APP_DIR/kubernetes/namespace.yaml"
