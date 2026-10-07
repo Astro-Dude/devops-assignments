@@ -1,0 +1,548 @@
+################ helm repo / helm search ################
+$ helm repo list
+no repositories to show
+
+$ helm repo add bitnami https://charts.bitnami.com/bitnami
+"bitnami" has been added to your repositories
+
+$ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+"ingress-nginx" has been added to your repositories
+
+$ helm repo list
+NAME         	URL                                       
+bitnami      	https://charts.bitnami.com/bitnami        
+ingress-nginx	https://kubernetes.github.io/ingress-nginx
+
+$ helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "ingress-nginx" chart repository
+...Successfully got an update from the "bitnami" chart repository
+Update Complete. ⎈Happy Helming!⎈
+
+$ helm search repo ingress-nginx
+NAME                       	CHART VERSION	APP VERSION	DESCRIPTION                                       
+ingress-nginx/ingress-nginx	4.15.1       	1.15.1     	Ingress controller for Kubernetes using NGINX a...
+
+$ helm search repo nginx --max-col-width 45 | head -6
+NAME                            	CHART VERSION	APP VERSION	DESCRIPTION                                  
+bitnami/nginx                   	25.2.1       	1.31.6     	NGINX Open Source is a web server that can...
+bitnami/nginx-ingress-controller	12.0.7       	1.13.1     	NGINX Ingress Controller is an Ingress con...
+bitnami/nginx-intel             	2.1.15       	0.4.9      	DEPRECATED NGINX Open Source for Intel is ...
+ingress-nginx/ingress-nginx     	4.15.1       	1.15.1     	Ingress controller for Kubernetes using NG...
+
+$ helm search repo bitnami/redis --versions | head -4
+NAME                 	CHART VERSION	APP VERSION	DESCRIPTION                                       
+bitnami/redis        	28.3.1       	8.10.2     	Redis(R) is an open source, advanced key-value ...
+bitnami/redis        	28.3.0       	8.10.2     	Redis(R) is an open source, advanced key-value ...
+bitnami/redis        	28.2.4       	8.10.2     	Redis(R) is an open source, advanced key-value ...
+
+$ helm search hub notes --max-col-width 50 | head -6
+URL                                               	CHART VERSION	APP VERSION	DESCRIPTION                                       
+https://artifacthub.io/packages/helm/nicholaswi...	1.0.0        	ee287b9    	A self-hosted note taking web app that lets you...
+https://artifacthub.io/packages/helm/notes/note...	0.1.0        	1.0.0      	A Helm chart for the Notes application            
+https://artifacthub.io/packages/helm/k8s-infra-...	0.1.0        	1.0.0      	Full stack notes app chart managed by Flux        
+https://artifacthub.io/packages/helm/notesproje...	0.1.0        	1.16.0     	A Helm chart for Kubernetes                       
+https://artifacthub.io/packages/helm/notesproje...	0.1.0        	1.16.0     	A Helm chart for Kubernetes                       
+
+$ helm search hub ingress-nginx --max-col-width 60 | head -5
+URL                                                         	CHART VERSION	APP VERSION	DESCRIPTION                                                 
+https://artifacthub.io/packages/helm/quench-ingress-nginx...	0.0.10       	1.15.10    	Ingress NGINX Controller: the Kubernetes-maintained Ingre...
+https://artifacthub.io/packages/helm/ingress-nginx/ingres...	4.15.1       	1.15.1     	Ingress controller for Kubernetes using NGINX as a revers...
+https://artifacthub.io/packages/helm/ingress-nginx-intern...	4.1.0        	1.2.0      	Ingress controller for Kubernetes using NGINX as a revers...
+https://artifacthub.io/packages/helm/ingress-nginx-valida...	1.13.99      	1.13.99    	Enables ingress-nginx to validate JWT tokens                
+
+$ helm show chart ingress-nginx/ingress-nginx | head -12
+annotations:
+  artifacthub.io/changes: |
+    - Update Ingress-Nginx version controller-v1.15.1
+  artifacthub.io/prerelease: "false"
+apiVersion: v2
+appVersion: 1.15.1
+description: Ingress controller for Kubernetes using NGINX as a reverse proxy and
+  load balancer
+home: https://github.com/kubernetes/ingress-nginx
+icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
+keywords:
+- ingress
+
+$ helm repo remove ingress-nginx
+"ingress-nginx" has been removed from your repositories
+
+$ helm repo list
+NAME   	URL                               
+bitnami	https://charts.bitnami.com/bitnami
+
+################ MINI PROJECT: notes-chart ################
+$ kubectl create namespace s15-gap
+namespace/s15-gap created
+
+$ kubectl -n s15-gap run client --image=busybox:1.36 --restart=Never -- sleep 36000
+pod/client created
+
+--- step 8: lint ---
+$ helm lint notes-chart
+==> Linting notes-chart
+[INFO] Chart.yaml: icon is recommended
+
+1 chart(s) linted, 0 chart(s) failed
+
+--- step 9: render locally ---
+$ helm template notes-dev notes-chart | grep -E '^kind:|^  name:|replicas:|image:'
+kind: ConfigMap
+  name: notes-dev-notes-app-config
+kind: Service
+  name: notes-dev-notes-app
+kind: Deployment
+  name: notes-dev-notes-app
+  replicas: 1
+          image: "nginx:1.27-alpine"
+
+--- step 10: install (development) ---
+$ helm install notes-dev notes-chart -n s15-gap --wait --timeout 3m
+NAME: notes-dev
+LAST DEPLOYED: Wed Oct  7 19:09:12 2026
+NAMESPACE: s15-gap
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "notes-dev".
+
+  Environment : development
+  Revision    : 1
+  Replicas    : 1
+
+Reach the app with:
+  kubectl port-forward svc/notes-dev-notes-app 8088:80
+  curl http://localhost:8088
+
+$ helm list -n s15-gap
+NAME     	NAMESPACE	REVISION	UPDATED                             	STATUS  	CHART          	APP VERSION
+notes-dev	s15-gap  	1       	2026-10-07 19:09:12.532286 +0530 IST	deployed	notes-app-0.1.0	1.27       
+
+$ helm status notes-dev -n s15-gap
+NAME: notes-dev
+LAST DEPLOYED: Wed Oct  7 19:09:12 2026
+NAMESPACE: s15-gap
+STATUS: deployed
+REVISION: 1
+DESCRIPTION: Install complete
+RESOURCES:
+==> v1/ConfigMap
+NAME                         DATA   AGE
+notes-dev-notes-app-config   3      7s
+
+==> v1/Service
+NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+notes-dev-notes-app   ClusterIP   10.96.20.181   <none>        80/TCP    7s
+
+==> v1/Deployment
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+notes-dev-notes-app   1/1     1            1           7s
+
+==> v1/Pod(related)
+NAME                                   READY   STATUS    RESTARTS   AGE
+notes-dev-notes-app-68f875f899-blwx6   1/1     Running   0          7s
+
+
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "notes-dev".
+
+  Environment : development
+  Revision    : 1
+  Replicas    : 1
+
+Reach the app with:
+  kubectl port-forward svc/notes-dev-notes-app 8088:80
+  curl http://localhost:8088
+
+$ kubectl -n s15-gap get pods,svc,configmaps -l app.kubernetes.io/instance=notes-dev
+NAME                                       READY   STATUS    RESTARTS   AGE
+pod/notes-dev-notes-app-68f875f899-blwx6   1/1     Running   0          7s
+
+NAME                          TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/notes-dev-notes-app   ClusterIP   10.96.20.181   <none>        80/TCP    7s
+
+NAME                                   DATA   AGE
+configmap/notes-dev-notes-app-config   3      7s
+
+$ kubectl -n s15-gap wait --for=condition=Ready pod/client --timeout=60s
+pod/client condition met
+
+$ kubectl -n s15-gap exec client -- wget -q -O- http://notes-dev-notes-app
+    <h1>Notes App - development</h1>
+    <p>environment: development</p>
+    <p>revision: 1</p>
+
+--- helm get: everything Helm stored for this release ---
+$ helm get values notes-dev -n s15-gap
+USER-SUPPLIED VALUES:
+null
+
+$ helm get values notes-dev -n s15-gap --all | head -12
+COMPUTED VALUES:
+autoscaling:
+  enabled: false
+  maxReplicas: 5
+  minReplicas: 1
+  targetCPUUtilizationPercentage: 70
+config:
+  environment: development
+  logLevel: debug
+  welcomeMessage: Notes App - development
+image:
+  pullPolicy: IfNotPresent
+
+$ helm get metadata notes-dev -n s15-gap
+NAME: notes-dev
+CHART: notes-app
+VERSION: 0.1.0
+APP_VERSION: 1.27
+ANNOTATIONS: 
+LABELS: modifiedAt=1791380359,name=notes-dev,owner=helm,status=deployed,version=1
+DEPENDENCIES: 
+NAMESPACE: s15-gap
+REVISION: 1
+STATUS: deployed
+DEPLOYED_AT: 2026-10-07T19:09:12+05:30
+APPLY_METHOD: server-side apply
+
+$ helm get notes notes-dev -n s15-gap
+NOTES:
+notes-app (0.1.0) has been deployed as release "notes-dev".
+
+  Environment : development
+  Revision    : 1
+  Replicas    : 1
+
+Reach the app with:
+  kubectl port-forward svc/notes-dev-notes-app 8088:80
+  curl http://localhost:8088
+
+
+$ helm get hooks notes-dev -n s15-gap
+
+$ helm get manifest notes-dev -n s15-gap | grep -E '^# Source|^kind:'
+# Source: notes-app/templates/configmap.yaml
+kind: ConfigMap
+# Source: notes-app/templates/service.yaml
+kind: Service
+# Source: notes-app/templates/deployment.yaml
+kind: Deployment
+
+$ helm get all notes-dev -n s15-gap | grep -E '^NAME:|^LAST DEPLOYED:|^STATUS:|^REVISION:|^COMPUTED VALUES|^HOOKS|^MANIFEST|^NOTES|^# Source' 
+NAME: notes-dev
+LAST DEPLOYED: Wed Oct  7 19:09:12 2026
+STATUS: deployed
+REVISION: 1
+COMPUTED VALUES:
+HOOKS:
+MANIFEST:
+# Source: notes-app/templates/configmap.yaml
+# Source: notes-app/templates/service.yaml
+# Source: notes-app/templates/deployment.yaml
+NOTES:
+
+--- step 11: upgrade to production values ---
+$ helm upgrade notes-dev notes-chart -f notes-chart/values-prod.yaml -n s15-gap --wait --timeout 3m
+Release "notes-dev" has been upgraded. Happy Helming!
+NAME: notes-dev
+LAST DEPLOYED: Wed Oct  7 19:09:19 2026
+NAMESPACE: s15-gap
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "notes-dev".
+
+  Environment : production
+  Revision    : 2
+  Replicas    : autoscaled 3-10
+
+Reach the app with:
+  kubectl port-forward svc/notes-dev-notes-app 8088:80
+  curl http://localhost:8088
+
+$ helm status notes-dev -n s15-gap
+NAME: notes-dev
+LAST DEPLOYED: Wed Oct  7 19:09:19 2026
+NAMESPACE: s15-gap
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+RESOURCES:
+==> v1/Deployment
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+notes-dev-notes-app   3/3     3            3           20s
+
+==> v1/Pod(related)
+NAME                                   READY   STATUS      RESTARTS   AGE
+notes-dev-notes-app-68f875f899-blwx6   0/1     Completed   0          20s
+notes-dev-notes-app-86d54d8b5f-27nhc   1/1     Running     0          12s
+notes-dev-notes-app-86d54d8b5f-ltq74   1/1     Running     0          12s
+notes-dev-notes-app-86d54d8b5f-wwrh2   1/1     Running     0          6s
+
+==> v2/HorizontalPodAutoscaler
+NAME                  REFERENCE                        TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+notes-dev-notes-app   Deployment/notes-dev-notes-app   cpu: <unknown>/60%   3         10        1          12s
+
+==> v1/ConfigMap
+NAME                         DATA   AGE
+notes-dev-notes-app-config   3      20s
+
+==> v1/Service
+NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+notes-dev-notes-app   ClusterIP   10.96.20.181   <none>        80/TCP    20s
+
+
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "notes-dev".
+
+  Environment : production
+  Revision    : 2
+  Replicas    : autoscaled 3-10
+
+Reach the app with:
+  kubectl port-forward svc/notes-dev-notes-app 8088:80
+  curl http://localhost:8088
+
+$ kubectl -n s15-gap get deploy,hpa,pods -l app.kubernetes.io/instance=notes-dev
+NAME                                  READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/notes-dev-notes-app   3/3     3            3           20s
+
+NAME                                                      REFERENCE                        TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/notes-dev-notes-app   Deployment/notes-dev-notes-app   cpu: <unknown>/60%   3         10        1          12s
+
+NAME                                       READY   STATUS      RESTARTS   AGE
+pod/notes-dev-notes-app-68f875f899-blwx6   0/1     Completed   0          20s
+pod/notes-dev-notes-app-86d54d8b5f-27nhc   1/1     Running     0          12s
+pod/notes-dev-notes-app-86d54d8b5f-ltq74   1/1     Running     0          12s
+pod/notes-dev-notes-app-86d54d8b5f-wwrh2   1/1     Running     0          6s
+
+$ kubectl -n s15-gap exec client -- wget -q -O- http://notes-dev-notes-app
+    <h1>Notes App - PRODUCTION</h1>
+    <p>environment: production</p>
+    <p>revision: 2</p>
+
+--- step 12: history ---
+$ helm history notes-dev -n s15-gap
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION     
+1       	Wed Oct  7 19:09:12 2026	superseded	notes-app-0.1.0	1.27       	Install complete
+2       	Wed Oct  7 19:09:19 2026	deployed  	notes-app-0.1.0	1.27       	Upgrade complete
+
+--- step 13: simulate a bad upgrade (no --wait, exactly as the course does it) ---
+$ helm upgrade notes-dev notes-chart -f notes-chart/values-prod.yaml --set image.tag=broken-tag-does-not-exist -n s15-gap
+Release "notes-dev" has been upgraded. Happy Helming!
+NAME: notes-dev
+LAST DEPLOYED: Wed Oct  7 19:09:35 2026
+NAMESPACE: s15-gap
+STATUS: deployed
+REVISION: 3
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "notes-dev".
+
+  Environment : production
+  Revision    : 3
+  Replicas    : autoscaled 3-10
+
+Reach the app with:
+  kubectl port-forward svc/notes-dev-notes-app 8088:80
+  curl http://localhost:8088
+
+$ helm status notes-dev -n s15-gap
+NAME: notes-dev
+LAST DEPLOYED: Wed Oct  7 19:09:35 2026
+NAMESPACE: s15-gap
+STATUS: deployed
+REVISION: 3
+DESCRIPTION: Upgrade complete
+RESOURCES:
+==> v1/ConfigMap
+NAME                         DATA   AGE
+notes-dev-notes-app-config   3      54s
+
+==> v1/Service
+NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+notes-dev-notes-app   ClusterIP   10.96.20.181   <none>        80/TCP    54s
+
+==> v1/Deployment
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+notes-dev-notes-app   3/3     1            3           54s
+
+==> v1/Pod(related)
+NAME                                   READY   STATUS             RESTARTS   AGE
+notes-dev-notes-app-86d54d8b5f-27nhc   1/1     Running            0          46s
+notes-dev-notes-app-86d54d8b5f-ltq74   1/1     Running            0          46s
+notes-dev-notes-app-86d54d8b5f-wwrh2   1/1     Running            0          40s
+notes-dev-notes-app-bbdcc47bf-z2zbx    0/1     ImagePullBackOff   0          31s
+
+==> v2/HorizontalPodAutoscaler
+NAME                  REFERENCE                        TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+notes-dev-notes-app   Deployment/notes-dev-notes-app   cpu: 2%/60%   3         10        3          46s
+
+
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "notes-dev".
+
+  Environment : production
+  Revision    : 3
+  Replicas    : autoscaled 3-10
+
+Reach the app with:
+  kubectl port-forward svc/notes-dev-notes-app 8088:80
+  curl http://localhost:8088
+
+$ kubectl -n s15-gap get pods -l app.kubernetes.io/instance=notes-dev
+NAME                                   READY   STATUS             RESTARTS   AGE
+notes-dev-notes-app-86d54d8b5f-27nhc   1/1     Running            0          46s
+notes-dev-notes-app-86d54d8b5f-ltq74   1/1     Running            0          46s
+notes-dev-notes-app-86d54d8b5f-wwrh2   1/1     Running            0          40s
+notes-dev-notes-app-bbdcc47bf-z2zbx    0/1     ImagePullBackOff   0          31s
+
+$ helm history notes-dev -n s15-gap
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION     
+1       	Wed Oct  7 19:09:12 2026	superseded	notes-app-0.1.0	1.27       	Install complete
+2       	Wed Oct  7 19:09:19 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete
+3       	Wed Oct  7 19:09:35 2026	deployed  	notes-app-0.1.0	1.27       	Upgrade complete
+
+$ helm get values notes-dev -n s15-gap
+USER-SUPPLIED VALUES:
+autoscaling:
+  enabled: true
+  maxReplicas: 10
+  minReplicas: 3
+  targetCPUUtilizationPercentage: 60
+config:
+  environment: production
+  logLevel: warn
+  welcomeMessage: Notes App - PRODUCTION
+image:
+  tag: broken-tag-does-not-exist
+replicaCount: 3
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+$ kubectl -n s15-gap exec client -- wget -q -O- http://notes-dev-notes-app
+    <h1>Notes App - PRODUCTION</h1>
+    <p>environment: production</p>
+    <p>revision: 2</p>
+
+--- step 14: rollback to revision 2 ---
+$ helm rollback notes-dev 2 -n s15-gap --wait --timeout 3m
+Rollback was a success! Happy Helming!
+
+$ kubectl -n s15-gap get pods -l app.kubernetes.io/instance=notes-dev
+NAME                                   READY   STATUS        RESTARTS   AGE
+notes-dev-notes-app-86d54d8b5f-27nhc   1/1     Running       0          46s
+notes-dev-notes-app-86d54d8b5f-ltq74   1/1     Running       0          46s
+notes-dev-notes-app-86d54d8b5f-wwrh2   1/1     Running       0          40s
+notes-dev-notes-app-bbdcc47bf-z2zbx    0/1     Terminating   0          31s
+
+$ helm history notes-dev -n s15-gap
+REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIPTION     
+1       	Wed Oct  7 19:09:12 2026	superseded	notes-app-0.1.0	1.27       	Install complete
+2       	Wed Oct  7 19:09:19 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete
+3       	Wed Oct  7 19:09:35 2026	superseded	notes-app-0.1.0	1.27       	Upgrade complete
+4       	Wed Oct  7 19:10:06 2026	deployed  	notes-app-0.1.0	1.27       	Rollback to 2   
+
+$ helm status notes-dev -n s15-gap
+NAME: notes-dev
+LAST DEPLOYED: Wed Oct  7 19:10:06 2026
+NAMESPACE: s15-gap
+STATUS: deployed
+REVISION: 4
+DESCRIPTION: Rollback to 2
+RESOURCES:
+==> v1/Service
+NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+notes-dev-notes-app   ClusterIP   10.96.20.181   <none>        80/TCP    54s
+
+==> v1/Deployment
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+notes-dev-notes-app   3/3     3            3           54s
+
+==> v1/Pod(related)
+NAME                                   READY   STATUS        RESTARTS   AGE
+notes-dev-notes-app-86d54d8b5f-27nhc   1/1     Running       0          46s
+notes-dev-notes-app-86d54d8b5f-ltq74   1/1     Running       0          46s
+notes-dev-notes-app-86d54d8b5f-wwrh2   1/1     Running       0          40s
+notes-dev-notes-app-bbdcc47bf-z2zbx    0/1     Terminating   0          31s
+
+==> v2/HorizontalPodAutoscaler
+NAME                  REFERENCE                        TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+notes-dev-notes-app   Deployment/notes-dev-notes-app   cpu: 2%/60%   3         10        3          46s
+
+==> v1/ConfigMap
+NAME                         DATA   AGE
+notes-dev-notes-app-config   3      54s
+
+
+TEST SUITE: None
+NOTES:
+notes-app (0.1.0) has been deployed as release "notes-dev".
+
+  Environment : production
+  Revision    : 2
+  Replicas    : autoscaled 3-10
+
+Reach the app with:
+  kubectl port-forward svc/notes-dev-notes-app 8088:80
+  curl http://localhost:8088
+
+$ helm get values notes-dev -n s15-gap --revision 2
+USER-SUPPLIED VALUES:
+autoscaling:
+  enabled: true
+  maxReplicas: 10
+  minReplicas: 3
+  targetCPUUtilizationPercentage: 60
+config:
+  environment: production
+  logLevel: warn
+  welcomeMessage: Notes App - PRODUCTION
+replicaCount: 3
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+$ kubectl -n s15-gap exec client -- wget -q -O- http://notes-dev-notes-app
+    <h1>Notes App - PRODUCTION</h1>
+    <p>environment: production</p>
+    <p>revision: 2</p>
+
+--- step 15: clean up ---
+$ helm uninstall notes-dev -n s15-gap
+release "notes-dev" uninstalled
+
+$ kubectl -n s15-gap get pods,svc,configmaps,hpa -l app.kubernetes.io/instance=notes-dev
+NAME                                       READY   STATUS        RESTARTS   AGE
+pod/notes-dev-notes-app-86d54d8b5f-27nhc   1/1     Terminating   0          47s
+pod/notes-dev-notes-app-86d54d8b5f-ltq74   1/1     Terminating   0          47s
+pod/notes-dev-notes-app-86d54d8b5f-wwrh2   1/1     Terminating   0          41s
+pod/notes-dev-notes-app-bbdcc47bf-z2zbx    0/1     Terminating   0          32s
+
+$ helm list -n s15-gap --all
+Error: unknown flag: --all
+
+$ helm status notes-dev -n s15-gap
+Error: release: not found
+
+$ kubectl -n s15-gap get secrets -l owner=helm
+No resources found in s15-gap namespace.
+
