@@ -1,0 +1,101 @@
+$ kubectl apply -f kubernetes/00-namespace.yaml
+namespace/tickethub-raw created
+
+$ kubectl -n tickethub-raw create secret generic tickethub-db --from-literal=DB_USER=tickethub --from-literal=DB_PASSWORD="$(openssl rand -hex 16)"
+secret/tickethub-db created
+
+$ kubectl apply -f kubernetes/
+namespace/tickethub-raw unchanged
+configmap/tickethub-config created
+persistentvolumeclaim/tickethub-postgres-data created
+deployment.apps/tickethub-postgres created
+service/tickethub-postgres created
+deployment.apps/tickethub-backend created
+service/tickethub-backend created
+deployment.apps/tickethub-frontend created
+service/tickethub-frontend created
+ingress.networking.k8s.io/tickethub created
+horizontalpodautoscaler.autoscaling/tickethub-backend created
+networkpolicy.networking.k8s.io/tickethub-postgres created
+namespace/tickethub created
+
+$ kubectl -n tickethub-raw rollout status deploy/tickethub-backend --timeout=180s
+Waiting for deployment "tickethub-backend" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "tickethub-backend" rollout to finish: 1 of 2 updated replicas are available...
+deployment "tickethub-backend" successfully rolled out
+
+$ kubectl -n tickethub-raw rollout status deploy/tickethub-frontend --timeout=120s
+deployment "tickethub-frontend" successfully rolled out
+
+$ kubectl -n tickethub-raw get deploy,pods,svc,endpoints,ingress,hpa,pvc,networkpolicy,configmap,secret -o wide
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                                                               SELECTOR
+deployment.apps/tickethub-backend    2/2     2            2           17s   backend      ghcr.io/astro-dude/s21-tickethub-backend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4    app.kubernetes.io/name=tickethub-backend
+deployment.apps/tickethub-frontend   2/2     2            2           17s   frontend     ghcr.io/astro-dude/s21-tickethub-frontend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4   app.kubernetes.io/name=tickethub-frontend
+deployment.apps/tickethub-postgres   1/1     1            1           17s   postgres     postgres:17-alpine                                                                   app.kubernetes.io/name=tickethub-postgres
+
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE                   NOMINATED NODE   READINESS GATES
+pod/tickethub-backend-644799b847-5nfks    1/1     Running   0          17s   10.244.0.43   hw-s21-control-plane   <none>           <none>
+pod/tickethub-backend-644799b847-rggmm    1/1     Running   0          17s   10.244.0.40   hw-s21-control-plane   <none>           <none>
+pod/tickethub-frontend-7f7659c547-cw8zw   1/1     Running   0          17s   10.244.0.41   hw-s21-control-plane   <none>           <none>
+pod/tickethub-frontend-7f7659c547-hts44   1/1     Running   0          17s   10.244.0.42   hw-s21-control-plane   <none>           <none>
+pod/tickethub-postgres-5dc6977fdf-gcn99   1/1     Running   0          17s   10.244.0.44   hw-s21-control-plane   <none>           <none>
+
+NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/tickethub-backend    ClusterIP   10.96.127.231   <none>        8000/TCP   17s   app.kubernetes.io/name=tickethub-backend
+service/tickethub-frontend   ClusterIP   10.96.198.207   <none>        80/TCP     17s   app.kubernetes.io/name=tickethub-frontend
+service/tickethub-postgres   ClusterIP   10.96.207.82    <none>        5432/TCP   17s   app.kubernetes.io/name=tickethub-postgres
+
+NAME                           ENDPOINTS                           AGE
+endpoints/tickethub-backend    10.244.0.40:8000,10.244.0.43:8000   17s
+endpoints/tickethub-frontend   10.244.0.41:8080,10.244.0.42:8080   17s
+endpoints/tickethub-postgres   10.244.0.44:5432                    17s
+
+NAME                                  CLASS   HOSTS                        ADDRESS   PORTS   AGE
+ingress.networking.k8s.io/tickethub   nginx   raw.tickethub.localtest.me             80      17s
+
+NAME                                                    REFERENCE                      TARGETS                               MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/tickethub-backend   Deployment/tickethub-backend   cpu: <unknown>/70%, memory: 48%/85%   2         5         2          17s
+
+NAME                                            STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+persistentvolumeclaim/tickethub-postgres-data   Bound    pvc-1e4a6c39-b6fd-4f0a-89a1-13f58a0e0260   1Gi        RWO            standard       <unset>                 17s   Filesystem
+
+NAME                                                 POD-SELECTOR                                AGE
+networkpolicy.networking.k8s.io/tickethub-postgres   app.kubernetes.io/name=tickethub-postgres   17s
+
+NAME                         DATA   AGE
+configmap/kube-root-ca.crt   1      17s
+configmap/tickethub-config   6      17s
+
+NAME                  TYPE     DATA   AGE
+secret/tickethub-db   Opaque   2      17s
+
+$ curl -s http://raw.tickethub.localtest.me:28080/api/info
+<html>
+<head><title>503 Service Temporarily Unavailable</title></head>
+<body>
+<center><h1>503 Service Temporarily Unavailable</h1></center>
+<hr><center>nginx</center>
+</body>
+</html>
+
+$ curl -s -o /dev/null -w "%{http_code} %{content_type}\n" http://raw.tickethub.localtest.me:28080/
+200 text/html
+
+
+# the 503 above was ingress-nginx not having synced the brand-new Ingress yet (ADDRESS still empty); 10s later:
+$ kubectl -n tickethub-raw get ingress tickethub
+NAME        CLASS   HOSTS                        ADDRESS     PORTS   AGE
+tickethub   nginx   raw.tickethub.localtest.me   localhost   80      23s
+$ curl -s http://raw.tickethub.localtest.me:28080/api/info
+{"service":"TicketHub API","version":"c9ba4c7","environment":"raw-manifests","pod":"tickethub-backend-644799b847-5nfks","default_team":"L1 Support"}
+$ kubectl -n tickethub-raw logs deploy/tickethub-backend -c migrate
+Found 2 pods, using pod/tickethub-backend-644799b847-rggmm
+waiting for database ...
+waiting for database ...
+waiting for database ...
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001_create_tickets, create tickets table
+INFO  [alembic.runtime.migration] Running upgrade 0001_create_tickets -> 0002_create_comments, create comments table
+migrations applied (alembic head)

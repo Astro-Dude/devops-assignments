@@ -18,7 +18,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       containers:
         - name: frontend
-          image: ghcr.io/astro-dude/s21-tickethub-frontend:IMAGE_TAG
+          image: ghcr.io/astro-dude/s21-tickethub-frontend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
           ports:
             - {name: http, containerPort: 8080}
           env:

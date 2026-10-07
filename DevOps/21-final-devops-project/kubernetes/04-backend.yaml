@@ -21,7 +21,7 @@ spec:
         seccompProfile: {type: RuntimeDefault}
       initContainers:
         - name: migrate
-          image: ghcr.io/astro-dude/s21-tickethub-backend:IMAGE_TAG
+          image: ghcr.io/astro-dude/s21-tickethub-backend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
           command: ["python", "-m", "app.migrate"]
           envFrom:
             - configMapRef: {name: tickethub-config}
@@ -35,7 +35,7 @@ spec:
             limits: {cpu: 500m, memory: 256Mi}
       containers:
         - name: backend
-          image: ghcr.io/astro-dude/s21-tickethub-backend:IMAGE_TAG
+          image: ghcr.io/astro-dude/s21-tickethub-backend:c9ba4c7618f8b5d827d3f57722fac8103cd804e4
           ports:
             - {name: http, containerPort: 8000}
           envFrom:

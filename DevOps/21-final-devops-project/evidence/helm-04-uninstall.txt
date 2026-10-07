@@ -1,0 +1,16 @@
+$ helm uninstall tickethub -n tickethub-helm
+These resources were kept due to the resource policy:
+[PersistentVolumeClaim] tickethub-postgres-data
+[Secret] tickethub-db
+
+release "tickethub" uninstalled
+
+$ kubectl -n tickethub-helm get pvc,secret   # helm.sh/resource-policy: keep -> data and DB password survive uninstall
+NAME                                            STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/tickethub-postgres-data   Bound    pvc-80111814-e189-4be3-8ac3-ca038f60d032   1Gi        RWO            standard       <unset>                 4m46s
+
+NAME                  TYPE     DATA   AGE
+secret/tickethub-db   Opaque   2      4m46s
+
+$ kubectl delete namespace tickethub-helm   # lab clean-up
+namespace "tickethub-helm" deleted
