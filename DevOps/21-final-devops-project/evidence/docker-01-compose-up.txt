@@ -1,0 +1,199 @@
+ Image tickethub-frontend Building 
+ Image tickethub-backend Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.16kB done
+#1 DONE 0.0s
+
+#2 [backend internal] load build definition from backend.Dockerfile
+#2 transferring dockerfile: 1.48kB 0.0s done
+#2 DONE 0.1s
+
+#3 [frontend internal] load build definition from frontend.Dockerfile
+#3 transferring dockerfile: 1.15kB done
+#3 DONE 0.1s
+
+#4 [frontend] resolve image config for docker-image://docker.io/docker/dockerfile:1
+#4 DONE 1.2s
+
+#5 [frontend] docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#5 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e done
+#5 CACHED
+
+#6 [backend internal] load metadata for docker.io/library/python:3.13-alpine
+#6 ...
+
+#7 [frontend internal] load metadata for docker.io/nginxinc/nginx-unprivileged:1.29-alpine
+#7 DONE 1.0s
+
+#6 [backend internal] load metadata for docker.io/library/python:3.13-alpine
+#6 DONE 1.0s
+
+#8 [backend internal] load .dockerignore
+#8 transferring context: 101B done
+#8 DONE 0.0s
+
+#9 [frontend internal] load metadata for docker.io/library/node:24-alpine
+#9 DONE 1.0s
+
+#10 [frontend internal] load .dockerignore
+#10 transferring context: 58B done
+#10 DONE 0.0s
+
+#11 [backend internal] load build context
+#11 transferring context: 1.06kB done
+#11 DONE 0.0s
+
+#12 [backend build 1/4] FROM docker.io/library/python:3.13-alpine@sha256:2d9aefe2fef018a7eb2c13064c89c71929800fd2e5dccdbf52ea5da5bb8d929a
+#12 resolve docker.io/library/python:3.13-alpine@sha256:2d9aefe2fef018a7eb2c13064c89c71929800fd2e5dccdbf52ea5da5bb8d929a 0.0s done
+#12 DONE 0.0s
+
+#13 [frontend stage-1 1/4] FROM docker.io/nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6
+#13 resolve docker.io/nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6 0.0s done
+#13 DONE 0.0s
+
+#14 [frontend build 1/6] FROM docker.io/library/node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
+#14 resolve docker.io/library/node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 0.0s done
+#14 CACHED
+
+#15 [backend build 4/4] RUN /venv/bin/pip install -r requirements.txt
+#15 CACHED
+
+#16 [backend stage-1 5/7] COPY alembic.ini ./
+#16 CACHED
+
+#17 [backend stage-1 2/7] RUN apk upgrade --no-cache && addgroup -S -g 10001 app && adduser -S -D -H -u 10001 -G app app     && pip uninstall -y pip setuptools 2>/dev/null || true
+#17 CACHED
+
+#18 [backend stage-1 3/7] WORKDIR /app
+#18 CACHED
+
+#19 [backend stage-1 4/7] COPY --from=build /venv /venv
+#19 CACHED
+
+#20 [backend stage-1 6/7] COPY alembic ./alembic
+#20 CACHED
+
+#21 [backend build 3/4] COPY requirements.txt .
+#21 CACHED
+
+#22 [backend build 2/4] RUN python -m venv /venv
+#22 CACHED
+
+#23 [frontend internal] load build context
+#23 transferring context: 842B done
+#23 DONE 0.0s
+
+#24 [backend stage-1 7/7] COPY app ./app
+#24 CACHED
+
+#25 [frontend stage-1 2/4] RUN apk upgrade --no-cache
+#25 CACHED
+
+#26 [frontend stage-1 3/4] COPY --chown=101:101 nginx.conf.template /etc/nginx/templates/default.conf.template
+#26 CACHED
+
+#27 [frontend build 2/6] WORKDIR /src
+#27 DONE 0.0s
+
+#28 [frontend build 3/6] COPY package.json package-lock.json ./
+#28 DONE 0.0s
+
+#29 [backend] exporting to image
+#29 exporting layers done
+#29 exporting manifest sha256:02341162c654dc6950a0e80768c115391c7bbfd20263e2bfb627639f434309f6 done
+#29 exporting config sha256:ed3fc266cc6ecf4f5b64abe11d99ad2e7a9680dca9592f4172ab8cb44275d03f done
+#29 exporting attestation manifest sha256:04f1fc45ee5da6fac7c8f92efee80377326a77260f9d48f44edac87e775f918c done
+#29 exporting manifest list sha256:53ab453d28128f47dce1005caa260d14cefdb18a30862b118ed2f2f5dc8977c5 done
+#29 naming to docker.io/library/tickethub-backend:latest done
+#29 unpacking to docker.io/library/tickethub-backend:latest done
+#29 DONE 0.1s
+
+#30 [backend] resolving provenance for metadata file
+#30 DONE 0.0s
+
+#31 [frontend build 4/6] RUN npm ci --no-audit --no-fund
+#31 4.745 
+#31 4.745 added 19 packages in 5s
+#31 4.746 npm notice
+#31 4.746 npm notice New major version of npm available! 11.19.0 -> 12.2.0
+#31 4.746 npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+#31 4.746 npm notice To update run: npm install -g npm@12.2.0
+#31 4.746 npm notice
+#31 DONE 4.9s
+
+#32 [frontend build 5/6] COPY . .
+#32 DONE 0.0s
+
+#33 [frontend build 6/6] RUN npm test && npm run build
+#33 0.186 
+#33 0.186 > tickethub-frontend@1.0.0 test
+#33 0.186 > node --test "src/**/*.test.js"
+#33 0.186 
+#33 0.254 ✔ label turns enum values into words (0.465375ms)
+#33 0.254 ✔ timeAgo buckets durations (0.17075ms)
+#33 0.254 ✔ sortQueue puts urgent and older tickets first (0.480458ms)
+#33 0.254 ✔ nextStatus walks the workflow and stops at CLOSED (0.070167ms)
+#33 0.261 ℹ tests 4
+#33 0.261 ℹ suites 0
+#33 0.261 ℹ pass 4
+#33 0.261 ℹ fail 0
+#33 0.261 ℹ cancelled 0
+#33 0.261 ℹ skipped 0
+#33 0.261 ℹ todo 0
+#33 0.261 ℹ duration_ms 42.144875
+#33 0.344 
+#33 0.344 > tickethub-frontend@1.0.0 build
+#33 0.344 > vite build
+#33 0.344 
+#33 0.538 vite v8.3.3 building client environment for production...
+#33 0.558 transforming...
+#33 0.596 ✓ 18 modules transformed.
+#33 0.683 rendering chunks...
+#33 0.705 computing gzip size...
+#33 0.707 dist/index.html                   0.41 kB │ gzip:  0.28 kB
+#33 0.707 dist/assets/index-D9674Sew.css    4.18 kB │ gzip:  1.55 kB
+#33 0.707 dist/assets/index-DI1AqPPf.js   228.37 kB │ gzip: 71.46 kB
+#33 0.707 
+#33 0.708 ✓ built in 169ms
+#33 DONE 0.7s
+
+#34 [frontend stage-1 4/4] COPY --from=build --chown=101:101 /src/dist /usr/share/nginx/html
+#34 DONE 0.0s
+
+#35 [frontend] exporting to image
+#35 exporting layers
+#35 exporting layers 0.4s done
+#35 exporting manifest sha256:f97784938a788bfb535f47abc0e5d9df567d3d8b86e324aaa160e5370d368d24 done
+#35 exporting config sha256:9c98580dc9cba9cfb6c0df58ce81d5e991d7e1016eed77ac5302c5b047425010 done
+#35 exporting attestation manifest sha256:280d71f2b05737c56b4b01679272f30f2e089577620eec14858471a611cb6221 done
+#35 exporting manifest list sha256:32d7d48b20b94de9c4656079164befe013668b8e839c1f255772ea603fc9cce1 done
+#35 naming to docker.io/library/tickethub-frontend:latest done
+#35 unpacking to docker.io/library/tickethub-frontend:latest 0.1s done
+#35 DONE 0.6s
+
+#36 [frontend] resolving provenance for metadata file
+#36 DONE 0.0s
+ Image tickethub-backend Built 
+ Image tickethub-frontend Built 
+ Network tickethub_default Creating 
+ Volume tickethub_pgdata Creating 
+ Volume tickethub_pgdata Creating 
+ Network tickethub_default Creating 
+ Volume tickethub_pgdata Created 
+ Volume tickethub_pgdata Created 
+ Network tickethub_default Created 
+ Network tickethub_default Created 
+ Container tickethub-postgres-1 Creating 
+ Container tickethub-postgres-1 Created 
+ Container tickethub-backend-1 Creating 
+ Container tickethub-backend-1 Created 
+ Container tickethub-frontend-1 Creating 
+ Container tickethub-frontend-1 Created 
+ Container tickethub-postgres-1 Starting 
+ Container tickethub-postgres-1 Started 
+ Container tickethub-postgres-1 Waiting 
+ Container tickethub-postgres-1 Healthy 
+ Container tickethub-backend-1 Starting 
+ Container tickethub-backend-1 Started 
+ Container tickethub-frontend-1 Starting 
+ Container tickethub-frontend-1 Started 

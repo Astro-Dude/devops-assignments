@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tickethub-raw
+  labels:
+    app.kubernetes.io/part-of: tickethub
+    # Pod Security Admission: warn on anything that would not meet "restricted"
+    pod-security.kubernetes.io/warn: restricted

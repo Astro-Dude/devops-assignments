@@ -1,0 +1,6 @@
+# helm upgrade --install metrics-server metrics-server/metrics-server -n kube-system -f monitoring/metrics-server-values.yaml
+# kind kubelets use self-signed serving certs, hence --kubelet-insecure-tls (lab only).
+args:
+  - --kubelet-insecure-tls
+resources:
+  requests: {cpu: 20m, memory: 48Mi}

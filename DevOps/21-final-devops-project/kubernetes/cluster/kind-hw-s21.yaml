@@ -1,0 +1,24 @@
+# Local single-node cluster for the capstone.
+#   kind create cluster --config kubernetes/cluster/kind-hw-s21.yaml
+# Host 28080/28443 -> ingress-nginx (hostPort 80/443 on the node)
+# Host 32080-32089 -> NodePorts reserved for demos
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: hw-s21
+nodes:
+  - role: control-plane
+    labels:
+      ingress-ready: "true"
+    extraPortMappings:
+      - {containerPort: 80, hostPort: 28080, protocol: TCP}
+      - {containerPort: 443, hostPort: 28443, protocol: TCP}
+      - {containerPort: 32080, hostPort: 32080}
+      - {containerPort: 32081, hostPort: 32081}
+      - {containerPort: 32082, hostPort: 32082}
+      - {containerPort: 32083, hostPort: 32083}
+      - {containerPort: 32084, hostPort: 32084}
+      - {containerPort: 32085, hostPort: 32085}
+      - {containerPort: 32086, hostPort: 32086}
+      - {containerPort: 32087, hostPort: 32087}
+      - {containerPort: 32088, hostPort: 32088}
+      - {containerPort: 32089, hostPort: 32089}

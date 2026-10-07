@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tickethub-frontend
+  namespace: tickethub-raw
+  labels: {app.kubernetes.io/name: tickethub-frontend, app.kubernetes.io/part-of: tickethub}
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app.kubernetes.io/name: tickethub-frontend}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: tickethub-frontend}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: frontend
+          image: ghcr.io/astro-dude/s21-tickethub-frontend:IMAGE_TAG
+          ports:
+            - {name: http, containerPort: 8080}
+          env:
+            - {name: BACKEND_URL, value: "http://tickethub-backend:8000"}
+          startupProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 2
+            failureThreshold: 15
+          livenessProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {cpu: 200m, memory: 64Mi}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: nginx-conf, mountPath: /etc/nginx/conf.d}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+        - {name: nginx-conf, emptyDir: {}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tickethub-frontend
+  namespace: tickethub-raw
+  labels: {app.kubernetes.io/name: tickethub-frontend}
+spec:
+  selector: {app.kubernetes.io/name: tickethub-frontend}
+  ports:
+    - {name: http, port: 80, targetPort: http}

@@ -1,0 +1,16 @@
+# Gitleaks configuration for the Session 21 project.
+# Starts from the full built-in rule set (AWS keys, GitHub tokens, private keys, generic API keys ...).
+title = "tickethub gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known non-secrets"
+paths = [
+  '''package-lock\.json''',          # integrity hashes look like high-entropy strings
+]
+regexes = [
+  '''CHANGE_ME''',                     # placeholder in kubernetes/02-secret.yaml.example
+  '''local-dev-only''',                # docker compose default for a throw-away local DB
+]

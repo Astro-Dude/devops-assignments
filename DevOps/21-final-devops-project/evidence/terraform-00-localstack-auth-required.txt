@@ -1,0 +1,16 @@
+
+LocalStack version: 2026.9.1
+LocalStack build date: 2026-10-07
+LocalStack build git hash: f6d6999e
+
+Localstack returning with exit code 55. Reason: 
+===============================================
+License activation failed! 🔑❌
+
+Reason: No credentials were found in the environment. Please set the LOCALSTACK_AUTH_TOKEN variable to a valid auth token. Alternatively, run `lstk login` and start LocalStack with the lstk CLI, which configures the credentials for you.
+
+Due to this error, Localstack has quit. LocalStack pro features can only be used with a valid license.
+
+- Please check that your credentials are set up correctly and that you have an active license.
+  You can find your credentials in our webapp at https://app.localstack.cloud.
+

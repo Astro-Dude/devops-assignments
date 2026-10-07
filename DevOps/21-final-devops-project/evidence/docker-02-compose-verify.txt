@@ -1,0 +1,32 @@
+$ docker compose -f docker/docker-compose.yml ps
+NAME                   IMAGE                COMMAND                  SERVICE    CREATED          STATUS                             PORTS
+tickethub-backend-1    tickethub-backend    "sh -c 'python -m ap…"   backend    33 seconds ago   Up 27 seconds (health: starting)   0.0.0.0:29011->8000/tcp, [::]:29011->8000/tcp
+tickethub-frontend-1   tickethub-frontend   "/docker-entrypoint.…"   frontend   33 seconds ago   Up 27 seconds                      0.0.0.0:29010->8080/tcp, [::]:29010->8080/tcp
+tickethub-postgres-1   postgres:17-alpine   "docker-entrypoint.s…"   postgres   33 seconds ago   Up 32 seconds (healthy)            5432/tcp
+
+$ docker compose -f docker/docker-compose.yml logs backend | head -12
+backend-1  | INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+backend-1  | INFO  [alembic.runtime.migration] Will assume transactional DDL.
+backend-1  | INFO  [alembic.runtime.migration] Running upgrade  -> 0001_create_tickets, create tickets table
+backend-1  | INFO  [alembic.runtime.migration] Running upgrade 0001_create_tickets -> 0002_create_comments, create comments table
+backend-1  | migrations applied (alembic head)
+backend-1  | INFO:     Started server process [1]
+backend-1  | INFO:     Waiting for application startup.
+backend-1  | {"ts": "2026-10-07T13:23:44", "level": "INFO", "logger": "tickethub", "msg": "TicketHub API starting", "env": "compose", "version": "compose-local", "host": "398949a3d65f"}
+backend-1  | INFO:     Application startup complete.
+backend-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+backend-1  | INFO:     192.168.65.1:36822 - "GET /health HTTP/1.1" 200 OK
+backend-1  | {"ts": "2026-10-07T13:23:50", "level": "INFO", "logger": "tickethub", "msg": "ticket created", "env": "compose", "version": "compose-local", "ticket_id": 1, "priority": "HIGH"}
+
+$ curl -s localhost:29011/health
+{"status":"UP"}
+$ curl -s localhost:29010/api/stats      # through the frontend nginx /api proxy
+{"total":4,"open":3,"in_progress":1,"resolved":0,"closed":0,"urgent_open":1}
+$ docker compose exec backend id ; docker compose exec frontend id
+uid=10001(app) gid=10001(app) groups=10001(app)
+uid=101(nginx) gid=101(nginx) groups=101(nginx)
+
+$ docker images | grep tickethub
+REPOSITORY                                      TAG               SIZE
+tickethub-frontend                              latest            112MB
+tickethub-backend                               latest            221MB

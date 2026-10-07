@@ -1,0 +1,21 @@
+# Production-shaped overrides (EKS from terraform/).
+config:
+  appEnv: production
+  logLevel: WARNING
+database:
+  existingSecret: tickethub-db       # synced by External Secrets Operator from AWS Secrets Manager
+backend:
+  replicaCount: 3
+frontend:
+  replicaCount: 3
+postgres:
+  persistence:
+    size: 20Gi
+    storageClass: gp3
+ingress:
+  host: tickethub.example.com
+  tls:
+    enabled: true
+autoscaling:
+  minReplicas: 3
+  maxReplicas: 10

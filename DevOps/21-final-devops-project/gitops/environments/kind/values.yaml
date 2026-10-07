@@ -1,0 +1,21 @@
+# Environment values for the local kind cluster (hw-s21), tracked by Argo CD.
+# image.*.tag is written by the CI pipeline (job "gitops-bump") after a green build — do not edit by hand.
+image:
+  backend:
+    tag: "1.0.0"
+  frontend:
+    tag: "1.0.0"
+config:
+  appEnv: kind-gitops
+  logLevel: INFO
+database:
+  existingSecret: tickethub-db   # created out-of-band, never committed (see README "Secrets")
+backend:
+  replicaCount: 2
+frontend:
+  replicaCount: 2
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 4
+ingress:
+  host: tickethub.localtest.me

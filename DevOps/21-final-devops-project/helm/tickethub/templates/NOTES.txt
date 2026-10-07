@@ -1,0 +1,11 @@
+TicketHub {{ .Chart.AppVersion }} deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+  backend image : {{ include "tickethub.backendImage" . }}
+  frontend image: {{ include "tickethub.frontendImage" . }}
+{{- if .Values.ingress.enabled }}
+  URL           : http://{{ .Values.ingress.host }}/   (kind: add :28080)
+{{- end }}
+
+Check it:
+  kubectl -n {{ .Release.Namespace }} get pods,svc,ingress,hpa,pvc
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}

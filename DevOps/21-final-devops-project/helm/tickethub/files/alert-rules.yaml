@@ -1,0 +1,38 @@
+- name: tickethub.availability
+  rules:
+    - alert: TicketHubBackendDown
+      expr: (sum(up{namespace="__NS__", service=~".*-backend"}) or vector(0)) == 0
+      for: 1m
+      labels: {severity: critical, team: helpdesk-platform}
+      annotations:
+        summary: "No TicketHub backend pod is being scraped successfully in __NS__"
+        description: "Prometheus cannot scrape any backend pod for 1m. Check `kubectl -n __NS__ get pods,endpoints`."
+    - alert: TicketHubHighErrorRate
+      expr: |
+        sum(rate(tickethub_http_requests_total{namespace="__NS__", status=~"5.."}[5m]))
+          / clamp_min(sum(rate(tickethub_http_requests_total{namespace="__NS__"}[5m])), 1e-9) > 0.05
+      for: 2m
+      labels: {severity: warning, team: helpdesk-platform}
+      annotations:
+        summary: "More than 5% of TicketHub API requests fail with 5xx"
+    - alert: TicketHubSlowRequests
+      expr: |
+        histogram_quantile(0.95, sum by (le) (rate(tickethub_http_request_duration_seconds_bucket{namespace="__NS__", route!="/metrics"}[5m]))) > 0.5
+      for: 5m
+      labels: {severity: warning, team: helpdesk-platform}
+      annotations:
+        summary: "p95 API latency above 500ms"
+    - alert: TicketHubPodRestarting
+      expr: increase(kube_pod_container_status_restarts_total{namespace="__NS__"}[10m]) > 2
+      labels: {severity: warning, team: helpdesk-platform}
+      annotations:
+        summary: "Container {{ $labels.container }} in {{ $labels.pod }} restarted more than twice in 10m"
+- name: tickethub.business
+  rules:
+    - alert: TicketHubUrgentBacklog
+      expr: max(tickethub_tickets_open{namespace="__NS__", priority="URGENT"}) > __URGENT__
+      for: 1m
+      labels: {severity: warning, team: service-desk}
+      annotations:
+        summary: "{{ $value }} URGENT tickets are open (threshold __URGENT__)"
+        description: "The service desk is falling behind on urgent tickets. Page the on-call L2 engineer."

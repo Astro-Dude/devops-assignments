@@ -1,0 +1,95 @@
+{{- $fullname := include "tickethub.fullname" . -}}
+{{- $sel := dict "component" "tickethub-postgres" "root" . -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $fullname }}-postgres-data
+  labels: {{- include "tickethub.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep   # data outlives `helm uninstall`
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- with .Values.postgres.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.postgres.persistence.size }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullname }}-postgres
+  labels:
+    {{- include "tickethub.labels" . | nindent 4 }}
+    {{- include "tickethub.selector" $sel | nindent 4 }}
+    app.kubernetes.io/component: database
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate          # RWO volume: never run two postgres pods on one data dir
+  selector:
+    matchLabels: {{- include "tickethub.selector" $sel | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "tickethub.selector" $sel | nindent 8 }}
+        app.kubernetes.io/component: database
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        # run postgres directly as the image's "postgres" user (uid 70 on alpine)
+        runAsUser: 70
+        runAsGroup: 70
+        runAsNonRoot: true
+        fsGroup: 70
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: postgres
+          image: {{ .Values.postgres.image }}
+          ports:
+            - {name: postgres, containerPort: 5432}
+          env:
+            - name: POSTGRES_DB
+              valueFrom: {configMapKeyRef: {name: {{ $fullname }}-config, key: DB_NAME}}
+            - name: POSTGRES_USER
+              valueFrom: {secretKeyRef: {name: {{ include "tickethub.secretName" . }}, key: DB_USER}}
+            - name: POSTGRES_PASSWORD
+              valueFrom: {secretKeyRef: {name: {{ include "tickethub.secretName" . }}, key: DB_PASSWORD}}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec: {command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]}
+            periodSeconds: 5
+          livenessProbe:
+            exec: {command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]}
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          resources: {{- toYaml .Values.postgres.resources | nindent 12 }}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+            - {name: run, mountPath: /var/run/postgresql}   # unix socket + pid
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ $fullname }}-postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}-postgres
+  labels: {{- include "tickethub.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector: {{- include "tickethub.selector" $sel | nindent 4 }}
+  ports:
+    - {name: postgres, port: 5432, targetPort: postgres}

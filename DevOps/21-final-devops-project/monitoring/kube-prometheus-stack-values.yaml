@@ -1,0 +1,61 @@
+# Lean kube-prometheus-stack for a shared single-node kind cluster.
+# helm upgrade --install kps prometheus-community/kube-prometheus-stack -n monitoring --create-namespace \
+#   -f monitoring/kube-prometheus-stack-values.yaml
+fullnameOverride: kps
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests: {cpu: 10m, memory: 32Mi}
+      limits: {memory: 96Mi}
+
+grafana:
+  adminPassword: ""        # chart generates a random one into the kps-grafana Secret
+  resources:
+    requests: {cpu: 20m, memory: 128Mi}
+    limits: {memory: 256Mi}
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: ALL  # pick up the dashboard ConfigMap shipped by the TicketHub chart
+  defaultDashboardsEnabled: false
+
+prometheus:
+  prometheusSpec:
+    retention: 12h
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+    # Discover ServiceMonitors / PrometheusRules from every namespace, not just this release.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests: {cpu: 50m, memory: 256Mi}
+      limits: {memory: 768Mi}
+
+prometheusOperator:
+  resources:
+    requests: {cpu: 10m, memory: 48Mi}
+
+kube-state-metrics:
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}
+
+prometheus-node-exporter:
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+
+# Control-plane components on kind are not reachable on their default ports; skip their noisy alerts.
+kubeEtcd: {enabled: false}
+kubeControllerManager: {enabled: false}
+kubeScheduler: {enabled: false}
+kubeProxy: {enabled: false}
+defaultRules:
+  rules:
+    etcd: false
+    kubeControllerManager: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeProxy: false

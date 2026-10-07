@@ -1,0 +1,8 @@
+# Accepted IaC findings. Every entry needs a justification; the scanner fails the build on anything else.
+misconfigurations:
+  - id: AWS-0104
+    paths:
+      - terraform/security_groups.tf
+    statement: >-
+      Worker nodes need outbound HTTPS (tcp/443 only) to pull images from ghcr.io/ECR and call AWS APIs.
+      Traffic leaves through the NAT gateway; all other egress is limited to the VPC CIDR.

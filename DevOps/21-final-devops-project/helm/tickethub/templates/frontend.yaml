@@ -1,0 +1,70 @@
+{{- $fullname := include "tickethub.fullname" . -}}
+{{- $sel := dict "component" "tickethub-frontend" "root" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullname }}-frontend
+  labels:
+    {{- include "tickethub.labels" . | nindent 4 }}
+    {{- include "tickethub.selector" $sel | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels: {{- include "tickethub.selector" $sel | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "tickethub.selector" $sel | nindent 8 }}
+        app.kubernetes.io/component: web
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- include "tickethub.podSecurity" . | nindent 6 }}
+      automountServiceAccountToken: false
+      containers:
+        - name: frontend
+          image: {{ include "tickethub.frontendImage" . }}
+          imagePullPolicy: {{ .Values.image.frontend.pullPolicy }}
+          ports:
+            - {name: http, containerPort: {{ .Values.frontend.port }}}
+          env:
+            - name: BACKEND_URL
+              value: http://{{ $fullname }}-backend:{{ .Values.backend.port }}
+          startupProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 2
+            failureThreshold: 15
+          livenessProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: {path: /nginx-health, port: http}
+            periodSeconds: 5
+          {{- include "tickethub.containerSecurity" . | nindent 10 }}
+          resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: nginx-conf, mountPath: /etc/nginx/conf.d}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: nginx-conf      # entrypoint renders the BACKEND_URL template here
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}-frontend
+  labels:
+    {{- include "tickethub.labels" . | nindent 4 }}
+    {{- include "tickethub.selector" $sel | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector: {{- include "tickethub.selector" $sel | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

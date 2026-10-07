@@ -1,0 +1,11 @@
+# Small footprint for laptops / kind.
+config:
+  appEnv: dev
+  logLevel: DEBUG
+backend:
+  replicaCount: 1
+frontend:
+  replicaCount: 1
+autoscaling:
+  minReplicas: 1
+  maxReplicas: 3

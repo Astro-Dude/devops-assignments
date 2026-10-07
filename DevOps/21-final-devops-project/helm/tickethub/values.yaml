@@ -1,0 +1,85 @@
+# Default values for the TicketHub chart.
+# Environment-specific overrides live in values-*.yaml and in gitops/environments/*.
+
+image:
+  backend:
+    repository: ghcr.io/astro-dude/s21-tickethub-backend
+    tag: ""            # defaults to .Chart.AppVersion; CI/GitOps sets the git SHA
+    pullPolicy: IfNotPresent
+  frontend:
+    repository: ghcr.io/astro-dude/s21-tickethub-frontend
+    tag: ""
+    pullPolicy: IfNotPresent
+
+imagePullSecrets: []   # e.g. [{name: ghcr-pull}] when the GHCR package is private
+
+# Non-secret settings -> ConfigMap
+config:
+  appEnv: development
+  logLevel: INFO
+  defaultTeam: L1 Support
+
+# Database credentials -> Secret
+database:
+  name: tickethub
+  user: tickethub
+  # Name of a pre-created Secret with keys DB_USER and DB_PASSWORD.
+  # Leave empty and the chart generates one (random password, kept across upgrades via lookup).
+  # GitOps/Argo CD MUST use existingSecret (Argo renders with `helm template`, where lookup is empty).
+  existingSecret: ""
+
+backend:
+  replicaCount: 2
+  port: 8000
+  resources:
+    requests: {cpu: 50m, memory: 96Mi}
+    limits: {cpu: 500m, memory: 256Mi}
+
+frontend:
+  replicaCount: 2
+  port: 8080
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}
+    limits: {cpu: 200m, memory: 64Mi}
+
+postgres:
+  image: postgres:17-alpine
+  resources:
+    requests: {cpu: 50m, memory: 96Mi}
+    limits: {cpu: 500m, memory: 384Mi}
+  persistence:
+    size: 1Gi
+    storageClass: ""   # "" = cluster default (kind: standard / local-path)
+
+ingress:
+  enabled: true
+  className: nginx
+  host: tickethub.localtest.me
+  tls:
+    enabled: false
+    secretName: tickethub-tls
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 85
+
+networkPolicy:
+  enabled: true
+
+# Prometheus Operator objects. Only rendered when the CRDs exist in the cluster.
+monitoring:
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    labels:
+      release: kps
+  prometheusRule:
+    enabled: true
+    labels:
+      release: kps
+    urgentBacklogThreshold: 3
+  grafanaDashboard:
+    enabled: true

@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tickethub-postgres-data
+  namespace: tickethub-raw
+  labels: {app.kubernetes.io/part-of: tickethub}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tickethub-postgres
+  namespace: tickethub-raw
+  labels: {app.kubernetes.io/name: tickethub-postgres, app.kubernetes.io/part-of: tickethub}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: {app.kubernetes.io/name: tickethub-postgres}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: tickethub-postgres}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        # run postgres directly as the image's "postgres" user (uid 70 on alpine)
+        runAsUser: 70
+        runAsGroup: 70
+        runAsNonRoot: true
+        fsGroup: 70
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          ports:
+            - {name: postgres, containerPort: 5432}
+          env:
+            - name: POSTGRES_DB
+              valueFrom: {configMapKeyRef: {name: tickethub-config, key: DB_NAME}}
+            - name: POSTGRES_USER
+              valueFrom: {secretKeyRef: {name: tickethub-db, key: DB_USER}}
+            - name: POSTGRES_PASSWORD
+              valueFrom: {secretKeyRef: {name: tickethub-db, key: DB_PASSWORD}}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          readinessProbe:
+            exec: {command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]}
+            periodSeconds: 5
+          livenessProbe:
+            exec: {command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]}
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+          resources:
+            requests: {cpu: 50m, memory: 96Mi}
+            limits: {cpu: 500m, memory: 384Mi}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+            - {name: run, mountPath: /var/run/postgresql}   # unix socket + pid
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: run
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: data
+          persistentVolumeClaim:
+            claimName: tickethub-postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tickethub-postgres
+  namespace: tickethub-raw
+spec:
+  selector: {app.kubernetes.io/name: tickethub-postgres}
+  ports:
+    - {name: postgres, port: 5432, targetPort: postgres}

@@ -1,0 +1,36 @@
+# Argo CD Application: Git (this public repo) is the source of truth for namespace "tickethub".
+#   source 1: the Helm chart          DevOps/21-final-devops-project/helm/tickethub
+#   source 2: the environment values  DevOps/21-final-devops-project/gitops/environments/kind/values.yaml
+# CI bumps image.*.tag in source 2 -> Argo CD notices the new commit -> helm template -> sync.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tickethub
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/Astro-Dude/devops-assignments.git
+      targetRevision: main
+      path: DevOps/21-final-devops-project/helm/tickethub
+      helm:
+        releaseName: tickethub
+        valueFiles:
+          - $values/DevOps/21-final-devops-project/gitops/environments/kind/values.yaml
+    - repoURL: https://github.com/Astro-Dude/devops-assignments.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tickethub
+  syncPolicy:
+    automated:
+      prune: true      # resources removed from Git are removed from the cluster
+      selfHeal: true   # manual kubectl drift is reverted to what Git says
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff: {duration: 10s, factor: 2, maxDuration: 3m}

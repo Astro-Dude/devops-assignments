@@ -1,0 +1,18 @@
+{{- if .Values.networkPolicy.enabled }}
+# Only the backend pods (and the migrate initContainer, same pod) may talk to PostgreSQL.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "tickethub.fullname" . }}-postgres
+  labels: {{- include "tickethub.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels: {{- include "tickethub.selector" (dict "component" "tickethub-postgres" "root" .) | nindent 6 }}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {{- include "tickethub.selector" (dict "component" "tickethub-backend" "root" .) | nindent 14 }}
+      ports:
+        - {protocol: TCP, port: 5432}
+{{- end }}

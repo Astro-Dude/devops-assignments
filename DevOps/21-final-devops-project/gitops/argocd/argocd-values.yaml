@@ -1,0 +1,26 @@
+# Lean Argo CD for a single-node kind cluster.
+# helm upgrade --install argocd argo/argo-cd -n argocd --create-namespace -f gitops/argocd/argocd-values.yaml
+configs:
+  cm:
+    # poll Git every 60s instead of the default 180s so a CI image bump shows up quickly
+    timeout.reconciliation: 60s
+  params:
+    server.insecure: true     # TLS terminates at the port-forward / ingress in this lab
+dex:
+  enabled: false
+notifications:
+  enabled: false
+applicationSet:
+  replicas: 0             # ApplicationSets not used here
+redis:
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}
+controller:
+  resources:
+    requests: {cpu: 50m, memory: 192Mi}
+repoServer:
+  resources:
+    requests: {cpu: 20m, memory: 96Mi}
+server:
+  resources:
+    requests: {cpu: 10m, memory: 64Mi}

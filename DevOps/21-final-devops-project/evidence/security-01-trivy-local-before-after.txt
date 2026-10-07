@@ -1,0 +1,36 @@
+$ trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 tickethub-backend:before-fix
+Python (python-pkg)
+===================
+Total: 4 (HIGH: 4, CRITICAL: 0)
+
+┌────────────┬─────────────────────┬──────────┬────────┬───────────────────┬───────────────┬────────────────────────────────────────────────────────────┐
+│  Library   │    Vulnerability    │ Severity │ Status │ Installed Version │ Fixed Version │                           Title                            │
+├────────────┼─────────────────────┼──────────┼────────┼───────────────────┼───────────────┼────────────────────────────────────────────────────────────┤
+│ msgpack    │ GHSA-6v7p-g79w-8964 │ HIGH     │ fixed  │ 1.1.2             │ 1.2.1         │ MessagePack for Python: Out-of-bounds read / crash on      │
+│            │                     │          │        │                   │               │ Unpacker reuse after a...                                  │
+│            │                     │          │        │                   │               │ https://github.com/advisories/GHSA-6v7p-g79w-8964          │
+├────────────┼─────────────────────┤          │        ├───────────────────┼───────────────┼────────────────────────────────────────────────────────────┤
+│ setuptools │ CVE-2025-47273      │          │        │ 70.3.0            │ 78.1.1        │ setuptools: Path Traversal Vulnerability in setuptools     │
+│            │                     │          │        │                   │               │ PackageIndex                                               │
+│            │                     │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2025-47273                 │
+├────────────┼─────────────────────┤          │        ├───────────────────┼───────────────┼────────────────────────────────────────────────────────────┤
+│ urllib3    │ CVE-2026-97687      │          │        │ 2.7.0             │ 2.8.0         │ urllib3: urllib3: Traffic interception via HTTPS proxy TLS │
+│            │                     │          │        │                   │               │ configuration override                                     │
+│            │                     │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-97687                 │
+│            ├─────────────────────┤          │        │                   │               ├────────────────────────────────────────────────────────────┤
+│            │ CVE-2026-97689      │          │        │                   │               │ urllib3: urllib3: Denial of Service via unbounded memory   │
+│            │                     │          │        │                   │               │ allocation in chunk parser...                              │
+│            │                     │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2026-97689                 │
+└────────────┴─────────────────────┴──────────┴────────┴───────────────────┴───────────────┴────────────────────────────────────────────────────────────┘
+exit code: 1
+
+# after removing pip from the runtime virtualenv (docker/backend.Dockerfile):
+$ trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 tickethub-backend:latest
+│                                    Target                                     │    Type    │ Vulnerabilities │ Secrets │
+├───────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ tickethub-backend:latest (alpine 3.24.2)                                      │   alpine   │        0        │    -    │
+├───────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/alembic-1.20.0.dist-info/METADATA           │ python-pkg │        0        │    -    │
+├───────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/annotated_doc-0.0.5.dist-info/METADATA      │ python-pkg │        0        │    -    │
+exit code: 0

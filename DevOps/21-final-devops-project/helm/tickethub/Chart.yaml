@@ -1,0 +1,10 @@
+apiVersion: v2
+name: tickethub
+description: TicketHub IT helpdesk (FastAPI + React + PostgreSQL) — Session 21 capstone
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords: [helpdesk, fastapi, react, postgresql]
+maintainers:
+  - name: Shaurya Verma (24BCS10151)
+    url: https://github.com/Astro-Dude

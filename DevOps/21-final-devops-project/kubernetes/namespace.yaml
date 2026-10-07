@@ -1,0 +1,7 @@
+# Namespace for the Helm / Argo CD managed release (the raw manifests use tickethub-raw, see 00-namespace.yaml).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tickethub
+  labels:
+    app.kubernetes.io/part-of: tickethub

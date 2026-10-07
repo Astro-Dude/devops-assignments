@@ -1,0 +1,16 @@
+# Only backend pods may open connections to PostgreSQL.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tickethub-postgres
+  namespace: tickethub-raw
+spec:
+  podSelector:
+    matchLabels: {app.kubernetes.io/name: tickethub-postgres}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {app.kubernetes.io/name: tickethub-backend}
+      ports:
+        - {protocol: TCP, port: 5432}
