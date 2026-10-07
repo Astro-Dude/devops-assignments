@@ -1,13 +1,16 @@
 # DevOps Assignments
 
 Homework submissions for the DevOps course, covering Linux, shell scripting,
-networking, Git, Docker, Kubernetes, and Helm.
+networking, Git, Docker, Kubernetes, Helm, CI/CD and DevSecOps, Terraform,
+monitoring and GitOps, and a final end-to-end project.
 
 All documentation in this repository contains **real captured command output**
 from live systems — not sample or illustrative text. Linux exercises were run
 in an Ubuntu 22.04 container with systemd enabled; Docker exercises were run on
 a live Docker engine. Docker web applications have browser screenshots; the
-Kubernetes and Helm submissions include captured CLI and HTTP checks.
+Kubernetes and Helm submissions include captured CLI and HTTP checks. The CI/CD
+submissions ran on GitHub Actions in this repository. The Terraform submissions
+ran against a local AWS API emulator, because no AWS account was used.
 
 ## Contents
 
@@ -27,6 +30,12 @@ Kubernetes and Helm submissions include captured CLI and HTTP checks.
 | 13 | Storage, HPA & Probes | [DevOps/13-storage-hpa-probes](DevOps/13-storage-hpa-probes/README.md) |
 | 14 | Kubernetes Troubleshooting | [DevOps/14-kubernetes-troubleshooting](DevOps/14-kubernetes-troubleshooting/README.md) |
 | 15 | Helm | [DevOps/15-helm](DevOps/15-helm/README.md) |
+| 16 | CI/CD & GitHub Actions | [DevOps/16-github-actions](DevOps/16-github-actions/README.md) |
+| 17 | Complete CI/CD & DevSecOps | [DevOps/17-devsecops](DevOps/17-devsecops/README.md) |
+| 18 | Terraform & Infrastructure as Code | [DevOps/18-terraform-iac](DevOps/18-terraform-iac/README.md) |
+| 19 | Cloud & Terraform in Action | [DevOps/19-cloud-terraform](DevOps/19-cloud-terraform/README.md) |
+| 20 | Monitoring, Observability & GitOps | [DevOps/20-monitoring-observability-gitops](DevOps/20-monitoring-observability-gitops/README.md) |
+| 21 | Final DevOps Project & Troubleshooting | [DevOps/21-final-devops-project](DevOps/21-final-devops-project/README.md) |
 
 Folder numbers match the course session numbers. Session 1 (DevOps engineer
 roadmap) had no homework, so the first submission is `02`.
@@ -104,6 +113,58 @@ helpers, conditionals and the config-checksum rollout trick; install → upgrade
 rollback across 8 revisions; a **failed upgrade shown leaving a mixed broken
 state**, then the same upgrade cleaned up automatically by `--atomic`; packaging;
 and a real third-party chart deployed from a public repository.
+
+**16. CI/CD & GitHub Actions** — a Flask calculator API with 16 tests at 100%
+coverage; one workflow that tests on five GitHub-hosted runners (three Python
+versions, Linux/macOS/Windows), passes artifacts between jobs, builds and
+smoke-tests a Docker image, publishes it to GHCR, and deploys it to a kind
+cluster created on the runner. A deliberately broken commit shows the failing
+tests stopping build, publish and deploy.
+
+**17. Complete CI/CD & DevSecOps** — the spec's flow as ten jobs: build, unit
+test, SAST (Semgrep, Bandit), SCA (pip-audit, Trivy), secret scan (Gitleaks),
+Docker build, Trivy image scan, a policy-driven **security gate**, push to GHCR,
+and deploy to kind under the restricted Pod Security level. An intentionally
+insecure commit (command injection, a fake API key, a vulnerable dependency)
+was blocked by the gate, then fixed and pushed green.
+
+**18. Terraform & IaC** — an S3 bucket taken through `init → fmt → validate →
+plan → apply → show → output → destroy`, verified with the AWS CLI; plus one
+README per AWS service (IAM, EC2, S3, VPC, DynamoDB & RDS), each with a small
+hands-on run.
+
+**19. Cloud & Terraform in Action** — VPC, public and private subnets, Internet
+Gateway, route tables, security group, EC2 with an IAM role, and S3 in one
+Terraform project (27 resources). It covers dependencies, state inspection and
+change-impact plans, with a rendered `terraform graph` and an architecture
+diagram.
+
+**20. Monitoring, Observability & GitOps** — Prometheus, Alertmanager, Grafana,
+Loki and Jaeger on kind, with a demo app emitting metrics, logs and traces.
+Alerts were driven to FIRING under real load, and an error log was followed to
+its trace. Argo CD tracks this repository: a git commit was synced, manual
+drift was reverted by self-heal, and a removed resource was pruned.
+
+**21. Final DevOps Project** — TicketHub, a FastAPI + React + PostgreSQL helpdesk
+app, taken through the whole chain. A 12-job GitHub Actions pipeline with
+DevSecOps scanning and a security gate pushes to GHCR, deploys to kind, and
+commits the new image tag to `gitops/`, which Argo CD syncs to a local cluster.
+It includes raw manifests and a Helm chart (Ingress, HPA, probes, PVC,
+NetworkPolicy), Terraform for VPC/EKS/ECR, and Prometheus/Grafana monitoring
+with a firing alert. The troubleshooting challenge has 7 planted faults, each
+taken from identify to verified fix.
+
+## Notes on environments
+
+- **AWS / Terraform (18, 19, 21):** no AWS account was used. LocalStack's
+  current image refuses to start without a licence token, so Terraform ran
+  against [moto](https://github.com/getmoto/moto), a local AWS API emulator.
+  Every plan, apply and AWS CLI result is real, but no EC2 instance actually
+  boots. Each README shows the provider change needed to target real AWS.
+- **CI/CD (16, 17, 21):** GitHub only runs workflows from the repository root,
+  so the real workflows live in [`.github/workflows/`](.github/workflows/).
+  Each submission folder keeps an identical copy. Kubernetes deployments in CI
+  go to a temporary kind cluster created inside the GitHub runner.
 
 ## Running things yourself
 
