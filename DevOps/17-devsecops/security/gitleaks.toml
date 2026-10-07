@@ -1,0 +1,30 @@
+# Gitleaks configuration for Session 17
+# Used as:
+#   gitleaks git --config DevOps/17-devsecops/security/gitleaks.toml \
+#     --log-opts="-- DevOps/17-devsecops" --gitleaks-ignore-path DevOps/17-devsecops/security/.gitleaksignore
+#
+# The git log is limited to this folder so the rest of the (shared) repository
+# never affects this pipeline. Whole history of the folder is scanned, not just
+# HEAD - a secret deleted in a later commit is still leaked.
+
+title = "s17-devsecops gitleaks config"
+
+# Start from the full upstream ruleset (AWS, GitHub, Slack, private keys,
+# generic high-entropy api keys, ... ~200 rules).
+[extend]
+useDefault = true
+
+# Organisation-specific token format that the default rules do not know about.
+# Format: pay_live_ + 32 alphanumerics (our hypothetical payment provider).
+[[rules]]
+id = "hw-payment-live-key"
+description = "Payment provider LIVE API key (pay_live_...)"
+regex = '''\bpay_live_[A-Za-z0-9]{32}\b'''
+keywords = ["pay_live_"]
+tags = ["key", "payment", "custom"]
+
+[allowlist]
+description = "Paths that are allowed to contain example patterns"
+paths = [
+  '''DevOps/17-devsecops/security/gitleaks\.toml''',
+]

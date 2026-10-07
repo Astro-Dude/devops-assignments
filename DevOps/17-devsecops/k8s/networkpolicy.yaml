@@ -1,0 +1,16 @@
+# Default-deny for the namespace, then allow only HTTP into the app pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hw-devsecops
+  namespace: s17-devsecops
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: hw-devsecops
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - ports:
+        - port: 8000
+          protocol: TCP
+  egress: []

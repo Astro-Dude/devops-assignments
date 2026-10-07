@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: s17-devsecops
+  labels:
+    # Enforce the "restricted" Pod Security Standard: the API server rejects
+    # any pod that runs as root, keeps capabilities, allows privilege
+    # escalation or lacks a seccomp profile.
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted

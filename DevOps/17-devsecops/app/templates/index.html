@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hw-devsecops | Session 17</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <h1>hw-devsecops</h1>
+    <p class="sub">Session 17 &middot; CI/CD &amp; DevSecOps &middot; Shaurya Verma (24BCS10151)</p>
+    <ol class="flow">
+      <li>Build</li><li>Unit Test</li><li>SAST</li><li>SCA</li><li>Secret Scan</li>
+      <li>Docker Build</li><li>Image Scan</li><li class="gate">Security Gate</li>
+      <li>Push Image</li><li>Deploy to Kubernetes</li>
+    </ol>
+    <table>
+      <tr><th>Version</th><td>{{ version }}</td></tr>
+      <tr><th>Git SHA</th><td><code>{{ sha }}</code></td></tr>
+    </table>
+    <p>Endpoints: <code>/health</code> <code>/ready</code> <code>/api/status</code>
+       <code>/api/greet/&lt;name&gt;</code> <code>POST /api/calculate</code></p>
+  </main>
+</body>
+</html>

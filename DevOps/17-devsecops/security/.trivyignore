@@ -1,0 +1,4 @@
+# Accepted-risk exceptions for Trivy (one ID per line, with a reason + review date).
+# Every exception must be justified; an empty file means "no exceptions".
+# Example:
+# CVE-2099-0001  # not reachable: affects mount(8) only, container has no CAP_SYS_ADMIN - review 2026-12-31

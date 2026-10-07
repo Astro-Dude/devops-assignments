@@ -1,0 +1,3 @@
+# Gitleaks fingerprints of findings that have been triaged.
+# Format: <commit>:<file>:<rule-id>:<line>
+# Only add an entry AFTER the credential has been revoked/rotated.

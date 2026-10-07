@@ -1,0 +1,71 @@
+# Project-specific Semgrep rules for hw-devsecops.
+# Run together with the public registry packs p/python and p/flask (see workflow).
+# Severity ERROR = blocking for the security gate (security/gate-policy.toml).
+rules:
+  - id: s17-subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: >-
+      subprocess called with shell=True. If any part of the command comes from the
+      request this is OS command injection (CWE-78). Pass an argument list instead.
+    metadata:
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+      category: security
+    pattern-either:
+      - pattern: subprocess.$FUNC(..., shell=True, ...)
+      - pattern: os.system(...)
+      - pattern: os.popen(...)
+
+  - id: s17-eval-exec
+    languages: [python]
+    severity: ERROR
+    message: eval()/exec() executes arbitrary code (CWE-95). Never use it on input.
+    metadata:
+      cwe: "CWE-95: Eval Injection"
+      category: security
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+
+  - id: s17-flask-debug
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Flask debug mode exposes the Werkzeug interactive debugger (remote code
+      execution). Production runs under gunicorn; never enable debug.
+    metadata:
+      cwe: "CWE-489: Active Debug Code"
+      category: security
+    pattern-either:
+      - pattern: $APP.run(..., debug=True, ...)
+      - pattern: $APP.debug = True
+
+  - id: s17-unsafe-yaml-load
+    languages: [python]
+    severity: ERROR
+    message: yaml.load without SafeLoader can construct arbitrary objects. Use yaml.safe_load.
+    metadata:
+      cwe: "CWE-502: Deserialization of Untrusted Data"
+      category: security
+    patterns:
+      - pattern: yaml.load(...)
+      - pattern-not: yaml.load(..., Loader=yaml.SafeLoader, ...)
+
+  - id: s17-hardcoded-credential
+    languages: [python]
+    severity: WARNING
+    message: >-
+      Credential-looking variable assigned a string literal. Read it from the
+      environment / a Kubernetes Secret instead (secret scanning also checks this).
+    metadata:
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      category: security
+    patterns:
+      - pattern: $NAME = "$VALUE"
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(password|passwd|secret|api_?key|token).*
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: .{8,}

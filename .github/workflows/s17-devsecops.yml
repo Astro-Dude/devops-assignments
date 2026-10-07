@@ -1,0 +1,443 @@
+# Session 17 - Complete CI/CD + DevSecOps pipeline
+#
+#   Code -> Build -> Unit Test -> SAST -> SCA -> Secret Scan -> Docker Build
+#        -> Container Image Scan -> Security Gate -> Push Image -> Deploy to Kubernetes
+#
+# Source of truth: .github/workflows/s17-devsecops.yml (GitHub only executes
+# workflows from the repository-root .github/workflows directory).
+# A byte-identical copy lives in DevOps/17-devsecops/ci/ and the Build job
+# fails if the two ever drift apart.
+
+name: "S17 DevSecOps pipeline"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "DevOps/17-devsecops/**"
+      - "!DevOps/17-devsecops/**/*.md"
+      - "!DevOps/17-devsecops/evidence/**"
+      - "!DevOps/17-devsecops/screenshots/**"
+      - ".github/workflows/s17-devsecops.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "DevOps/17-devsecops/**"
+      - ".github/workflows/s17-devsecops.yml"
+  workflow_dispatch:
+
+# Least privilege by default; individual jobs widen only what they need.
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash # => bash -eo pipefail
+
+concurrency:
+  group: s17-devsecops-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  APP_DIR: DevOps/17-devsecops
+  REPORTS: ${{ github.workspace }}/reports
+  IMAGE_NAME: ghcr.io/astro-dude/s17-devsecops-app
+  APP_VERSION: "1.0.0"
+  PYTHON_VERSION: "3.12"
+  # Scanner versions are pinned (tag + digest) so a compromised "latest" tag
+  # cannot silently change what runs in the pipeline.
+  TRIVY_IMAGE: aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+  SEMGREP_IMAGE: semgrep/semgrep:1.178.0@sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b
+  GITLEAKS_VERSION: "8.30.1"
+  GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+  BANDIT_VERSION: "1.9.4"
+  PIP_AUDIT_VERSION: "2.10.1"
+
+jobs:
+  # ---------------------------------------------------------------- 1. BUILD
+  build:
+    name: "1. Build"
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: ${{ env.APP_DIR }}/requirements*.txt
+      - name: Workflow copy in folder is in sync with the executed workflow
+        run: diff -u "$GITHUB_WORKSPACE/.github/workflows/s17-devsecops.yml" ci/s17-devsecops.yml
+      - name: Install pinned, hash-verified dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --require-hashes --no-deps -r requirements.txt
+          pip check
+      - name: Compile and import the application
+        run: |
+          python -m compileall -q app
+          python -c "from app.main import app; print('routes:', sorted(r.rule for r in app.url_map.iter_rules()))"
+
+  # ------------------------------------------------------------ 2. UNIT TEST
+  unit-test:
+    name: "2. Unit Test"
+    needs: build
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: ${{ env.APP_DIR }}/requirements*.txt
+      - name: Install dependencies
+        run: |
+          pip install --require-hashes --no-deps -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: pytest with coverage (fails under 90%)
+        run: |
+          mkdir -p "$REPORTS/tests"
+          python -m pytest -v \
+            --junitxml="$REPORTS/tests/junit.xml" \
+            --cov=app --cov-report=term-missing \
+            --cov-report=xml:"$REPORTS/tests/coverage.xml" \
+            --cov-fail-under=90
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: reports-tests
+          path: reports/
+          retention-days: 14
+
+  # ----------------------------------------------------------------- 3. SAST
+  sast:
+    name: "3. SAST (Semgrep, Bandit, Trivy config)"
+    needs: unit-test
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Semgrep - custom rules + p/python + p/flask
+        run: |
+          mkdir -p "$REPORTS/sast"
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$SEMGREP_IMAGE" \
+            semgrep scan \
+              --config "$APP_DIR/security/semgrep/rules.yml" \
+              --config p/python --config p/flask \
+              --metrics=off --text \
+              --json-output=reports/sast/semgrep.json \
+              --sarif-output=reports/sast/semgrep.sarif \
+              "$APP_DIR/app"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Bandit - Python security linter
+        run: |
+          pip install "bandit[sarif]==${BANDIT_VERSION}"
+          cd "$APP_DIR"
+          bandit -c security/bandit.yaml -r app -f json -o "$REPORTS/sast/bandit.json" --exit-zero
+          bandit -c security/bandit.yaml -r app -f sarif -o "$REPORTS/sast/bandit.sarif" --exit-zero
+          bandit -c security/bandit.yaml -r app --exit-zero
+      - name: Trivy config - Dockerfile and Kubernetes manifest misconfigurations
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+            config --config "$APP_DIR/security/trivy.yaml" \
+            --format json -o reports/sast/trivy-config.json "$APP_DIR"
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+            convert --format table reports/sast/trivy-config.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: reports-sast
+          path: reports/
+          retention-days: 14
+
+  # ------------------------------------------------------------------ 4. SCA
+  sca:
+    name: "4. SCA (pip-audit, Trivy fs)"
+    needs: sast
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: pip-audit - PyPI advisory database (OSV/PYSEC)
+        run: |
+          pip install "pip-audit==${PIP_AUDIT_VERSION}"
+          mkdir -p "$REPORTS/sca"
+          cd "$APP_DIR"
+          # exit 1 just means "vulnerabilities found"; the gate decides. The
+          # report file must exist, otherwise the gate fails closed.
+          pip-audit -r requirements.txt --require-hashes --disable-pip --progress-spinner off \
+            --format json -o "$REPORTS/sca/pip-audit.json" || true
+          python - <<'EOF'
+          import json, os
+          d = json.load(open(os.path.join(os.environ["REPORTS"], "sca", "pip-audit.json")))
+          for dep in d["dependencies"]:
+              ids = ", ".join(v["id"] + " (fix " + ",".join(v["fix_versions"]) + ")" for v in dep["vulns"]) or "no known vulnerabilities"
+              print(f'{dep["name"]:<14} {dep["version"]:<10} {ids}')
+          EOF
+      - name: Trivy fs - dependency manifests
+        run: |
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+            fs --config "$APP_DIR/security/trivy.yaml" --scanners vuln \
+            --format json -o reports/sca/trivy-fs.json "$APP_DIR"
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+            convert --format table reports/sca/trivy-fs.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: reports-sca
+          path: reports/
+          retention-days: 14
+
+  # ---------------------------------------------------------- 5. SECRET SCAN
+  secret-scan:
+    name: "5. Secret Scan (Gitleaks)"
+    needs: sca
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # full history: a secret removed later is still leaked
+      - name: Install Gitleaks (pinned version, checksum verified)
+        run: |
+          curl -sSfL -o /tmp/gitleaks.tgz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  /tmp/gitleaks.tgz" | sha256sum -c -
+          tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+          /tmp/gitleaks version
+      - name: Gitleaks - full git history of this folder only
+        run: |
+          mkdir -p "$REPORTS/secrets"
+          /tmp/gitleaks git . \
+            --config "$APP_DIR/security/gitleaks.toml" \
+            --gitleaks-ignore-path "$APP_DIR/security/.gitleaksignore" \
+            --log-opts="-- $APP_DIR" \
+            --redact --no-banner --verbose \
+            --exit-code 0 \
+            --report-format json --report-path "$REPORTS/secrets/gitleaks.json"
+          echo "findings: $(python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))))" "$REPORTS/secrets/gitleaks.json")"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: reports-secrets
+          path: reports/
+          retention-days: 14
+
+  # --------------------------------------------------------- 6. DOCKER BUILD
+  docker-build:
+    name: "6. Docker Build"
+    needs: secret-scan
+    runs-on: ubuntu-24.04
+    outputs:
+      image_id: ${{ steps.meta.outputs.image_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build image (not pushed - it has not been scanned yet)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ env.APP_DIR }}
+          platforms: linux/amd64
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            APP_VERSION=${{ env.APP_VERSION }}
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          outputs: type=docker,dest=/tmp/image.tar
+          cache-from: type=gha,scope=s17
+          cache-to: type=gha,scope=s17,mode=max
+      - name: Inspect image
+        id: meta
+        run: |
+          docker load -i /tmp/image.tar
+          docker image inspect "$IMAGE_NAME:${{ github.sha }}" \
+            --format 'id={{.Id}} user={{.Config.User}} size={{.Size}} cmd={{json .Config.Cmd}}'
+          echo "image_id=$(docker image inspect "$IMAGE_NAME:${{ github.sha }}" --format '{{.Id}}')" >> "$GITHUB_OUTPUT"
+          docker history --format '{{.Size}}\t{{.CreatedBy}}' "$IMAGE_NAME:${{ github.sha }}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-tar
+          path: /tmp/image.tar
+          retention-days: 1
+
+  # ------------------------------------------------- 7. CONTAINER IMAGE SCAN
+  image-scan:
+    name: "7. Container Image Scan (Trivy)"
+    needs: docker-build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-tar
+          path: /tmp
+      - name: Trivy image - OS packages and Python libraries in the built image
+        run: |
+          mkdir -p "$REPORTS/image"
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -v /tmp/image.tar:/image.tar:ro -w /src "$TRIVY_IMAGE" \
+            image --config "$APP_DIR/security/trivy.yaml" --scanners vuln --list-all-pkgs \
+            --input /image.tar --format json -o reports/image/trivy-image.json
+          for fmt in sarif cyclonedx; do
+            docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+              convert --format "$fmt" -o "reports/image/trivy-image.$fmt" reports/image/trivy-image.json
+          done
+          mv reports/image/trivy-image.cyclonedx reports/image/sbom.cdx.json
+          docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+            convert --format table --severity HIGH,CRITICAL reports/image/trivy-image.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: reports-image
+          path: reports/
+          retention-days: 14
+
+  # -------------------------------------------------------- 8. SECURITY GATE
+  security-gate:
+    name: "8. Security Gate"
+    needs: [build, unit-test, sast, sca, secret-scan, docker-build, image-scan]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: reports-*
+          merge-multiple: true
+          path: reports
+      - name: List collected reports
+        run: find reports -type f | sort
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Evaluate gate policy (blocks push + deploy on failure)
+        run: |
+          python "$APP_DIR/security/gate.py" \
+            --policy "$APP_DIR/security/gate-policy.toml" \
+            --reports reports --summary reports/gate-summary.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: security-gate-result
+          path: |
+            reports/gate-summary.md
+            reports/gate-result.json
+          retention-days: 30
+
+  # ----------------------------------------------------------- 9. PUSH IMAGE
+  push-image:
+    name: "9. Push Image (GHCR)"
+    needs: [docker-build, security-gate]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image-tar
+          path: /tmp
+      - name: Load the exact image that was scanned
+        run: |
+          docker load -i /tmp/image.tar
+          id=$(docker image inspect "$IMAGE_NAME:${{ github.sha }}" --format '{{.Id}}')
+          echo "loaded   $id"
+          echo "expected ${{ needs.docker-build.outputs.image_id }}"
+          test "$id" = "${{ needs.docker-build.outputs.image_id }}"
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tag and push
+        id: push
+        run: |
+          docker tag "$IMAGE_NAME:${{ github.sha }}" "$IMAGE_NAME:$APP_VERSION"
+          docker tag "$IMAGE_NAME:${{ github.sha }}" "$IMAGE_NAME:latest"
+          for t in "${{ github.sha }}" "$APP_VERSION" latest; do docker push -q "$IMAGE_NAME:$t"; done
+          ref=$(docker image inspect "$IMAGE_NAME:${{ github.sha }}" --format '{{index .RepoDigests 0}}')
+          echo "pushed $ref"
+          echo "digest=${ref#*@}" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Image pushed to GHCR"
+            echo '```'
+            echo "$ref"
+            echo "tags: ${{ github.sha }}, $APP_VERSION, latest"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ------------------------------------------------- 10. DEPLOY TO KUBERNETES
+  deploy:
+    name: "10. Deploy to Kubernetes (kind)"
+    needs: push-image
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    env:
+      NS: s17-devsecops
+      KUBECTL: kubectl --context kind-s17
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Create ephemeral kind cluster
+        uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa # v1.15.1
+        with:
+          cluster_name: s17
+          wait: 120s
+      - name: Namespace (PSS restricted), ServiceAccount and GHCR pull secret
+        run: |
+          $KUBECTL version
+          $KUBECTL apply -f "$APP_DIR/k8s/namespace.yaml" -f "$APP_DIR/k8s/serviceaccount.yaml"
+          $KUBECTL -n "$NS" create secret docker-registry ghcr-pull \
+            --docker-server=ghcr.io --docker-username="${{ github.actor }}" \
+            --docker-password="${{ secrets.GITHUB_TOKEN }}"
+          $KUBECTL -n "$NS" patch serviceaccount hw-devsecops \
+            -p '{"imagePullSecrets":[{"name":"ghcr-pull"}]}'
+      - name: Deploy the gated image by immutable digest
+        working-directory: ${{ env.APP_DIR }}/k8s
+        run: |
+          DIGEST="${{ needs.push-image.outputs.digest }}"
+          test -n "$DIGEST"
+          kustomize version || { echo "kustomize missing"; exit 1; }
+          kustomize edit set image "hw-devsecops=${IMAGE_NAME}@${DIGEST}"
+          $KUBECTL kustomize . | grep -n 'image:'
+          $KUBECTL apply -k .
+          $KUBECTL -n "$NS" rollout status deployment/hw-devsecops --timeout=180s
+      - name: Verify deployment
+        run: |
+          $KUBECTL -n "$NS" get deploy,rs,pods,svc,networkpolicy -o wide
+          echo "--- image running in the pods"
+          $KUBECTL -n "$NS" get pods -o jsonpath='{range .items[*]}{.metadata.name}{"  "}{.status.containerStatuses[0].imageID}{"\n"}{end}'
+          echo "--- process identity inside the container"
+          $KUBECTL -n "$NS" exec deploy/hw-devsecops -- id
+          echo "--- Pod Security admission rejects a root/privileged pod in this namespace"
+          if $KUBECTL -n "$NS" run pss-probe --image=busybox:1.36 --restart=Never \
+               --overrides='{"spec":{"containers":[{"name":"p","image":"busybox:1.36","securityContext":{"privileged":true}}]}}' 2>&1 | tee /tmp/pss.txt; then
+            echo "ERROR: privileged pod was admitted"; exit 1
+          fi
+          grep -q 'violates PodSecurity' /tmp/pss.txt
+      - name: Smoke test through the Service
+        run: |
+          $KUBECTL -n "$NS" port-forward svc/hw-devsecops 18080:80 >/tmp/pf.log 2>&1 &
+          for _ in $(seq 1 20); do curl -sf http://127.0.0.1:18080/health >/dev/null && break; sleep 1; done
+          set -x
+          curl -sf http://127.0.0.1:18080/health
+          curl -sf http://127.0.0.1:18080/ready
+          curl -sf http://127.0.0.1:18080/api/status | tee /tmp/status.json
+          python3 -c "import json; d=json.load(open('/tmp/status.json')); assert d['git_sha']=='${{ github.sha }}', d; print('deployed git_sha matches commit')"
+          curl -sf -X POST http://127.0.0.1:18080/api/calculate -H 'Content-Type: application/json' -d '{"a":6,"b":7,"operation":"multiply"}'
+          curl -sI http://127.0.0.1:18080/ | grep -iE 'HTTP/|content-security-policy|x-frame-options|x-content-type-options'
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:18080/api/greet/%3Cscript%3E); test "$code" = 400
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          $KUBECTL -n "$NS" get events --sort-by=.lastTimestamp | tail -30 || true
+          $KUBECTL -n "$NS" describe pods || true
+          $KUBECTL -n "$NS" logs deploy/hw-devsecops --tail=50 || true

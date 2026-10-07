@@ -1,0 +1,35 @@
+# Security gate policy for the s17 pipeline (evaluated by security/gate.py).
+#
+# Every scanner job only REPORTS; this file is the single place that decides
+# what blocks "Push Image" and "Deploy to Kubernetes".
+# A missing or unreadable report is itself a gate failure (fail closed).
+
+[sast.semgrep]
+report = "sast/semgrep.json"
+block_severities = ["ERROR"]          # rule severity ERROR == high-impact
+
+[sast.bandit]
+report = "sast/bandit.json"
+block_severities = ["HIGH"]
+min_confidence = "MEDIUM"             # ignore LOW-confidence guesses
+
+[sast.trivy_config]                   # Dockerfile + Kubernetes manifest misconfigurations
+report = "sast/trivy-config.json"
+block_severities = ["HIGH", "CRITICAL"]
+
+[sca.pip_audit]
+report = "sca/pip-audit.json"
+block_if_fix_available = true         # pip-audit has no severity: any fixable known vuln blocks
+
+[sca.trivy_fs]
+report = "sca/trivy-fs.json"
+block_severities = ["HIGH", "CRITICAL"]
+
+[secrets.gitleaks]
+report = "secrets/gitleaks.json"
+max_findings = 0                      # zero tolerance
+
+[image.trivy]
+report = "image/trivy-image.json"
+block_severities = ["HIGH", "CRITICAL"]
+require_fix_available = true          # unfixed OS CVEs are reported, not blocking

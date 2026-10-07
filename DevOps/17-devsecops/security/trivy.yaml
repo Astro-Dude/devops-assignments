@@ -1,0 +1,24 @@
+# Trivy configuration shared by the SCA (trivy fs), IaC (trivy config) and
+# container image (trivy image) stages.   Used as:  trivy --config security/trivy.yaml ...
+#
+# Trivy itself only REPORTS (exit-code 0). It reports every severity so the
+# full picture is in the artifacts; the decision to block is made in one place,
+# the security-gate job (security/gate.py + security/gate-policy.toml).
+severity:
+  - UNKNOWN
+  - LOW
+  - MEDIUM
+  - HIGH
+  - CRITICAL
+exit-code: 0
+ignorefile: DevOps/17-devsecops/security/.trivyignore
+# Scanners are chosen per stage on the command line:
+#   SCA   -> trivy fs     --scanners vuln
+#   IaC   -> trivy config (misconfig)
+#   Image -> trivy image  --scanners vuln   (secrets are Gitleaks' job)
+vulnerability:
+  ignore-unfixed: false
+pkg:
+  types:
+    - os
+    - library

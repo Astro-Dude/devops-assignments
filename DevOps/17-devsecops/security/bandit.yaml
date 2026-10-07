@@ -1,0 +1,11 @@
+# Bandit (Python SAST) configuration
+# Used as:  bandit -c security/bandit.yaml -r app
+# Tests are not shipped in the image, so they are excluded (they legitimately use assert).
+exclude_dirs:
+  - tests
+  - .venv
+
+# No checks are skipped: every Bandit plugin runs. Findings are reported with
+# severity + confidence; the security gate blocks on severity HIGH
+# (see security/gate-policy.toml).
+skips: []
