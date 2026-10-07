@@ -2,14 +2,14 @@
 # image.*.tag is written by the CI pipeline (job "gitops-bump") after a green build — do not edit by hand.
 image:
   backend:
-    tag: "1.0.0"
+    tag: "25d422506213bc43a6177ea19bdd3efd2c504156"
   frontend:
-    tag: "1.0.0"
+    tag: "25d422506213bc43a6177ea19bdd3efd2c504156"
 config:
   appEnv: kind-gitops
   logLevel: INFO
 database:
-  existingSecret: tickethub-db   # created out-of-band, never committed (see README "Secrets")
+  existingSecret: tickethub-db # created out-of-band, never committed (see README "Secrets")
 backend:
   replicaCount: 2
 frontend:
