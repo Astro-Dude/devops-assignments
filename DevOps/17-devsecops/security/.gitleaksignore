@@ -8,3 +8,9 @@
 #             Removed from HEAD in 52d5fa5; history kept (no force-push on a
 #             shared repo), so the historical finding is acknowledged here.
 3d214abf2f7b63675fefff980e7f5677434162d8:DevOps/17-devsecops/app/config.py:hw-payment-live-key:5
+
+# 2026-10-07  Same fake demo key, re-committed by accident in a60d3f3: Semgrep's
+#             text output prints the matched source line, the run-2 log was saved
+#             under evidence/ and "git add -A" picked it up. Gitleaks blocked run
+#             37631434958. The evidence file is now redacted; history entry triaged.
+a60d3f3eb96609409aaf5c7f910ea94ccd72ffad:DevOps/17-devsecops/evidence/run-37629169373-gate-failed.log.txt:hw-payment-live-key:96

@@ -3,30 +3,30 @@
 # (source: gh run view 37629169373 --log; timestamps, ANSI colours, env dumps and setup/checkout steps removed)
 
 ===== [1. Build] Workflow copy in folder is in sync with the executed workflow
-^[[36;1mdiff -u "$GITHUB_WORKSPACE/.github/workflows/s17-devsecops.yml" ci/s17-devsecops.yml^[[0m
+diff -u "$GITHUB_WORKSPACE/.github/workflows/s17-devsecops.yml" ci/s17-devsecops.yml
 
 ===== [1. Build] Install pinned, hash-verified dependencies
-^[[36;1mpython -m pip install --upgrade pip^[[0m
-^[[36;1mpip install --require-hashes --no-deps -r requirements.txt^[[0m
-^[[36;1mpip check^[[0m
+python -m pip install --upgrade pip
+pip install --require-hashes --no-deps -r requirements.txt
+pip check
 No broken requirements found.
 
 ===== [1. Build] Compile and import the application
-^[[36;1mpython -m compileall -q app^[[0m
-^[[36;1mpython -c "from app.main import app; print('routes:', sorted(r.rule for r in app.url_map.iter_rules()))"^[[0m
+python -m compileall -q app
+python -c "from app.main import app; print('routes:', sorted(r.rule for r in app.url_map.iter_rules()))"
 routes: ['/', '/api/calculate', '/api/diag/ping', '/api/greet/<name>', '/api/status', '/health', '/ready', '/static/<path:filename>']
 
 ===== [2. Unit Test] Install dependencies
-^[[36;1mpip install --require-hashes --no-deps -r requirements.txt^[[0m
-^[[36;1mpip install -r requirements-dev.txt^[[0m
+pip install --require-hashes --no-deps -r requirements.txt
+pip install -r requirements-dev.txt
 
 ===== [2. Unit Test] pytest with coverage (fails under 90%)
-^[[36;1mmkdir -p "$REPORTS/tests"^[[0m
-^[[36;1mpython -m pytest -v \^[[0m
-^[[36;1m  --junitxml="$REPORTS/tests/junit.xml" \^[[0m
-^[[36;1m  --cov=app --cov-report=term-missing \^[[0m
-^[[36;1m  --cov-report=xml:"$REPORTS/tests/coverage.xml" \^[[0m
-^[[36;1m  --cov-fail-under=90^[[0m
+mkdir -p "$REPORTS/tests"
+python -m pytest -v \
+  --junitxml="$REPORTS/tests/junit.xml" \
+  --cov=app --cov-report=term-missing \
+  --cov-report=xml:"$REPORTS/tests/coverage.xml" \
+  --cov-fail-under=90
 ============================= test session starts ==============================
 platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- /opt/hostedtoolcache/Python/3.12.14/x64/bin/python
 cachedir: .pytest_cache
@@ -67,15 +67,15 @@ Required test coverage of 90% reached. Total coverage: 95.45%
 ============================== 17 passed in 0.47s ==============================
 
 ===== [3. SAST (Semgrep, Bandit, Trivy config)] Semgrep - custom rules + p/python + p/flask
-^[[36;1mmkdir -p "$REPORTS/sast"^[[0m
-^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$SEMGREP_IMAGE" \^[[0m
-^[[36;1m  semgrep scan \^[[0m
-^[[36;1m    --config "$APP_DIR/security/semgrep/rules.yml" \^[[0m
-^[[36;1m    --config p/python --config p/flask \^[[0m
-^[[36;1m    --metrics=off --text \^[[0m
-^[[36;1m    --json-output=reports/sast/semgrep.json \^[[0m
-^[[36;1m    --sarif-output=reports/sast/semgrep.sarif \^[[0m
-^[[36;1m    "$APP_DIR/app"^[[0m
+mkdir -p "$REPORTS/sast"
+docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$SEMGREP_IMAGE" \
+  semgrep scan \
+    --config "$APP_DIR/security/semgrep/rules.yml" \
+    --config p/python --config p/flask \
+    --metrics=off --text \
+    --json-output=reports/sast/semgrep.json \
+    --sarif-output=reports/sast/semgrep.sarif \
+    "$APP_DIR/app"
 Unable to find image 'semgrep/semgrep:1.178.0@sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b' locally
 docker.io/semgrep/semgrep@sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b: Pulling from semgrep/semgrep
 Digest: sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b
@@ -93,7 +93,7 @@ Status: Downloaded newer image for semgrep/semgrep@sha256:32e459968daabe7ab86968
           ❰❰ Blocking ❱❱
           Credential-looking variable assigned a string literal. Read it from the environment / a Kubernetes
           Secret instead (secret scanning also checks this).                                                
-            5┆ PAYMENT_API_KEY = "pay_live_GGRUBF6aFwikk3RobMpUesqKNv9kd5lZ"
+            5┆ PAYMENT_API_KEY = "pay_live_[REDACTED-FAKE-DEMO-KEY]"
     DevOps/17-devsecops/app/main.py
    ❯❯❱ DevOps.17-devsecops.security.semgrep.s17-subprocess-shell-true
           ❰❰ Blocking ❱❱
@@ -140,11 +140,11 @@ Status: Downloaded newer image for semgrep/semgrep@sha256:32e459968daabe7ab86968
 Ran 156 rules on 3 files: 5 findings.
 
 ===== [3. SAST (Semgrep, Bandit, Trivy config)] Bandit - Python security linter
-^[[36;1mpip install "bandit[sarif]==${BANDIT_VERSION}"^[[0m
-^[[36;1mcd "$APP_DIR"^[[0m
-^[[36;1mbandit -c security/bandit.yaml -r app -f json -o "$REPORTS/sast/bandit.json" --exit-zero^[[0m
-^[[36;1mbandit -c security/bandit.yaml -r app -f sarif -o "$REPORTS/sast/bandit.sarif" --exit-zero^[[0m
-^[[36;1mbandit -c security/bandit.yaml -r app --exit-zero^[[0m
+pip install "bandit[sarif]==${BANDIT_VERSION}"
+cd "$APP_DIR"
+bandit -c security/bandit.yaml -r app -f json -o "$REPORTS/sast/bandit.json" --exit-zero
+bandit -c security/bandit.yaml -r app -f sarif -o "$REPORTS/sast/bandit.sarif" --exit-zero
+bandit -c security/bandit.yaml -r app --exit-zero
 [main]	INFO	profile include tests: None
 [main]	INFO	profile exclude tests: None
 [main]	INFO	cli include tests: None
@@ -199,11 +199,11 @@ Run metrics:
 Files skipped (0):
 
 ===== [3. SAST (Semgrep, Bandit, Trivy config)] Trivy config - Dockerfile and Kubernetes manifest misconfigurations
-^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
-^[[36;1m  config --config "$APP_DIR/security/trivy.yaml" \^[[0m
-^[[36;1m  --format json -o reports/sast/trivy-config.json "$APP_DIR"^[[0m
-^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
-^[[36;1m  convert --format table reports/sast/trivy-config.json^[[0m
+docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+  config --config "$APP_DIR/security/trivy.yaml" \
+  --format json -o reports/sast/trivy-config.json "$APP_DIR"
+docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+  convert --format table reports/sast/trivy-config.json
 Unable to find image 'aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa' locally
 docker.io/aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa: Pulling from aquasec/trivy
 e2de96513ba9: Already exists
@@ -216,20 +216,20 @@ Status: Downloaded newer image for aquasec/trivy@sha256:af6acf9a6b85dfe389a19415
 2026-10-07T13:32:44Z	WARN	[report] No enabled scanners found. Summary table will not be displayed.
 
 ===== [4. SCA (pip-audit, Trivy fs)] pip-audit - PyPI advisory database (OSV/PYSEC)
-^[[36;1mpip install "pip-audit==${PIP_AUDIT_VERSION}"^[[0m
-^[[36;1mmkdir -p "$REPORTS/sca"^[[0m
-^[[36;1mcd "$APP_DIR"^[[0m
-^[[36;1m# exit 1 just means "vulnerabilities found"; the gate decides. The^[[0m
-^[[36;1m# report file must exist, otherwise the gate fails closed.^[[0m
-^[[36;1mpip-audit -r requirements.txt --require-hashes --disable-pip --progress-spinner off \^[[0m
-^[[36;1m  --format json -o "$REPORTS/sca/pip-audit.json" || true^[[0m
-^[[36;1mpython - <<'EOF'^[[0m
-^[[36;1mimport json, os^[[0m
-^[[36;1md = json.load(open(os.path.join(os.environ["REPORTS"], "sca", "pip-audit.json")))^[[0m
-^[[36;1mfor dep in d["dependencies"]:^[[0m
-^[[36;1m    ids = ", ".join(v["id"] + " (fix " + ",".join(v["fix_versions"]) + ")" for v in dep["vulns"]) or "no known vulnerabilities"^[[0m
-^[[36;1m    print(f'{dep["name"]:<14} {dep["version"]:<10} {ids}')^[[0m
-^[[36;1mEOF^[[0m
+pip install "pip-audit==${PIP_AUDIT_VERSION}"
+mkdir -p "$REPORTS/sca"
+cd "$APP_DIR"
+# exit 1 just means "vulnerabilities found"; the gate decides. The
+# report file must exist, otherwise the gate fails closed.
+pip-audit -r requirements.txt --require-hashes --disable-pip --progress-spinner off \
+  --format json -o "$REPORTS/sca/pip-audit.json" || true
+python - <<'EOF'
+import json, os
+d = json.load(open(os.path.join(os.environ["REPORTS"], "sca", "pip-audit.json")))
+for dep in d["dependencies"]:
+    ids = ", ".join(v["id"] + " (fix " + ",".join(v["fix_versions"]) + ")" for v in dep["vulns"]) or "no known vulnerabilities"
+    print(f'{dep["name"]:<14} {dep["version"]:<10} {ids}')
+EOF
 Found 4 known vulnerabilities in 1 package
 blinker        1.9.0      no known vulnerabilities
 click          8.5.0      no known vulnerabilities
@@ -242,11 +242,11 @@ packaging      26.3       no known vulnerabilities
 werkzeug       3.1.9      no known vulnerabilities
 
 ===== [4. SCA (pip-audit, Trivy fs)] Trivy fs - dependency manifests
-^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
-^[[36;1m  fs --config "$APP_DIR/security/trivy.yaml" --scanners vuln \^[[0m
-^[[36;1m  --format json -o reports/sca/trivy-fs.json "$APP_DIR"^[[0m
-^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
-^[[36;1m  convert --format table reports/sca/trivy-fs.json^[[0m
+docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+  fs --config "$APP_DIR/security/trivy.yaml" --scanners vuln \
+  --format json -o reports/sca/trivy-fs.json "$APP_DIR"
+docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+  convert --format table reports/sca/trivy-fs.json
 Unable to find image 'aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa' locally
 docker.io/aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa: Pulling from aquasec/trivy
 e2de96513ba9: Already exists
@@ -275,26 +275,26 @@ Total: 2 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 2, CRITICAL: 0)
 └──────────┴───────────────┴──────────┴────────┴───────────────────┴───────────────┴─────────────────────────────────────────────────────────┘
 
 ===== [5. Secret Scan (Gitleaks)] Install Gitleaks (pinned version, checksum verified)
-^[[36;1mcurl -sSfL -o /tmp/gitleaks.tgz \^[[0m
-^[[36;1m  "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"^[[0m
-^[[36;1mecho "${GITLEAKS_SHA256}  /tmp/gitleaks.tgz" | sha256sum -c -^[[0m
-^[[36;1mtar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks^[[0m
-^[[36;1m/tmp/gitleaks version^[[0m
+curl -sSfL -o /tmp/gitleaks.tgz \
+  "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+echo "${GITLEAKS_SHA256}  /tmp/gitleaks.tgz" | sha256sum -c -
+tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+/tmp/gitleaks version
 /tmp/gitleaks.tgz: OK
 8.30.1
 
 ===== [5. Secret Scan (Gitleaks)] Gitleaks - full git history of this folder only
-^[[36;1mmkdir -p "$REPORTS/secrets"^[[0m
-^[[36;1m/tmp/gitleaks git . \^[[0m
-^[[36;1m  --config "$APP_DIR/security/gitleaks.toml" \^[[0m
-^[[36;1m  --gitleaks-ignore-path "$APP_DIR/security/.gitleaksignore" \^[[0m
-^[[36;1m  --log-opts="-- $APP_DIR" \^[[0m
-^[[36;1m  --redact --no-banner --verbose \^[[0m
-^[[36;1m  --exit-code 0 \^[[0m
-^[[36;1m  --report-format json --report-path "$REPORTS/secrets/gitleaks.json"^[[0m
-^[[36;1mecho "findings: $(python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))))" "$REPORTS/secrets/gitleaks.json")"^[[0m
-Finding:     PAYMENT_API_KEY = "^[[1;3;mREDACTED^[[0m
-Secret:      ^[[1;3;mREDACTED^[[0m
+mkdir -p "$REPORTS/secrets"
+/tmp/gitleaks git . \
+  --config "$APP_DIR/security/gitleaks.toml" \
+  --gitleaks-ignore-path "$APP_DIR/security/.gitleaksignore" \
+  --log-opts="-- $APP_DIR" \
+  --redact --no-banner --verbose \
+  --exit-code 0 \
+  --report-format json --report-path "$REPORTS/secrets/gitleaks.json"
+echo "findings: $(python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))))" "$REPORTS/secrets/gitleaks.json")"
+Finding:     PAYMENT_API_KEY = "REDACTED
+Secret:      REDACTED
 RuleID:      hw-payment-live-key
 Entropy:     4.704994
 Tags:        [key payment custom]
@@ -306,9 +306,9 @@ Email:       sagittariusshaurya5@gmail.com
 Date:        2026-10-07T13:31:14Z
 Fingerprint: 3d214abf2f7b63675fefff980e7f5677434162d8:DevOps/17-devsecops/app/config.py:hw-payment-live-key:5
 Link:        https://github.com/Astro-Dude/devops-assignments/blob/3d214abf2f7b63675fefff980e7f5677434162d8/DevOps/17-devsecops/app/config.py#L5
-^[[90m1:33PM^[[0m ^[[32mINF^[[0m ^[[1m2 commits scanned.^[[0m
-^[[90m1:33PM^[[0m ^[[32mINF^[[0m ^[[1mscanned ~63481 bytes (63.48 KB) in 97.4ms^[[0m
-^[[90m1:33PM^[[0m ^[[33mWRN^[[0m ^[[1mleaks found: 1^[[0m
+1:33PM INF 2 commits scanned.
+1:33PM INF scanned ~63481 bytes (63.48 KB) in 97.4ms
+1:33PM WRN leaks found: 1
 findings: 1
 
 ===== [6. Docker Build] Build image (not pushed - it has not been scanned yet)
@@ -771,11 +771,11 @@ builder-894c5094-1f44-4c38-a841-c3f12e389b95/builder-894c5094-1f44-4c38-a841-c3f
 Build summary supported!
 
 ===== [6. Docker Build] Inspect image
-^[[36;1mdocker load -i /tmp/image.tar^[[0m
-^[[36;1mdocker image inspect "$IMAGE_NAME:3d214abf2f7b63675fefff980e7f5677434162d8" \^[[0m
-^[[36;1m  --format 'id={{.Id}} user={{.Config.User}} size={{.Size}} cmd={{json .Config.Cmd}}'^[[0m
-^[[36;1mecho "image_id=$(docker image inspect "$IMAGE_NAME:3d214abf2f7b63675fefff980e7f5677434162d8" --format '{{.Id}}')" >> "$GITHUB_OUTPUT"^[[0m
-^[[36;1mdocker history --format '{{.Size}}\t{{.CreatedBy}}' "$IMAGE_NAME:3d214abf2f7b63675fefff980e7f5677434162d8"^[[0m
+docker load -i /tmp/image.tar
+docker image inspect "$IMAGE_NAME:3d214abf2f7b63675fefff980e7f5677434162d8" \
+  --format 'id={{.Id}} user={{.Config.User}} size={{.Size}} cmd={{json .Config.Cmd}}'
+echo "image_id=$(docker image inspect "$IMAGE_NAME:3d214abf2f7b63675fefff980e7f5677434162d8" --format '{{.Id}}')" >> "$GITHUB_OUTPUT"
+docker history --format '{{.Size}}\t{{.CreatedBy}}' "$IMAGE_NAME:3d214abf2f7b63675fefff980e7f5677434162d8"
 Loaded image: ghcr.io/astro-dude/s17-devsecops-app:3d214abf2f7b63675fefff980e7f5677434162d8
 id=sha256:ef22dbf1b7133146a3bc3fb7bf5642d595c241e6e78254dc4a7403c197ff76ac user=10001:10001 size=126569968 cmd=["gunicorn","--bind","0.0.0.0:8000","--workers","2","--worker-tmp-dir","/tmp","--access-logfile","-","app.main:app"]
 0B	CMD ["gunicorn" "--bind" "0.0.0.0:8000" "--w…
@@ -802,17 +802,17 @@ id=sha256:ef22dbf1b7133146a3bc3fb7bf5642d595c241e6e78254dc4a7403c197ff76ac user=
 78.8MB	# debian.sh --arch 'amd64' out/ 'trixie' '@1…
 
 ===== [7. Container Image Scan (Trivy)] Trivy image - OS packages and Python libraries in the built image
-^[[36;1mmkdir -p "$REPORTS/image"^[[0m
-^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -v /tmp/image.tar:/image.tar:ro -w /src "$TRIVY_IMAGE" \^[[0m
-^[[36;1m  image --config "$APP_DIR/security/trivy.yaml" --scanners vuln --list-all-pkgs \^[[0m
-^[[36;1m  --input /image.tar --format json -o reports/image/trivy-image.json^[[0m
-^[[36;1mfor fmt in sarif cyclonedx; do^[[0m
-^[[36;1m  docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
-^[[36;1m    convert --format "$fmt" -o "reports/image/trivy-image.$fmt" reports/image/trivy-image.json^[[0m
-^[[36;1mdone^[[0m
-^[[36;1mmv reports/image/trivy-image.cyclonedx reports/image/sbom.cdx.json^[[0m
-^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
-^[[36;1m  convert --format table --severity HIGH,CRITICAL reports/image/trivy-image.json^[[0m
+mkdir -p "$REPORTS/image"
+docker run --rm -v "$GITHUB_WORKSPACE:/src" -v /tmp/image.tar:/image.tar:ro -w /src "$TRIVY_IMAGE" \
+  image --config "$APP_DIR/security/trivy.yaml" --scanners vuln --list-all-pkgs \
+  --input /image.tar --format json -o reports/image/trivy-image.json
+for fmt in sarif cyclonedx; do
+  docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+    convert --format "$fmt" -o "reports/image/trivy-image.$fmt" reports/image/trivy-image.json
+done
+mv reports/image/trivy-image.cyclonedx reports/image/sbom.cdx.json
+docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \
+  convert --format table --severity HIGH,CRITICAL reports/image/trivy-image.json
 Unable to find image 'aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa' locally
 docker.io/aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa: Pulling from aquasec/trivy
 e2de96513ba9: Already exists
@@ -1028,7 +1028,7 @@ Total: 2 (HIGH: 2, CRITICAL: 0)
 └─────────────────────┴───────────────┴──────────┴────────┴───────────────────┴───────────────┴─────────────────────────────────────────────────────────┘
 
 ===== [8. Security Gate] List collected reports
-^[[36;1mfind reports -type f | sort^[[0m
+find reports -type f | sort
 reports/image/sbom.cdx.json
 reports/image/trivy-image.json
 reports/image/trivy-image.sarif
@@ -1044,9 +1044,9 @@ reports/tests/coverage.xml
 reports/tests/junit.xml
 
 ===== [8. Security Gate] Evaluate gate policy (blocks push + deploy on failure)
-^[[36;1mpython "$APP_DIR/security/gate.py" \^[[0m
-^[[36;1m  --policy "$APP_DIR/security/gate-policy.toml" \^[[0m
-^[[36;1m  --reports reports --summary reports/gate-summary.md^[[0m
+python "$APP_DIR/security/gate.py" \
+  --policy "$APP_DIR/security/gate-policy.toml" \
+  --reports reports --summary reports/gate-summary.md
 ## Security gate: FAILED - push and deploy are blocked
 | Stage | Tool | Findings | Blocking | Result | Note |
 |---|---|---:|---:|---|---|
