@@ -23,6 +23,7 @@ redirection.
 | 8 | Creates a directory with `mkdir` | `mkdir -p "$DIR_NAME"` | 49 |
 | 9 | Creates a file with `touch` | `touch "$REPORT_FILE"` | 52 |
 | 10 | Stores processes in the file with `>` | `echo ... > "$REPORT_FILE"` then `ps aux >> ...` | 57, 66 |
+| 10a | `ps` output stored with a plain `>` | `ps aux > demo_dir/processes.log`, shown in [Every listed command, run individually](#every-listed-command-run-individually) | — |
 
 ### Commands used
 
@@ -202,6 +203,139 @@ tmpfs           5.0M     0  5.0M   0% /run/lock
 
 Script finished successfully.
 ```
+
+---
+
+## Every listed command, run individually
+
+The script output above shows every command working together. The submission
+also asks for a README "with all commands output", so each command from the
+**Commands to Use** list was also run on its own, in a fresh `ubuntu:22.04`
+container (same kind of environment as the runs above), with its output
+captured. This block also contains the plain `ps aux > file` redirection — in
+the script itself the report header is written with `>` and the process list is
+then appended with `>>`.
+
+Raw transcript: [`evidence/commands-individually.txt`](evidence/commands-individually.txt).
+
+```console
+########## VARIABLES AND COMMAND SUBSTITUTION ##########
+$ NAME="Shaurya Verma"
+$ ROLL=24BCS10151
+$ TODAY=$(date +%F)
+$ HOST=$(hostname)
+$ echo "Name=$NAME Roll=$ROLL Date=$TODAY Host=$HOST"
+Name=Shaurya Verma Roll=24BCS10151 Date=2026-10-07 Host=21b56a42a55a
+
+$ echo "User: $(whoami), shell: $SHELL"
+User: root, shell: /bin/bash
+
+########## echo ##########
+$ echo "Hello from echo"
+Hello from echo
+$ echo -e "line1\nline2"
+line1
+line2
+$ echo -n "no newline"; echo " <- same line"
+no newline <- same line
+
+########## mkdir ##########
+$ mkdir demo_dir
+$ mkdir -p demo_dir/logs/2026
+$ ls -ld demo_dir demo_dir/logs demo_dir/logs/2026
+drwxr-xr-x 3 root root 4096 Oct  7 13:06 demo_dir
+drwxr-xr-x 3 root root 4096 Oct  7 13:06 demo_dir/logs
+drwxr-xr-x 2 root root 4096 Oct  7 13:06 demo_dir/logs/2026
+
+########## touch ##########
+$ touch demo_dir/notes.txt
+$ ls -l demo_dir/notes.txt
+-rw-r--r-- 1 root root 0 Oct  7 13:06 demo_dir/notes.txt
+$ sleep 2; touch demo_dir/notes.txt   # touching again only updates the timestamp
+$ ls -l --time-style=full-iso demo_dir/notes.txt
+-rw-r--r-- 1 root root 0 2026-10-07 13:06:36.719741009 +0000 demo_dir/notes.txt
+
+########## df ##########
+$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+overlay         911G  192G  673G  23% /
+tmpfs            64M     0   64M   0% /dev
+shm              64M     0   64M   0% /dev/shm
+/dev/vda1       911G  192G  673G  23% /etc/hosts
+tmpfs           4.0K     0  4.0K   0% /proc/scsi
+
+$ df -h / --output=source,size,used,avail,pcent
+Filesystem      Size  Used Avail Use%
+overlay         911G  192G  673G  23%
+
+########## ps ##########
+$ ps
+    PID TTY          TIME CMD
+      1 ?        00:00:00 sleep
+    287 ?        00:00:00 bash
+    293 ?        00:00:00 bash
+    294 ?        00:00:00 sleep
+    295 ?        00:00:00 tail
+    309 ?        00:00:00 ps
+
+$ ps aux | head -n 6
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0   2236  1112 ?        Ss   13:06   0:00 sleep 900
+root         287  0.0  0.0   3888  2780 ?        Ss   13:06   0:00 bash -c bash /tmp/run.sh; echo; echo "########## read -p (driven through a pseudo-terminal so the prompt is shown) ##########"; echo "\$ read -p \"Enter your name: \" NAME; read -p \"Enter your roll number: \" ROLL; echo \"Hello \$NAME (\$ROLL)\""; expect -f /tmp/drive.exp | tail -n +2
+root         293  0.0  0.0   3888  2868 ?        S    13:06   0:00 bash /tmp/run.sh
+root         294  0.0  0.0   2236  1112 ?        S    13:06   0:00 sleep 600
+root         295  0.0  0.0   2268  1092 ?        S    13:06   0:00 tail -f /dev/null
+
+########## > OUTPUT REDIRECTION: running processes into a file ##########
+$ ps aux > demo_dir/processes.log
+$ wc -l demo_dir/processes.log
+7 demo_dir/processes.log
+$ head -n 5 demo_dir/processes.log
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0   2236  1112 ?        Ss   13:06   0:00 sleep 900
+root         287  0.0  0.0   3888  2780 ?        Ss   13:06   0:00 bash -c bash /tmp/run.sh; echo; echo "########## read -p (driven through a pseudo-terminal so the prompt is shown) ##########"; echo "\$ read -p \"Enter your name: \" NAME; read -p \"Enter your roll number: \" ROLL; echo \"Hello \$NAME (\$ROLL)\""; expect -f /tmp/drive.exp | tail -n +2
+root         293  0.0  0.0   3888  2868 ?        S    13:06   0:00 bash /tmp/run.sh
+root         294  0.0  0.0   2236  1112 ?        S    13:06   0:00 sleep 600
+
+########## > TRUNCATES, >> APPENDS ##########
+$ echo "first"  > demo_dir/redirect.txt
+$ echo "second" > demo_dir/redirect.txt
+$ cat demo_dir/redirect.txt
+second
+$ echo "third" >> demo_dir/redirect.txt
+$ cat demo_dir/redirect.txt
+second
+third
+
+$ ls -la demo_dir
+total 20
+drwxr-xr-x 3 root root 4096 Oct  7 13:06 .
+drwx------ 1 root root 4096 Oct  7 13:06 ..
+drwxr-xr-x 3 root root 4096 Oct  7 13:06 logs
+-rw-r--r-- 1 root root    0 Oct  7 13:06 notes.txt
+-rw-r--r-- 1 root root  826 Oct  7 13:06 processes.log
+-rw-r--r-- 1 root root   13 Oct  7 13:06 redirect.txt
+
+########## read -p (driven through a pseudo-terminal so the prompt is shown) ##########
+$ read -p "Enter your name: " NAME; read -p "Enter your roll number: " ROLL; echo "Hello $NAME ($ROLL)"
+Enter your name: Shaurya Verma
+Enter your roll number: 24BCS10151
+Hello Shaurya Verma (24BCS10151)
+```
+
+### What each block shows
+
+| Command | What the output shows |
+|---|---|
+| Variables | `NAME=...` stores a literal string; `TODAY=$(date +%F)` and `HOST=$(hostname)` store the **output of a command** (command substitution). `$NAME` reads it back. |
+| `echo` | Prints text. `-e` turns `\n` into a real newline; `-n` leaves out the trailing newline, so the next `echo` carries on on the same line. |
+| `mkdir` | `mkdir demo_dir` creates a single directory; `mkdir -p` creates the whole `logs/2026` chain in one go. `ls -ld` lists the directories themselves rather than what is inside them. |
+| `touch` | Creates an empty (0-byte) file. Running it again on a file that already exists only updates the timestamp (`13:06:36.719…`). The contents are left alone. |
+| `df -h` | Disk usage per mounted filesystem in human-readable units; `--output=` picks just the columns you need. |
+| `ps` / `ps aux` | `ps` only lists processes for the current session; `ps aux` lists every process on the system with user, CPU, memory and full command line. The `sleep 600` and `tail -f /dev/null` processes were started in the background so the list has something in it besides the shell. |
+| `ps aux > file` | The process list goes into `processes.log` instead of the screen, and nothing is printed. `wc -l` reports 7 lines: the header plus 6 processes (`sleep 900`, the two `bash` shells, `sleep 600`, `tail`, and `ps aux` itself, which is running while it takes the snapshot). |
+| `>` vs `>>` | `"first"` was overwritten by `"second"` because `>` truncates the file; `>>` added `"third"` underneath without removing anything. |
+| `read -p` | The prompt `Enter your name: ` is printed, the typed reply is stored in `NAME`, and the next command uses it. It was driven through a pseudo-terminal with `expect`, because `read -p` only shows its prompt when input comes from a terminal. |
 
 ---
 
