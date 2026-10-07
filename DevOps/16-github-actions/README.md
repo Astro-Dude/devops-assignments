@@ -338,31 +338,41 @@ no risk of a fork's PR executing code on your own hardware).
 Secrets are encrypted values injected into a run only through the `secrets`
 context; GitHub **masks** their value in the logs. This pipeline uses the
 built-in `GITHUB_TOKEN` (created automatically for every run, scoped by the
-`permissions:` block, expired when the job ends) for three real things:
+`permissions:` block, expired when the job ends) and one **repository secret**,
+`S16_DEMO_SECRET`, created by hand in *Settings → Secrets and variables → Actions*:
+
+![Repository secrets page - names only, values are never shown again](screenshots/repo-secrets-page.png)
+
+The value is a random, non-sensitive 33-character string (`s16-demo-` + 24 hex
+characters). It is not in git or in this README. The secrets are used for:
 
 | Where | What the secret is used for |
 |---|---|
 | `security-check` → *Secrets are masked in logs* (L155) | call the GitHub API, and deliberately `echo` it to show masking |
 | `publish` → `docker/login-action` (L244) | log in to `ghcr.io` — allowed to push because the job has `packages: write` (L224) |
 | `deploy` → *Create image pull secret* (L291) | turned into a Kubernetes `docker-registry` Secret so the cluster can pull from GHCR |
+| `security-check` → same step (L157) | `S16_DEMO_SECRET`: echoed (masked), with its length and a sha256 prefix to prove the right value arrived |
 
 ```yaml
-      - name: Secrets are masked in logs (GITHUB_TOKEN)
+      - name: Secrets are masked in logs (GITHUB_TOKEN + repository secret)
         env:
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPTIONAL_API_KEY: ${{ secrets.S16_DEMO_API_KEY }}   # not configured on purpose
+          DEMO_SECRET: ${{ secrets.S16_DEMO_SECRET }}
         run: |
           echo "Printing the secret directly -> $TOKEN"
           echo "Secret length                -> ${#TOKEN} characters"
           curl -fsS -H "Authorization: Bearer $TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY" | jq ...
-          if [ -z "$OPTIONAL_API_KEY" ]; then echo "S16_DEMO_API_KEY is not configured -> skipping ..."; fi
+          if [ -z "$DEMO_SECRET" ]; then echo "::warning::S16_DEMO_SECRET not available (e.g. PR from a fork)"; exit 0; fi
+          echo "Repository secret S16_DEMO_SECRET -> $DEMO_SECRET (length ${#DEMO_SECRET})"
+          echo "sha256 prefix of S16_DEMO_SECRET  -> $(printf '%s' "$DEMO_SECRET" | sha256sum | cut -c1-12)"
 ```
 
-Real log of that step:
+Real log of that step (run `37648503265`,
+[`evidence/run-37648503265-secrets-step.log`](evidence/run-37648503265-secrets-step.log)):
 
 ```
   TOKEN: ***
-  OPTIONAL_API_KEY: 
+  DEMO_SECRET: ***
 Printing the secret directly -> ***
 Secret length                -> 377 characters
 Using it to call the GitHub API as the workflow:
@@ -371,23 +381,22 @@ Using it to call the GitHub API as the workflow:
   "visibility": "public",
   "default_branch": "main"
 }
-S16_DEMO_API_KEY is not configured -> skipping optional integration (secrets never fail open)
+Repository secret S16_DEMO_SECRET -> *** (length 33)
+sha256 prefix of S16_DEMO_SECRET  -> 5059e1718731
 ```
+
+The length (33) and sha256 prefix (`5059e1718731`) match the values computed
+locally from the string typed into the secrets form, so the runner received the
+correct value, but the value itself is printed only as `***`.
 
 The token is 377 characters long and works (the authenticated API call
 succeeded), yet the log only ever shows `***` — even in the echoed command line
 (`curl -fsS -H "Authorization: ***"`) and in the GHCR login step
-(`password: ***`). A repository secret that does not exist evaluates to an empty
-string rather than an error, so the script checks for it explicitly.
+(`password: ***`). Repository secrets are not passed to workflows triggered by
+a pull request from a fork; there `S16_DEMO_SECRET` evaluates to an empty
+string, so the script checks for that and only warns.
 
-![Secret masked in the job log](screenshots/job-secrets-masked.png)
-
-> **Not done:** creating a custom repository secret (Settings → Secrets and
-> variables → Actions) needs admin rights on the repository, which the CLI
-> account used for this work does not have. `GITHUB_TOKEN` is a real secret that
-> goes through exactly the same masking and `secrets.` context, so it is used for
-> every secret in this pipeline instead; `S16_DEMO_API_KEY` shows how a custom
-> one would be referenced.
+![Repository secret masked in the job log](screenshots/job-repo-secret-masked.png)
 
 ---
 
@@ -652,9 +661,14 @@ To show the gates working, the pipeline was run three times on purpose:
 4. `c809c04` — this README + evidence (a change under the folder, so the `paths:`
    filter triggered it) → **green**, deployed again
    ([`evidence/gh-run-view-37628519499.txt`](evidence/gh-run-view-37628519499.txt)).
+5. **Manual run (`workflow_dispatch`)** on `c48d34f`: started from the Actions
+   UI with *Run workflow → Branch: main → Run workflow*. It ran the full CI and CD
+   path → **green**, deployed. This run also uses the new repository secret
+   ([`evidence/gh-run-view-37648503265.txt`](evidence/gh-run-view-37648503265.txt)).
 
 ```bash
 $ gh run list -R Astro-Dude/devops-assignments --workflow s16-ci-cd.yml
+completed	success	S16 CI/CD - Calculator	S16 CI/CD - Calculator	main	workflow_dispatch	37648503265	3m20s	2026-10-07T15:59:49Z
 completed	success	s16: add README, run evidence and screenshots of the CI/CD pipeline	S16 CI/CD - Calculator	main	push	37628519499	2m44s	2026-10-07T13:26:39Z
 completed	success	s16: fix add() so the pipeline goes green again	S16 CI/CD - Calculator	main	push	37627185543	3m11s	2026-10-07T13:16:19Z
 completed	failure	s16: change add() (intentionally broken to demonstrate a failing pipe…	S16 CI/CD - Calculator	main	push	37626976777	38s	2026-10-07T13:14:44Z
@@ -662,6 +676,37 @@ completed	success	Add session 16 CI/CD demo: calculator API, Dockerfile, GitHub 
 ```
 
 ![Workflow runs list](screenshots/workflow-runs-list.png)
+
+### Manual trigger (`workflow_dispatch`)
+
+The workflow page shows a **Run workflow** button because of the
+`workflow_dispatch:` trigger (L22):
+
+![Run workflow dialog](screenshots/dispatch-dialog.png)
+
+The run it started shows *"Manually triggered"* and `on: workflow_dispatch`. The
+`publish` condition (`|| github.event_name == 'workflow_dispatch'`, L220) let the
+CD jobs run:
+
+![Manually triggered run](screenshots/run-dispatch-summary.png)
+
+```bash
+$ gh run view 37648503265 -R Astro-Dude/devops-assignments
+✓ main S16 CI/CD - Calculator · 37648503265
+Triggered via workflow_dispatch about 3 minutes ago
+
+JOBS
+✓ CI: Test (macos-latest, py3.13) in 18s (ID 112885420783)
+✓ CI: Test (ubuntu-latest, py3.14) in 20s (ID 112885421218)
+✓ CI: Test (ubuntu-latest, py3.13) in 14s (ID 112885421220)
+✓ CI: Test (windows-latest, py3.13) in 1m3s (ID 112885421264)
+✓ CI: Test (ubuntu-latest, py3.12) in 17s (ID 112885421357)
+✓ CI: Test report (download artifacts) in 4s (ID 112885965208)
+✓ CI: Security check + secrets demo in 6s (ID 112885965447)
+✓ CI: Build bundle + Docker image in 28s (ID 112886049142)
+✓ CD: Publish image to GHCR in 18s (ID 112886351825)
+✓ CD: Deploy to kind + smoke test in 55s (ID 112886537722)
+```
 
 ### The failing run (`37626976777`)
 
@@ -746,13 +791,12 @@ Push to `main` → 5 parallel test runners → security check and report → bui
 
 ## Notes and limitations
 
-- **Pull-request and `workflow_dispatch` runs were not exercised.** Both triggers
-  are configured, but opening a PR or pressing "Run workflow" needs a GitHub
-  account with write access to the repository via the API, and the CLI used here
-  is logged in as a different, read-only account (pushes go over SSH). All runs
-  shown are `push` events on `main`. For a PR, the `if:` on `publish` would skip
-  both CD jobs.
-- **No custom repository secret** (see Task 8) — `GITHUB_TOKEN` is used instead.
+- **The `pull_request` trigger was not exercised.** It is configured, but no PR
+  was opened. The runs shown are four `push` events and one manual
+  `workflow_dispatch` run. For a PR, the `if:` on `publish` would skip both CD
+  jobs.
+- The repository secret and the manual run were added after the first four
+  runs, using a browser signed in to the repository owner's account.
 - **Ephemeral deployment target.** The kind cluster lives only as long as the
   `deploy` job. That is the closest real alternative to a cloud cluster without a
   cloud account; swapping it for EKS/GKE/AKS would replace the `kind-action` step
@@ -772,6 +816,8 @@ Push to `main` → 5 parallel test runners → security check and report → bui
 | [`evidence/gh-run-view-37626976777.txt`](evidence/gh-run-view-37626976777.txt) | run #2 (intentional failure) |
 | [`evidence/gh-run-view-37627185543.txt`](evidence/gh-run-view-37627185543.txt) | run #3 (fixed, green) |
 | [`evidence/gh-run-view-37628519499.txt`](evidence/gh-run-view-37628519499.txt) | run #4 (README commit, green) |
+| [`evidence/gh-run-view-37648503265.txt`](evidence/gh-run-view-37648503265.txt) | run #5 (manual `workflow_dispatch`, green) |
+| [`evidence/run-37648503265-secrets-step.log`](evidence/run-37648503265-secrets-step.log) | secrets-demo job of run #5 (repository secret masked) |
 | [`evidence/run-37627185543-full.log`](evidence/run-37627185543-full.log) | complete logs of every job in run #3 (`gh run view --log`) |
 | [`evidence/run-37626976777-failed-test-log.txt`](evidence/run-37626976777-failed-test-log.txt) | the failing pytest step from run #2 |
 | [`evidence/artifacts-download.txt`](evidence/artifacts-download.txt) | `gh run download` of two artifacts |
