@@ -1,0 +1,88 @@
+$ kubectl -n monitoring get pods
+NAME                                      READY   STATUS    RESTARTS      AGE
+alertmanager-kps-alertmanager-0           2/2     Running   2 (22m ago)   61m
+kps-grafana-8ff977885-wtlpq               3/3     Running   0             18m
+kps-kube-state-metrics-5fff95b88d-5dwmd   1/1     Running   2 (22m ago)   62m
+kps-operator-7ffff6cd49-fjfbm             1/1     Running   2 (22m ago)   62m
+kps-prometheus-node-exporter-kpz8z        1/1     Running   1 (22m ago)   62m
+prometheus-kps-prometheus-0               2/2     Running   2 (22m ago)   61m
+
+$ kubectl -n tickethub get servicemonitor,prometheusrule
+NAME                                                     AGE
+servicemonitor.monitoring.coreos.com/tickethub-backend   5m43s
+
+NAME                                                    AGE
+prometheusrule.monitoring.coreos.com/tickethub-alerts   5m43s
+
+# the backend /metrics endpoint (Prometheus text format), via the Service from inside the cluster
+$ kubectl -n tickethub exec deploy/tickethub-frontend -- wget -qO- http://tickethub-backend:8000/metrics | grep -E '^tickethub_(tickets_open|tickets_created_total|http_requests_total\{method="GET",route="/api/tickets")' | head -12
+tickethub_http_requests_total{method="GET",route="/api/tickets",status="200"} 48.0
+tickethub_tickets_created_total{category="GENERAL",priority="LOW"} 3.0
+tickethub_tickets_open{priority="LOW"} 26.0
+tickethub_tickets_open{priority="MEDIUM"} 1.0
+tickethub_tickets_open{priority="HIGH"} 2.0
+tickethub_tickets_open{priority="URGENT"} 4.0
+
+# Prometheus targets for the app (port-forward 29090 -> svc/kps-prometheus)
+$ curl -s 'localhost:29090/api/v1/targets?state=active' | jq -r '.data.activeTargets[] | select(.labels.namespace=="tickethub") | [.labels.job, .labels.pod, .health, .scrapeUrl] | @tsv'
+tickethub-backend	tickethub-backend-658bbbfc4-db66v	up	http://10.244.0.51:8000/metrics
+tickethub-backend	tickethub-backend-658bbbfc4-mzptz	up	http://10.244.0.53:8000/metrics
+
+# a few PromQL queries the dashboard uses
+$ curl -s localhost:29090/api/v1/query --data-urlencode 'query=sum by (route) (rate(tickethub_http_requests_total{namespace="tickethub",route!~"/metrics|/health|/ready"}[2m]))' | jq -r '.data.result[] | [.metric.route, .value[1]] | @tsv'
+/api/tickets	1.7326069772426889
+/api/tickets/{ticket_id}	1.7262844958030508
+/api/stats	0.9140996591234747
+/api/info	0
+/api/tickets/{ticket_id}/comments	0
+
+$ curl -s localhost:29090/api/v1/query --data-urlencode 'query=max by (priority) (tickethub_tickets_open{namespace="tickethub"})' | jq -r '.data.result[] | [.metric.priority, .value[1]] | @tsv'
+LOW	26
+MEDIUM	1
+HIGH	2
+URGENT	4
+
+$ curl -s localhost:29090/api/v1/query --data-urlencode 'query=sum by (pod) (container_memory_working_set_bytes{namespace="tickethub",container!=""})' | jq -r '.data.result[] | [.metric.pod, .value[1]] | @tsv'
+tickethub-postgres-6c7cb8894f-jxtkr	35291136
+tickethub-backend-658bbbfc4-db66v	94302208
+tickethub-backend-658bbbfc4-mzptz	93818880
+tickethub-frontend-657cfd8c4c-hkcgz	9629696
+tickethub-frontend-657cfd8c4c-chpsj	9646080
+
+# alert rules shipped by the chart (PrometheusRule) and their state
+$ curl -s 'localhost:29090/api/v1/rules?type=alert' | jq -r '.data.groups[] | select(.name|startswith("tickethub")) | .rules[] | [.name, .state, .labels.severity] | @tsv'
+TicketHubBackendDown	inactive	critical
+TicketHubHighErrorRate	inactive	warning
+TicketHubSlowRequests	inactive	warning
+TicketHubPodRestarting	inactive	warning
+TicketHubUrgentBacklog	firing	warning
+
+$ curl -s localhost:29090/api/v1/alerts | jq '.data.alerts[] | select(.labels.alertname=="TicketHubUrgentBacklog")'
+{
+  "labels": {
+    "alertname": "TicketHubUrgentBacklog",
+    "severity": "warning",
+    "team": "service-desk"
+  },
+  "annotations": {
+    "description": "The service desk is falling behind on urgent tickets. Page the on-call L2 engineer.",
+    "summary": "4 URGENT tickets are open (threshold 3)"
+  },
+  "state": "firing",
+  "activeAt": "2026-10-07T14:28:25.944638116Z",
+  "value": "4e+00"
+}
+
+# routed to Alertmanager (port-forward 29093)
+$ curl -s localhost:29093/api/v2/alerts | jq -r '.[] | select(.labels.alertname|startswith("TicketHub")) | [.labels.alertname, .status.state, .annotations.summary] | @tsv'
+TicketHubUrgentBacklog	active	4 URGENT tickets are open (threshold 3)
+
+# logs: structured JSON request logs from the API
+$ kubectl -n tickethub logs deploy/tickethub-backend --tail=4
+Found 2 pods, using pod/tickethub-backend-658bbbfc4-db66v
+Defaulted container "backend" out of: backend, migrate (init)
+{"ts": "2026-10-07T14:32:16", "level": "INFO", "logger": "tickethub", "msg": "request", "env": "kind-gitops", "version": "0b9665e", "method": "GET", "path": "/api/tickets/999", "status": 404, "duration_ms": 2.19}
+{"ts": "2026-10-07T14:32:17", "level": "INFO", "logger": "tickethub", "msg": "request", "env": "kind-gitops", "version": "0b9665e", "method": "GET", "path": "/api/tickets", "status": 200, "duration_ms": 10.21}
+{"ts": "2026-10-07T14:32:17", "level": "INFO", "logger": "tickethub", "msg": "request", "env": "kind-gitops", "version": "0b9665e", "method": "GET", "path": "/api/stats", "status": 200, "duration_ms": 4.03}
+{"ts": "2026-10-07T14:32:17", "level": "INFO", "logger": "tickethub", "msg": "request", "env": "kind-gitops", "version": "0b9665e", "method": "GET", "path": "/api/tickets/999", "status": 404, "duration_ms": 2.42}
+
