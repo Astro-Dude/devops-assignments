@@ -1,0 +1,421 @@
+$ kubectl create namespace s13-hpa
+namespace/s13-hpa created
+
+########## 1. DEPLOY THE APPLICATION ##########
+$ kubectl -n s13-hpa apply -f manifests/hpa-course/deployment.yaml -f manifests/hpa-course/service.yaml
+deployment.apps/hpa-demo created
+service/hpa-demo-service created
+
+$ kubectl -n s13-hpa rollout status deploy/hpa-demo --timeout=120s
+Waiting for deployment "hpa-demo" rollout to finish: 0 of 1 updated replicas are available...
+deployment "hpa-demo" successfully rolled out
+
+########## 2. CONFIGURE HPA (course hpa.yaml) ##########
+$ kubectl -n s13-hpa apply -f manifests/hpa-course/hpa.yaml
+horizontalpodautoscaler.autoscaling/hpa-demo created
+
+########## 3. VERIFY HPA ##########
+$ kubectl -n s13-hpa get hpa
+NAME       REFERENCE             TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+hpa-demo   Deployment/hpa-demo   cpu: <unknown>/50%   1         5         1          45s
+
+$ kubectl -n s13-hpa describe hpa hpa-demo
+Name:                                                  hpa-demo
+Namespace:                                             s13-hpa
+Labels:                                                <none>
+Annotations:                                           <none>
+CreationTimestamp:                                     Wed, 07 Oct 2026 19:01:00 +0530
+Reference:                                             Deployment/hpa-demo
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  <unknown> / 50%
+Min replicas:                                          1
+Max replicas:                                          5
+Deployment pods:                                       1 current / 0 desired
+Conditions:
+  Type           Status  Reason                   Message
+  ----           ------  ------                   -------
+  AbleToScale    True    SucceededGetScale        the HPA controller was able to get the target's current scale
+  ScalingActive  False   FailedGetResourceMetric  the HPA was unable to compute the replica count: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+Events:
+  Type     Reason                        Age                From                       Message
+  ----     ------                        ----               ----                       -------
+  Warning  FailedGetResourceMetric       30s (x2 over 45s)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  30s (x2 over 45s)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       15s                horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  15s                horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+
+$ kubectl -n s13-hpa top pods
+NAME                        CPU(cores)   MEMORY(bytes)   
+hpa-demo-5d6676989b-zglhr   0m           11Mi            
+
+########## 4. DEPLOY A LOAD GENERATOR (1 replica) ##########
+$ kubectl -n s13-hpa apply -f manifests/hpa-course/load-generator.yaml
+deployment.apps/load-generator created
+
+----- [19:02:00] t=15s -----
+hpa-demo   Deployment/hpa-demo   cpu: 6%/50%   1     5     1     60s
+hpa-demo-5d6676989b-zglhr   6m    14Mi   
+----- [19:02:15] t=30s -----
+hpa-demo   Deployment/hpa-demo   cpu: 82%/50%   1     5     1     75s
+hpa-demo-5d6676989b-zglhr   82m   13Mi   
+----- [19:02:30] t=45s -----
+hpa-demo   Deployment/hpa-demo   cpu: 81%/50%   1     5     2     90s
+hpa-demo-5d6676989b-zglhr   81m   13Mi   
+----- [19:02:45] t=60s -----
+hpa-demo   Deployment/hpa-demo   cpu: 37%/50%   1     5     2     105s
+hpa-demo-5d6676989b-gvbwd   27m   12Mi   
+hpa-demo-5d6676989b-zglhr   48m   14Mi   
+----- [19:03:00] t=75s -----
+hpa-demo   Deployment/hpa-demo   cpu: 24%/50%   1     5     2     2m
+hpa-demo-5d6676989b-gvbwd   24m   12Mi   
+hpa-demo-5d6676989b-zglhr   25m   13Mi   
+----- [19:03:15] t=90s -----
+hpa-demo   Deployment/hpa-demo   cpu: 35%/50%   1     5     2     2m15s
+hpa-demo-5d6676989b-gvbwd   37m   13Mi   
+hpa-demo-5d6676989b-zglhr   34m   13Mi   
+
+########## 5. INCREASE APPLICATION LOAD (load-generator 1 -> 4) ##########
+$ kubectl -n s13-hpa scale deploy/load-generator --replicas=4
+deployment.apps/load-generator scaled
+
+----- [19:03:30] t=105s -----
+hpa-demo   Deployment/hpa-demo   cpu: 47%/50%   1     5     2     2m31s
+hpa-demo-5d6676989b-gvbwd   55m   13Mi   
+hpa-demo-5d6676989b-zglhr   40m   13Mi   
+----- [19:03:46] t=120s -----
+hpa-demo   Deployment/hpa-demo   cpu: 94%/50%   1     5     2     2m46s
+hpa-demo-5d6676989b-gvbwd   55m    13Mi   
+hpa-demo-5d6676989b-zglhr   133m   13Mi   
+----- [19:04:01] t=135s -----
+hpa-demo   Deployment/hpa-demo   cpu: 128%/50%   1     5     4     3m1s
+hpa-demo-5d6676989b-gvbwd   127m   13Mi   
+hpa-demo-5d6676989b-zglhr   129m   13Mi   
+----- [19:04:16] t=150s -----
+hpa-demo   Deployment/hpa-demo   cpu: 58%/50%   1     5     5     3m16s
+hpa-demo-5d6676989b-b9w2r   57m   12Mi   
+hpa-demo-5d6676989b-gvbwd   52m   13Mi   
+hpa-demo-5d6676989b-rlcv5   60m   12Mi   
+hpa-demo-5d6676989b-zglhr   66m   13Mi   
+----- [19:04:31] t=165s -----
+hpa-demo   Deployment/hpa-demo   cpu: 52%/50%   1     5     5     3m31s
+hpa-demo-5d6676989b-5sqlk   36m   12Mi   
+hpa-demo-5d6676989b-b9w2r   57m   12Mi   
+hpa-demo-5d6676989b-gvbwd   52m   13Mi   
+hpa-demo-5d6676989b-rlcv5   36m   12Mi   
+hpa-demo-5d6676989b-zglhr   66m   13Mi   
+----- [19:04:46] t=180s -----
+hpa-demo   Deployment/hpa-demo   cpu: 37%/50%   1     5     5     3m46s
+hpa-demo-5d6676989b-5sqlk   45m   12Mi   
+hpa-demo-5d6676989b-b9w2r   36m   12Mi   
+hpa-demo-5d6676989b-gvbwd   37m   13Mi   
+hpa-demo-5d6676989b-rlcv5   36m   12Mi   
+hpa-demo-5d6676989b-zglhr   35m   13Mi   
+----- [19:05:01] t=195s -----
+hpa-demo   Deployment/hpa-demo   cpu: 55%/50%   1     5     5     4m2s
+hpa-demo-5d6676989b-5sqlk   52m   12Mi   
+hpa-demo-5d6676989b-b9w2r   60m   12Mi   
+hpa-demo-5d6676989b-gvbwd   48m   12Mi   
+hpa-demo-5d6676989b-rlcv5   57m   13Mi   
+hpa-demo-5d6676989b-zglhr   58m   13Mi   
+----- [19:05:17] t=210s -----
+hpa-demo   Deployment/hpa-demo   cpu: 44%/50%   1     5     5     4m17s
+hpa-demo-5d6676989b-5sqlk   50m   12Mi   
+hpa-demo-5d6676989b-b9w2r   39m   13Mi   
+hpa-demo-5d6676989b-gvbwd   48m   12Mi   
+hpa-demo-5d6676989b-rlcv5   43m   13Mi   
+hpa-demo-5d6676989b-zglhr   43m   13Mi   
+----- [19:05:32] t=225s -----
+hpa-demo   Deployment/hpa-demo   cpu: 59%/50%   1     5     5     4m32s
+hpa-demo-5d6676989b-5sqlk   59m   12Mi   
+hpa-demo-5d6676989b-b9w2r   60m   12Mi   
+hpa-demo-5d6676989b-gvbwd   58m   12Mi   
+hpa-demo-5d6676989b-rlcv5   59m   13Mi   
+hpa-demo-5d6676989b-zglhr   60m   12Mi   
+----- [19:05:47] t=240s -----
+hpa-demo   Deployment/hpa-demo   cpu: 59%/50%   1     5     5     4m47s
+hpa-demo-5d6676989b-5sqlk   60m   13Mi   
+hpa-demo-5d6676989b-b9w2r   59m   12Mi   
+hpa-demo-5d6676989b-gvbwd   59m   12Mi   
+hpa-demo-5d6676989b-rlcv5   59m   12Mi   
+hpa-demo-5d6676989b-zglhr   59m   13Mi   
+----- [19:06:02] t=255s -----
+hpa-demo   Deployment/hpa-demo   cpu: 60%/50%   1     5     5     5m2s
+hpa-demo-5d6676989b-5sqlk   60m   13Mi   
+hpa-demo-5d6676989b-b9w2r   59m   13Mi   
+hpa-demo-5d6676989b-gvbwd   60m   13Mi   
+hpa-demo-5d6676989b-rlcv5   60m   12Mi   
+hpa-demo-5d6676989b-zglhr   61m   13Mi   
+----- [19:06:17] t=270s -----
+hpa-demo   Deployment/hpa-demo   cpu: 54%/50%   1     5     5     5m17s
+hpa-demo-5d6676989b-5sqlk   49m   12Mi   
+hpa-demo-5d6676989b-b9w2r   52m   13Mi   
+hpa-demo-5d6676989b-gvbwd   53m   13Mi   
+hpa-demo-5d6676989b-rlcv5   58m   13Mi   
+hpa-demo-5d6676989b-zglhr   61m   13Mi   
+
+########## 6-8. OBSERVE CPU AND SCALING ##########
+$ kubectl -n s13-hpa get hpa
+NAME       REFERENCE             TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+hpa-demo   Deployment/hpa-demo   cpu: 54%/50%   1         5         5          5m17s
+
+$ kubectl -n s13-hpa get pods -o wide
+NAME                              READY   STATUS    RESTARTS   AGE     IP            NODE                      NOMINATED NODE   READINESS GATES
+hpa-demo-5d6676989b-5sqlk         1/1     Running   0          2m17s   10.244.0.69   hw-legacy-control-plane   <none>           <none>
+hpa-demo-5d6676989b-b9w2r         1/1     Running   0          2m32s   10.244.0.67   hw-legacy-control-plane   <none>           <none>
+hpa-demo-5d6676989b-gvbwd         1/1     Running   0          4m2s    10.244.0.40   hw-legacy-control-plane   <none>           <none>
+hpa-demo-5d6676989b-rlcv5         1/1     Running   0          2m32s   10.244.0.66   hw-legacy-control-plane   <none>           <none>
+hpa-demo-5d6676989b-zglhr         1/1     Running   0          5m18s   10.244.0.30   hw-legacy-control-plane   <none>           <none>
+load-generator-7c686fd77b-jhl5q   1/1     Running   0          4m32s   10.244.0.39   hw-legacy-control-plane   <none>           <none>
+load-generator-7c686fd77b-nwxzg   1/1     Running   0          3m2s    10.244.0.62   hw-legacy-control-plane   <none>           <none>
+load-generator-7c686fd77b-x2gkc   1/1     Running   0          3m2s    10.244.0.60   hw-legacy-control-plane   <none>           <none>
+load-generator-7c686fd77b-x92p6   1/1     Running   0          3m2s    10.244.0.61   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n s13-hpa top pods
+NAME                              CPU(cores)   MEMORY(bytes)   
+hpa-demo-5d6676989b-5sqlk         49m          12Mi            
+hpa-demo-5d6676989b-b9w2r         52m          13Mi            
+hpa-demo-5d6676989b-gvbwd         53m          13Mi            
+hpa-demo-5d6676989b-rlcv5         58m          13Mi            
+hpa-demo-5d6676989b-zglhr         61m          13Mi            
+load-generator-7c686fd77b-jhl5q   808m         7Mi             
+load-generator-7c686fd77b-nwxzg   737m         7Mi             
+load-generator-7c686fd77b-x2gkc   805m         7Mi             
+load-generator-7c686fd77b-x92p6   804m         7Mi             
+
+$ kubectl -n s13-hpa describe hpa hpa-demo
+Name:                                                  hpa-demo
+Namespace:                                             s13-hpa
+Labels:                                                <none>
+Annotations:                                           <none>
+CreationTimestamp:                                     Wed, 07 Oct 2026 19:01:00 +0530
+Reference:                                             Deployment/hpa-demo
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  54% (54m) / 50%
+Min replicas:                                          1
+Max replicas:                                          5
+Deployment pods:                                       5 current / 5 desired
+Conditions:
+  Type            Status  Reason               Message
+  ----            ------  ------               -------
+  AbleToScale     True    ScaleDownStabilized  recent recommendations were higher than current one, applying the highest recent recommendation
+  ScalingActive   True    ValidMetricFound     the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  True    TooManyReplicas      the desired replica count is more than the maximum replica count
+  ScaledToZero    False   NotScaledToZero      the HPA controller did not scale the workload to zero
+Events:
+  Type     Reason                        Age                   From                       Message
+  ----     ------                        ----                  ----                       -------
+  Warning  FailedGetResourceMetric       5m3s (x2 over 5m18s)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  5m3s (x2 over 5m18s)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       4m48s                 horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  4m48s                 horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Normal   SuccessfulRescale             4m3s                  horizontal-pod-autoscaler  New size: 2; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             2m33s                 horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             2m18s                 horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+
+$ kubectl -n s13-hpa get events --field-selector involvedObject.name=hpa-demo --sort-by=.lastTimestamp
+LAST SEEN   TYPE      REASON                         OBJECT                             MESSAGE
+5m19s       Normal    ScalingReplicaSet              deployment/hpa-demo                Scaled up replica set hpa-demo-5d6676989b from 0 to 1
+5m3s        Warning   FailedGetResourceMetric        horizontalpodautoscaler/hpa-demo   failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+5m3s        Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/hpa-demo   invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+4m48s       Warning   FailedGetResourceMetric        horizontalpodautoscaler/hpa-demo   failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+4m48s       Warning   FailedComputeMetricsReplicas   horizontalpodautoscaler/hpa-demo   invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+4m3s        Normal    SuccessfulRescale              horizontalpodautoscaler/hpa-demo   New size: 2; reason: cpu resource utilization (percentage of request) above target
+4m3s        Normal    ScalingReplicaSet              deployment/hpa-demo                Scaled up replica set hpa-demo-5d6676989b from 1 to 2
+2m33s       Normal    SuccessfulRescale              horizontalpodautoscaler/hpa-demo   New size: 4; reason: cpu resource utilization (percentage of request) above target
+2m33s       Normal    ScalingReplicaSet              deployment/hpa-demo                Scaled up replica set hpa-demo-5d6676989b from 2 to 4
+2m18s       Normal    SuccessfulRescale              horizontalpodautoscaler/hpa-demo   New size: 5; reason: cpu resource utilization (percentage of request) above target
+2m18s       Normal    ScalingReplicaSet              deployment/hpa-demo                Scaled up replica set hpa-demo-5d6676989b from 4 to 5
+
+########## STOP THE LOAD AND WATCH SCALE-DOWN (default 300s stabilisation window) ##########
+$ kubectl -n s13-hpa delete deploy/load-generator
+deployment.apps "load-generator" deleted from s13-hpa namespace
+
+----- [19:06:33] t=285s -----
+hpa-demo   Deployment/hpa-demo   cpu: 53%/50%   1     5     5     5m33s
+hpa-demo-5d6676989b-5sqlk   58m   12Mi   
+hpa-demo-5d6676989b-b9w2r   57m   13Mi   
+hpa-demo-5d6676989b-gvbwd   54m   12Mi   
+hpa-demo-5d6676989b-rlcv5   51m   13Mi   
+hpa-demo-5d6676989b-zglhr   49m   13Mi   
+----- [19:06:48] t=300s -----
+hpa-demo   Deployment/hpa-demo   cpu: 54%/50%   1     5     5     5m48s
+hpa-demo-5d6676989b-5sqlk   54m   13Mi   
+hpa-demo-5d6676989b-b9w2r   56m   12Mi   
+hpa-demo-5d6676989b-gvbwd   54m   12Mi   
+hpa-demo-5d6676989b-rlcv5   55m   12Mi   
+hpa-demo-5d6676989b-zglhr   55m   12Mi   
+----- [19:07:03] t=315s -----
+hpa-demo   Deployment/hpa-demo   cpu: 47%/50%   1     5     5     6m3s
+hpa-demo-5d6676989b-5sqlk   54m   13Mi   
+hpa-demo-5d6676989b-b9w2r   54m   12Mi   
+hpa-demo-5d6676989b-gvbwd   48m   12Mi   
+hpa-demo-5d6676989b-rlcv5   45m   12Mi   
+hpa-demo-5d6676989b-zglhr   35m   12Mi   
+----- [19:07:18] t=330s -----
+hpa-demo   Deployment/hpa-demo   cpu: 15%/50%   1     5     5     6m18s
+hpa-demo-5d6676989b-5sqlk   20m   12Mi   
+hpa-demo-5d6676989b-b9w2r   20m   12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   35m   12Mi   
+----- [19:07:33] t=345s -----
+hpa-demo   Deployment/hpa-demo   cpu: 4%/50%   1     5     5     6m33s
+hpa-demo-5d6676989b-5sqlk   20m   12Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:07:48] t=360s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     6m48s
+hpa-demo-5d6676989b-5sqlk   0m    12Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:08:03] t=375s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     7m3s
+hpa-demo-5d6676989b-5sqlk   0m    12Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:08:18] t=390s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     7m19s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:08:34] t=405s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     7m34s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:08:49] t=420s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     7m49s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:09:04] t=435s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     8m4s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:09:19] t=450s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     8m19s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:09:34] t=465s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     8m34s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:09:49] t=480s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     8m49s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:10:04] t=495s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     9m4s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:10:20] t=510s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     9m20s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:10:35] t=525s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     9m35s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:10:50] t=540s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     9m50s
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:11:05] t=555s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     10m
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:11:20] t=570s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     10m
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:11:35] t=585s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     10m
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:11:51] t=600s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     10m
+hpa-demo-5d6676989b-5sqlk   0m    11Mi   
+hpa-demo-5d6676989b-b9w2r   0m    12Mi   
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+hpa-demo-5d6676989b-rlcv5   0m    12Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:12:06] t=615s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     5     11m
+hpa-demo-5d6676989b-gvbwd   0m    11Mi   
+hpa-demo-5d6676989b-zglhr   0m    12Mi   
+----- [19:12:21] t=630s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     2     11m
+hpa-demo-5d6676989b-gvbwd   0m    12Mi   
+----- [19:12:36] t=645s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     1     11m
+hpa-demo-5d6676989b-gvbwd   0m    11Mi   
+----- [19:12:51] t=660s -----
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1     5     1     11m
+hpa-demo-5d6676989b-gvbwd   0m    11Mi   
+$ kubectl -n s13-hpa get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+hpa-demo   Deployment/hpa-demo   cpu: 0%/50%   1         5         1          11m
+
+$ kubectl -n s13-hpa describe hpa hpa-demo | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason                        Age                From                       Message
+  ----     ------                        ----               ----                       -------
+  Warning  FailedGetResourceMetric       11m (x2 over 11m)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  11m (x2 over 11m)  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       11m                horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  11m                horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Normal   SuccessfulRescale             10m                horizontal-pod-autoscaler  New size: 2; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             9m6s               horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             8m51s              horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             50s                horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
+  Normal   SuccessfulRescale             35s                horizontal-pod-autoscaler  New size: 1; reason: All metrics below target
+
+$ kubectl -n s13-hpa get pods
+NAME                        READY   STATUS    RESTARTS   AGE
+hpa-demo-5d6676989b-gvbwd   1/1     Running   0          10m
+

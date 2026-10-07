@@ -1,0 +1,655 @@
+########## STEP 5.1 NAMESPACE ##########
+$ kubectl apply -f mini-project/namespace.yaml
+namespace/production-webapp created
+
+########## STEP 5.2 PVC ##########
+$ kubectl apply -f mini-project/pvc.yaml
+persistentvolumeclaim/web-data created
+
+$ kubectl -n production-webapp get pvc
+NAME       STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+web-data   Pending                                      standard       <unset>                 0s
+
+$ kubectl get storageclass
+NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  24m
+
+$ kubectl -n production-webapp describe pvc web-data | sed -n '/^Events:/,$p'
+Events:
+  Type    Reason                Age   From                         Message
+  ----    ------                ----  ----                         -------
+  Normal  WaitForFirstConsumer  0s    persistentvolume-controller  waiting for first consumer to be created before binding
+
+########## STEP 5.3 DEPLOYMENT + SERVICE ##########
+$ kubectl apply -f mini-project/deployment.yaml -f mini-project/service.yaml
+deployment.apps/web-app created
+service/web-service created
+
+$ kubectl -n production-webapp rollout status deploy/web-app --timeout=180s
+Waiting for deployment "web-app" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "web-app" rollout to finish: 1 of 2 updated replicas are available...
+deployment "web-app" successfully rolled out
+
+$ kubectl -n production-webapp get pods -o wide
+NAME                      READY   STATUS    RESTARTS   AGE   IP            NODE                      NOMINATED NODE   READINESS GATES
+web-app-d45775485-cbxq6   1/1     Running   0          13s   10.244.0.32   hw-legacy-control-plane   <none>           <none>
+web-app-d45775485-hfdkx   1/1     Running   0          13s   10.244.0.33   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n production-webapp get pvc
+NAME       STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+web-data   Bound    pvc-80417924-edfd-4197-94de-c19ea7cfd7d7   500Mi      RWO            standard       <unset>                 13s
+
+$ kubectl get pv
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                        STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+pvc-574d697f-491b-4082-85a4-685778abcae7   64Mi       RWO            Delete           Bound    s11-compare/data-db-0        standard       <unset>                          43s
+pvc-80417924-edfd-4197-94de-c19ea7cfd7d7   500Mi      RWO            Delete           Bound    production-webapp/web-data   standard       <unset>                          10s
+pvc-cc303650-ede0-43d6-92b5-5b0bb3d226c8   64Mi       RWO            Delete           Bound    s11-compare/data-db-1        standard       <unset>                          38s
+
+########## STEP 5.4 HPA ##########
+$ kubectl apply -f mini-project/hpa.yaml
+horizontalpodautoscaler.autoscaling/web-app-hpa created
+
+$ kubectl -n production-webapp get hpa
+NAME          REFERENCE            TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2         5         2          40s
+
+$ kubectl -n production-webapp get all
+NAME                          READY   STATUS    RESTARTS   AGE
+pod/web-app-d45775485-cbxq6   1/1     Running   0          53s
+pod/web-app-d45775485-hfdkx   1/1     Running   0          53s
+
+NAME                  TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+service/web-service   ClusterIP   10.96.77.99   <none>        80/TCP    53s
+
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/web-app   2/2     2            2           53s
+
+NAME                                DESIRED   CURRENT   READY   AGE
+replicaset.apps/web-app-d45775485   2         2         2       53s
+
+NAME                                              REFERENCE            TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/web-app-hpa   Deployment/web-app   cpu: 1%/50%   2         5         2          40s
+
+########## VERIFICATION TASK 1: STORAGE PERSISTENCE ##########
+$ POD_NAME=$(kubectl -n production-webapp get pods -l app=web-app -o jsonpath='{.items[0].metadata.name}')   # -> web-app-d45775485-cbxq6
+
+$ kubectl -n production-webapp exec web-app-d45775485-cbxq6 -- sh -c 'echo "Student: Shaurya Verma (24BCS10151)" > /data/student.txt'
+
+$ kubectl -n production-webapp exec web-app-d45775485-cbxq6 -- cat /data/student.txt
+Student: Shaurya Verma (24BCS10151)
+
+# the second replica mounts the same claim:
+$ kubectl -n production-webapp exec web-app-d45775485-hfdkx -- cat /data/student.txt
+Student: Shaurya Verma (24BCS10151)
+
+$ kubectl -n production-webapp delete pod web-app-d45775485-cbxq6
+pod "web-app-d45775485-cbxq6" deleted from production-webapp namespace
+
+$ kubectl -n production-webapp rollout status deploy/web-app --timeout=120s
+Waiting for deployment "web-app" rollout to finish: 1 of 2 updated replicas are available...
+deployment "web-app" successfully rolled out
+
+$ kubectl -n production-webapp get pods
+NAME                      READY   STATUS    RESTARTS   AGE
+web-app-d45775485-hfdkx   1/1     Running   0          62s
+web-app-d45775485-rtgx6   1/1     Running   0          8s
+
+$ NEW_POD=<newest pod>   # -> web-app-d45775485-rtgx6
+
+$ kubectl -n production-webapp exec web-app-d45775485-rtgx6 -- cat /data/student.txt
+Student: Shaurya Verma (24BCS10151)
+
+########## VERIFICATION TASK 2: SERVICE ##########
+$ kubectl -n production-webapp get svc web-service
+NAME          TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+web-service   ClusterIP   10.96.77.99   <none>        80/TCP    62s
+
+$ kubectl -n production-webapp get endpointslices -l kubernetes.io/service-name=web-service
+NAME                ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+web-service-64dn6   IPv4          80      10.244.0.33,10.244.0.46   62s
+
+$ kubectl -n production-webapp run curl-test --rm -i --restart=Never --image=busybox:1.36 -- wget -q -O- http://web-service | head -4
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+warning: couldn't attach to pod/curl-test, falling back to streaming logs: Internal error occurred: Internal error occurred: error attaching to container: container is in CONTAINER_EXITED state
+
+########## VERIFICATION TASK 3: TRIGGER HPA ##########
+$ kubectl run load-generator -n production-webapp --image=busybox:1.36 --restart=Never -- /bin/sh -c 'while true; do wget -q -O- http://web-service; done' 
+pod/load-generator created
+
+----- [19:02:40] t=15s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     2     65s
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-rtgx6   15m   12Mi   
+----- [19:02:55] t=30s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     2     80s
+web-app-d45775485-hfdkx   35m   12Mi   
+web-app-d45775485-rtgx6   46m   13Mi   
+----- [19:03:10] t=45s -----
+web-app-hpa   Deployment/web-app   cpu: 40%/50%   2     5     2     95s
+web-app-d45775485-hfdkx   46m   12Mi   
+web-app-d45775485-rtgx6   44m   12Mi   
+----- [19:03:25] t=60s -----
+web-app-hpa   Deployment/web-app   cpu: 45%/50%   2     5     2     110s
+web-app-d45775485-hfdkx   44m   12Mi   
+web-app-d45775485-rtgx6   44m   13Mi   
+----- [19:03:41] t=75s -----
+web-app-hpa   Deployment/web-app   cpu: 44%/50%   2     5     2     2m6s
+web-app-d45775485-hfdkx   42m   12Mi   
+web-app-d45775485-rtgx6   44m   13Mi   
+----- [19:03:56] t=90s -----
+web-app-hpa   Deployment/web-app   cpu: 43%/50%   2     5     2     2m21s
+web-app-d45775485-hfdkx   42m   12Mi   
+web-app-d45775485-rtgx6   42m   12Mi   
+----- [19:04:11] t=105s -----
+web-app-hpa   Deployment/web-app   cpu: 42%/50%   2     5     2     2m36s
+web-app-d45775485-hfdkx   35m   12Mi   
+web-app-d45775485-rtgx6   40m   12Mi   
+----- [19:04:26] t=120s -----
+web-app-hpa   Deployment/web-app   cpu: 37%/50%   2     5     2     2m51s
+web-app-d45775485-hfdkx   23m   12Mi   
+web-app-d45775485-rtgx6   22m   12Mi   
+----- [19:04:41] t=135s -----
+web-app-hpa   Deployment/web-app   cpu: 22%/50%   2     5     2     3m6s
+web-app-d45775485-hfdkx   35m   12Mi   
+web-app-d45775485-rtgx6   31m   12Mi   
+----- [19:04:56] t=150s -----
+web-app-hpa   Deployment/web-app   cpu: 33%/50%   2     5     2     3m21s
+web-app-d45775485-hfdkx   26m   12Mi   
+web-app-d45775485-rtgx6   29m   12Mi   
+----- [19:05:11] t=165s -----
+web-app-hpa   Deployment/web-app   cpu: 27%/50%   2     5     2     3m36s
+web-app-d45775485-hfdkx   36m   12Mi   
+web-app-d45775485-rtgx6   31m   12Mi   
+----- [19:05:26] t=180s -----
+web-app-hpa   Deployment/web-app   cpu: 33%/50%   2     5     2     3m51s
+web-app-d45775485-hfdkx   38m   11Mi   
+web-app-d45775485-rtgx6   31m   12Mi   
+----- [19:05:42] t=195s -----
+web-app-hpa   Deployment/web-app   cpu: 34%/50%   2     5     2     4m7s
+web-app-d45775485-hfdkx   39m   12Mi   
+web-app-d45775485-rtgx6   38m   12Mi   
+----- [19:05:57] t=210s -----
+web-app-hpa   Deployment/web-app   cpu: 38%/50%   2     5     2     4m22s
+web-app-d45775485-hfdkx   38m   12Mi   
+web-app-d45775485-rtgx6   39m   12Mi   
+----- [19:06:12] t=225s -----
+web-app-hpa   Deployment/web-app   cpu: 38%/50%   2     5     2     4m37s
+web-app-d45775485-hfdkx   41m   12Mi   
+web-app-d45775485-rtgx6   39m   12Mi   
+[script stopped here at 19:06:17: one load generator held CPU at ~33-38% of request, below the 50% target, so the HPA correctly did not scale. Continuing with more load below.]
+########## VERIFICATION TASK 3 (continued): ONE GENERATOR IS NOT ENOUGH - ADD TWO MORE ##########
+$ kubectl -n production-webapp get hpa
+NAME          REFERENCE            TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+web-app-hpa   Deployment/web-app   cpu: 38%/50%   2         5         2          4m42s
+
+$ kubectl run load-generator-2 -n production-webapp --image=busybox:1.36 --restart=Never -- /bin/sh -c 'while true; do wget -q -O- http://web-service; done'
+pod/load-generator-2 created
+
+$ kubectl run load-generator-3 -n production-webapp --image=busybox:1.36 --restart=Never -- /bin/sh -c 'while true; do wget -q -O- http://web-service; done'
+pod/load-generator-3 created
+
+----- [19:06:33] t=15s -----
+web-app-hpa   Deployment/web-app   cpu: 40%/50%   2     5     2     4m58s
+web-app-d45775485-hfdkx   39m   11Mi   
+web-app-d45775485-rtgx6   42m   12Mi   
+----- [19:06:48] t=30s -----
+web-app-hpa   Deployment/web-app   cpu: 40%/50%   2     5     2     5m13s
+web-app-d45775485-hfdkx   39m   11Mi   
+web-app-d45775485-rtgx6   61m   12Mi   
+----- [19:07:03] t=45s -----
+web-app-hpa   Deployment/web-app   cpu: 87%/50%   2     5     2     5m28s
+web-app-d45775485-hfdkx   79m   12Mi   
+web-app-d45775485-rtgx6   95m   12Mi   
+----- [19:07:18] t=60s -----
+web-app-hpa   Deployment/web-app   cpu: 37%/50%   2     5     4     5m43s
+web-app-d45775485-88rs8   21m   13Mi   
+web-app-d45775485-hfdkx   33m   12Mi   
+web-app-d45775485-qsn8z   11m   12Mi   
+web-app-d45775485-rtgx6   42m   13Mi   
+----- [19:07:33] t=75s -----
+web-app-hpa   Deployment/web-app   cpu: 41%/50%   2     5     4     5m58s
+web-app-d45775485-88rs8   43m   13Mi   
+web-app-d45775485-hfdkx   33m   12Mi   
+web-app-d45775485-qsn8z   42m   13Mi   
+web-app-d45775485-rtgx6   49m   13Mi   
+----- [19:07:48] t=90s -----
+web-app-hpa   Deployment/web-app   cpu: 55%/50%   2     5     4     6m13s
+web-app-d45775485-88rs8   53m   13Mi   
+web-app-d45775485-hfdkx   51m   12Mi   
+web-app-d45775485-qsn8z   59m   13Mi   
+web-app-d45775485-rtgx6   59m   12Mi   
+----- [19:08:03] t=105s -----
+web-app-hpa   Deployment/web-app   cpu: 50%/50%   2     5     4     6m28s
+web-app-d45775485-88rs8   50m   13Mi   
+web-app-d45775485-hfdkx   49m   12Mi   
+web-app-d45775485-qsn8z   48m   13Mi   
+web-app-d45775485-rtgx6   54m   13Mi   
+----- [19:08:18] t=120s -----
+web-app-hpa   Deployment/web-app   cpu: 60%/50%   2     5     4     6m44s
+web-app-d45775485-88rs8   63m   14Mi   
+web-app-d45775485-hfdkx   62m   12Mi   
+web-app-d45775485-qsn8z   63m   13Mi   
+web-app-d45775485-rtgx6   54m   13Mi   
+----- [19:08:34] t=135s -----
+web-app-hpa   Deployment/web-app   cpu: 63%/50%   2     5     5     6m59s
+web-app-d45775485-88rs8   63m   13Mi   
+web-app-d45775485-92p8d   27m   12Mi   
+web-app-d45775485-hfdkx   63m   13Mi   
+web-app-d45775485-qsn8z   63m   13Mi   
+web-app-d45775485-rtgx6   63m   12Mi   
+----- [19:08:49] t=150s -----
+web-app-hpa   Deployment/web-app   cpu: 55%/50%   2     5     5     7m14s
+web-app-d45775485-88rs8   54m   12Mi   
+web-app-d45775485-92p8d   27m   12Mi   
+web-app-d45775485-hfdkx   51m   12Mi   
+web-app-d45775485-qsn8z   59m   12Mi   
+web-app-d45775485-rtgx6   56m   12Mi   
+----- [19:09:04] t=165s -----
+web-app-hpa   Deployment/web-app   cpu: 53%/50%   2     5     5     7m29s
+web-app-d45775485-88rs8   54m   13Mi   
+web-app-d45775485-92p8d   54m   12Mi   
+web-app-d45775485-hfdkx   52m   12Mi   
+web-app-d45775485-qsn8z   53m   12Mi   
+web-app-d45775485-rtgx6   52m   12Mi   
+----- [19:09:19] t=180s -----
+web-app-hpa   Deployment/web-app   cpu: 52%/50%   2     5     5     7m44s
+web-app-d45775485-88rs8   53m   12Mi   
+web-app-d45775485-92p8d   52m   12Mi   
+web-app-d45775485-hfdkx   53m   12Mi   
+web-app-d45775485-qsn8z   52m   12Mi   
+web-app-d45775485-rtgx6   52m   12Mi   
+----- [19:09:34] t=195s -----
+web-app-hpa   Deployment/web-app   cpu: 53%/50%   2     5     5     7m59s
+web-app-d45775485-88rs8   53m   12Mi   
+web-app-d45775485-92p8d   53m   12Mi   
+web-app-d45775485-hfdkx   53m   12Mi   
+web-app-d45775485-qsn8z   52m   12Mi   
+web-app-d45775485-rtgx6   54m   13Mi   
+----- [19:09:49] t=210s -----
+web-app-hpa   Deployment/web-app   cpu: 53%/50%   2     5     5     8m14s
+web-app-d45775485-88rs8   54m   12Mi   
+web-app-d45775485-92p8d   52m   13Mi   
+web-app-d45775485-hfdkx   53m   12Mi   
+web-app-d45775485-qsn8z   54m   12Mi   
+web-app-d45775485-rtgx6   53m   12Mi   
+$ kubectl -n production-webapp get hpa
+NAME          REFERENCE            TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+web-app-hpa   Deployment/web-app   cpu: 53%/50%   2         5         5          8m14s
+
+$ kubectl -n production-webapp top pods
+NAME                      CPU(cores)   MEMORY(bytes)   
+load-generator            780m         6Mi             
+load-generator-2          785m         5Mi             
+load-generator-3          781m         5Mi             
+web-app-d45775485-88rs8   54m          12Mi            
+web-app-d45775485-92p8d   52m          13Mi            
+web-app-d45775485-hfdkx   53m          12Mi            
+web-app-d45775485-qsn8z   54m          12Mi            
+web-app-d45775485-rtgx6   53m          12Mi            
+
+$ kubectl -n production-webapp get pods -o wide
+NAME                      READY   STATUS      RESTARTS   AGE     IP            NODE                      NOMINATED NODE   READINESS GATES
+curl-test                 0/1     Completed   0          7m25s   10.244.0.51   hw-legacy-control-plane   <none>           <none>
+load-generator            1/1     Running     0          7m24s   10.244.0.52   hw-legacy-control-plane   <none>           <none>
+load-generator-2          1/1     Running     0          3m31s   10.244.0.76   hw-legacy-control-plane   <none>           <none>
+load-generator-3          1/1     Running     0          3m31s   10.244.0.77   hw-legacy-control-plane   <none>           <none>
+web-app-d45775485-88rs8   1/1     Running     0          2m58s   10.244.0.78   hw-legacy-control-plane   <none>           <none>
+web-app-d45775485-92p8d   1/1     Running     0          103s    10.244.0.81   hw-legacy-control-plane   <none>           <none>
+web-app-d45775485-hfdkx   1/1     Running     0          8m27s   10.244.0.33   hw-legacy-control-plane   <none>           <none>
+web-app-d45775485-qsn8z   1/1     Running     0          2m58s   10.244.0.79   hw-legacy-control-plane   <none>           <none>
+web-app-d45775485-rtgx6   1/1     Running     0          7m33s   10.244.0.46   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n production-webapp describe hpa web-app-hpa
+Name:                                                  web-app-hpa
+Namespace:                                             production-webapp
+Labels:                                                <none>
+Annotations:                                           <none>
+CreationTimestamp:                                     Wed, 07 Oct 2026 19:01:35 +0530
+Reference:                                             Deployment/web-app
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  53% (53m) / 50%
+Min replicas:                                          2
+Max replicas:                                          5
+Deployment pods:                                       5 current / 5 desired
+Conditions:
+  Type            Status  Reason              Message
+  ----            ------  ------              -------
+  AbleToScale     True    ReadyForNewScale    recommended size matches current size
+  ScalingActive   True    ValidMetricFound    the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  False   DesiredWithinRange  the desired count is within the acceptable range
+  ScaledToZero    False   NotScaledToZero     the HPA controller did not scale the workload to zero
+Events:
+  Type     Reason                        Age    From                       Message
+  ----     ------                        ----   ----                       -------
+  Warning  FailedGetResourceMetric       8m15s  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  8m15s  horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       8m     horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  8m     horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Normal   SuccessfulRescale             2m59s  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             104s   horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+
+$ kubectl -n production-webapp exec deploy/web-app -- cat /data/student.txt
+Student: Shaurya Verma (24BCS10151)
+
+--- stop load and watch scale-down (default 300s stabilisation window) ---
+$ kubectl delete pod load-generator load-generator-2 load-generator-3 -n production-webapp
+pod "load-generator" deleted from production-webapp namespace
+pod "load-generator-2" deleted from production-webapp namespace
+pod "load-generator-3" deleted from production-webapp namespace
+
+----- [19:10:36] t=225s -----
+web-app-hpa   Deployment/web-app   cpu: 51%/50%   2     5     5     9m1s
+web-app-d45775485-88rs8   52m   12Mi   
+web-app-d45775485-92p8d   52m   12Mi   
+web-app-d45775485-hfdkx   51m   12Mi   
+web-app-d45775485-qsn8z   52m   13Mi   
+web-app-d45775485-rtgx6   51m   12Mi   
+----- [19:10:51] t=240s -----
+web-app-hpa   Deployment/web-app   cpu: 17%/50%   2     5     5     9m16s
+web-app-d45775485-88rs8   8m    12Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    12Mi   
+web-app-d45775485-rtgx6   1m    12Mi   
+----- [19:11:06] t=255s -----
+web-app-hpa   Deployment/web-app   cpu: 2%/50%   2     5     5     9m31s
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    12Mi   
+----- [19:11:21] t=270s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     9m46s
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   2m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:11:36] t=285s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     10m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:11:52] t=300s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     10m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:12:07] t=315s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     10m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:12:22] t=330s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     10m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:12:37] t=345s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     11m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    12Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:12:52] t=360s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     11m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:13:07] t=375s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     11m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:13:22] t=390s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     11m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:13:37] t=405s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     12m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    12Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:13:52] t=420s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     12m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:14:08] t=435s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     12m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:14:23] t=450s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     12m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:14:38] t=465s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     13m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:14:53] t=480s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     13m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:15:08] t=495s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     13m
+web-app-d45775485-88rs8   1m    11Mi   
+web-app-d45775485-92p8d   1m    11Mi   
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-qsn8z   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:15:23] t=510s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     5     13m
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:15:39] t=525s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     2     14m
+web-app-d45775485-hfdkx   1m    12Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:15:54] t=540s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     2     14m
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-rtgx6   1m    12Mi   
+----- [19:16:09] t=555s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     2     14m
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:16:24] t=570s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     2     14m
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:16:39] t=585s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     2     15m
+web-app-d45775485-hfdkx   1m    11Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+----- [19:16:54] t=600s -----
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2     5     2     15m
+web-app-d45775485-hfdkx   1m    12Mi   
+web-app-d45775485-rtgx6   1m    11Mi   
+$ kubectl -n production-webapp get hpa
+NAME          REFERENCE            TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+web-app-hpa   Deployment/web-app   cpu: 1%/50%   2         5         2          15m
+
+$ kubectl -n production-webapp describe hpa web-app-hpa | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason                        Age    From                       Message
+  ----     ------                        ----   ----                       -------
+  Warning  FailedGetResourceMetric       15m    horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedComputeMetricsReplicas  15m    horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics API
+  Warning  FailedGetResourceMetric       15m    horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  15m    horizontal-pod-autoscaler  invalid metrics (1 invalid out of 1), first error is: failed to get cpu resource metric value: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Normal   SuccessfulRescale             10m    horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             8m49s  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale             93s    horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
+
+$ kubectl -n production-webapp get pods
+NAME                      READY   STATUS      RESTARTS   AGE
+curl-test                 0/1     Completed   0          14m
+web-app-d45775485-hfdkx   1/1     Running     0          15m
+web-app-d45775485-rtgx6   1/1     Running     0          14m
+
+########## BONUS CHALLENGE 2: READINESS GATING ##########
+$ kubectl -n production-webapp patch deploy web-app --type=json -p='[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/path","value":"/does-not-exist"}]'
+deployment.apps/web-app patched
+
+$ kubectl -n production-webapp get pods
+NAME                       READY   STATUS      RESTARTS   AGE
+curl-test                  0/1     Completed   0          15m
+web-app-5945bfc776-mgntt   0/1     Running     0          40s
+web-app-5945bfc776-ntcl9   0/1     Running     0          40s
+
+$ kubectl -n production-webapp get endpointslices -l kubernetes.io/service-name=web-service
+NAME                ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+web-service-64dn6   IPv4          80      10.244.0.93,10.244.0.94   16m
+
+$ kubectl -n production-webapp describe pods -l app=web-app | grep -E 'Readiness probe failed' | head -3
+
+$ kubectl -n production-webapp rollout undo deploy/web-app
+Warning: resource deployments/web-app was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/web-app rolled back
+
+$ kubectl -n production-webapp rollout status deploy/web-app --timeout=120s
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "web-app" rollout to finish: 1 of 2 updated replicas are available...
+deployment "web-app" successfully rolled out
+
+$ kubectl -n production-webapp get endpointslices -l kubernetes.io/service-name=web-service
+NAME                ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+web-service-64dn6   IPv4          80      10.244.0.96,10.244.0.95   16m
+
+########## BONUS CHALLENGE 3: LIVENESS RESTART LOOP ##########
+$ kubectl -n production-webapp patch deploy web-app --type=json -p='[{"op":"replace","path":"/spec/template/spec/containers/0/livenessProbe/httpGet/path","value":"/crash"}]'
+deployment.apps/web-app patched
+
+$ kubectl -n production-webapp get pods
+NAME                      READY   STATUS      RESTARTS      AGE
+curl-test                 0/1     Completed   0             16m
+web-app-85d86b65d-nzzr7   1/1     Running     3 (13s ago)   74s
+web-app-85d86b65d-wkjnf   1/1     Running     3 (13s ago)   74s
+
+$ kubectl -n production-webapp get events --field-selector reason=Killing --sort-by=.lastTimestamp | tail -4
+75s         Normal   Killing   pod/web-app-d45775485-ll6cn    Stopping container nginx
+75s         Normal   Killing   pod/web-app-d45775485-s5gjs    Stopping container nginx
+14s         Normal   Killing   pod/web-app-85d86b65d-wkjnf    Container nginx failed liveness probe, will be restarted
+14s         Normal   Killing   pod/web-app-85d86b65d-nzzr7    Container nginx failed liveness probe, will be restarted
+
+$ kubectl -n production-webapp rollout undo deploy/web-app
+Warning: resource deployments/web-app was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/web-app rolled back
+
+$ kubectl -n production-webapp rollout status deploy/web-app --timeout=120s
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "web-app" rollout to finish: 1 of 2 updated replicas are available...
+deployment "web-app" successfully rolled out
+
+$ kubectl -n production-webapp get pods
+NAME                      READY   STATUS      RESTARTS   AGE
+curl-test                 0/1     Completed   0          16m
+web-app-d45775485-c2kz5   1/1     Running     0          9s
+web-app-d45775485-lp57n   1/1     Running     0          9s
+
+$ kubectl -n production-webapp exec deploy/web-app -- cat /data/student.txt
+Student: Shaurya Verma (24BCS10151)
+
+########## BONUS CHALLENGE 2 (re-run with a proper endpoint check) ##########
+# 'kubectl get endpointslices' lists every endpoint, ready or not, so the first attempt above looked unchanged. Checking the ready condition this time:
+$ kubectl -n production-webapp patch deploy web-app --type=json -p='[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/path","value":"/does-not-exist"}]'
+deployment.apps/web-app patched
+
+$ kubectl -n production-webapp get pods -l app=web-app
+NAME                       READY   STATUS    RESTARTS   AGE
+web-app-5945bfc776-k8m9b   0/1     Running   0          35s
+web-app-5945bfc776-mmd6p   0/1     Running   0          35s
+
+$ kubectl -n production-webapp get endpoints web-service
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME          ENDPOINTS   AGE
+web-service               23m
+
+$ kubectl -n production-webapp get endpointslices -l kubernetes.io/service-name=web-service -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]}  ready={.conditions.ready}  serving={.conditions.serving}{"\n"}{end}'
+10.244.0.101  ready=false  serving=false
+10.244.0.102  ready=false  serving=false
+
+$ kubectl -n production-webapp get events --field-selector reason=Unhealthy --sort-by=.lastTimestamp | tail -3
+5m35s       Warning   Unhealthy   pod/web-app-85d86b65d-wkjnf    Liveness probe failed: HTTP probe failed with statuscode: 404
+1s          Warning   Unhealthy   pod/web-app-5945bfc776-k8m9b   Readiness probe failed: HTTP probe failed with statuscode: 404
+1s          Warning   Unhealthy   pod/web-app-5945bfc776-mmd6p   Readiness probe failed: HTTP probe failed with statuscode: 404
+
+$ kubectl -n production-webapp run curl-test2 --restart=Never --image=busybox:1.36 -- wget -T 3 -q -O- http://web-service
+pod/curl-test2 created
+
+$ kubectl -n production-webapp logs curl-test2
+wget: can't connect to remote host (10.96.77.99): Connection refused
+
+$ kubectl -n production-webapp rollout undo deploy/web-app
+Warning: resource deployments/web-app was previously managed with 'kubectl apply'. Rolling back will not update the kubectl.kubernetes.io/last-applied-configuration annotation, which may cause unexpected behavior on future 'kubectl apply' operations. Consider using 'kubectl apply' with your previous configuration file instead.
+deployment.apps/web-app rolled back
+
+$ kubectl -n production-webapp rollout status deploy/web-app --timeout=120s
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 out of 2 new replicas have been updated...
+Waiting for deployment "web-app" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "web-app" rollout to finish: 1 of 2 updated replicas are available...
+deployment "web-app" successfully rolled out
+
+$ kubectl -n production-webapp get endpoints web-service
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME          ENDPOINTS                         AGE
+web-service   10.244.0.104:80,10.244.0.105:80   23m
+
+$ kubectl -n production-webapp get endpointslices -l kubernetes.io/service-name=web-service -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]}  ready={.conditions.ready}  serving={.conditions.serving}{"\n"}{end}'
+10.244.0.105  ready=true  serving=true
+10.244.0.104  ready=true  serving=true
+
+$ kubectl -n production-webapp delete pod curl-test curl-test2
+pod "curl-test" deleted from production-webapp namespace
+pod "curl-test2" deleted from production-webapp namespace
+

@@ -5,12 +5,16 @@ a real load test, and the three probe types compared side by side on a single
 timeline.
 
 Command results are **real captured output** from the three-node kind cluster
-built in [assignment 09](../09-kubernetes-fundamentals/README.md), with
+built in [session 09](../09-kubernetes-fundamentals/README.md), with
 `metrics-server` installed so the HPA has something to read.
 
 ---
 
 ## Task 1 — Ephemeral volumes
+
+> The required [`01-kubernetes-volumes/README.md`](01-kubernetes-volumes/README.md)
+> summarises what I learned about emptyDir, hostPath, PV, PVC, StorageClass and
+> dynamic provisioning, using the practical examples in Tasks 1–3 below.
 
 ### emptyDir — shared between containers, dies with the pod
 
@@ -55,7 +59,7 @@ An `emptyDir` is created when the pod is assigned to a node and deleted when the
 pod leaves it — it survives a *container* crash, never a *pod* deletion.
 
 Good for: scratch space, caches, and handing files between containers in one pod
-(the sidecar pattern in [assignment 10](../10-k8s-core-objects/README.md)).
+(the sidecar pattern in [session 10](../10-k8s-core-objects/README.md)).
 
 ### hostPath — a real directory on the node
 
@@ -575,6 +579,196 @@ The real default is **300 seconds**; 60 was used here only so the demo finished.
 
 ---
 
+## Task 6 — HPA hands-on with the course's `hpa.yml`
+
+The spec says *"Use hpa.yml"*. Task 5 above used the Kubernetes docs'
+`php-apache` example. This task runs the course's own files
+(`devops-heros/session-13-storage-hpa-probes/04-hpa/`), copied unchanged to
+[`manifests/hpa-course/`](manifests/hpa-course/), and follows the nine listed
+steps. The load generator is the course's `wget` loop wrapped in a Deployment
+([`load-generator.yaml`](manifests/hpa-course/load-generator.yaml)), so that
+"increase application load" can be done by scaling it. Run on the single-node
+`hw-legacy` kind cluster with metrics-server. Full transcript:
+[`evidence/s13-hpa-course.txt`](evidence/s13-hpa-course.txt).
+
+```yaml
+# manifests/hpa-course/hpa.yaml  (course file)
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: hpa-demo }
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 50 }
+# manifests/hpa-course/deployment.yaml: nginx:1.27, requests.cpu 100m, limits.cpu 200m
+```
+
+No `behavior:` block is set, so unlike Task 5 the default **300 s** scale-down
+stabilisation window applies.
+
+### 1–3. Deploy, configure, verify
+
+```console
+$ kubectl -n s13-hpa apply -f manifests/hpa-course/deployment.yaml -f manifests/hpa-course/service.yaml
+deployment.apps/hpa-demo created
+service/hpa-demo-service created
+
+$ kubectl -n s13-hpa apply -f manifests/hpa-course/hpa.yaml
+horizontalpodautoscaler.autoscaling/hpa-demo created
+
+$ kubectl -n s13-hpa get hpa                      (45 s after creation)
+NAME       REFERENCE             TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+hpa-demo   Deployment/hpa-demo   cpu: <unknown>/50%   1         5         1          45s
+
+$ kubectl -n s13-hpa describe hpa hpa-demo
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  <unknown> / 50%
+Conditions:
+  AbleToScale    True    SucceededGetScale        the HPA controller was able to get the target's current scale
+  ScalingActive  False   FailedGetResourceMetric  the HPA was unable to compute the replica count: failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+
+$ kubectl -n s13-hpa top pods
+NAME                        CPU(cores)   MEMORY(bytes)   
+hpa-demo-5d6676989b-zglhr   0m           11Mi            
+```
+
+`<unknown>` at 45 s was **not** a misconfiguration: the request is set and
+metrics-server is running. The HPA had not yet received a metrics sample for a
+pod that was only seconds old (`did not receive metrics for targeted pods`).
+Fifteen seconds later it read `6%`. When `<unknown>` lasts longer than that,
+the cause is usually a missing `requests.cpu` (Task 5) or a missing
+metrics-server.
+
+### 4–8. Load generator, more load, CPU and scaling
+
+Sampled every 15 s with `kubectl get hpa` and `kubectl top pods`:
+
+```console
+$ kubectl -n s13-hpa apply -f manifests/hpa-course/load-generator.yaml      # 1 generator
+----- [19:02:00] t=15s -----
+hpa-demo   Deployment/hpa-demo   cpu: 6%/50%    1     5     1     60s
+hpa-demo-5d6676989b-zglhr   6m    14Mi
+----- [19:02:15] t=30s -----
+hpa-demo   Deployment/hpa-demo   cpu: 82%/50%   1     5     1     75s
+hpa-demo-5d6676989b-zglhr   82m   13Mi
+----- [19:02:30] t=45s -----
+hpa-demo   Deployment/hpa-demo   cpu: 81%/50%   1     5     2     90s
+----- [19:03:00] t=75s -----
+hpa-demo   Deployment/hpa-demo   cpu: 24%/50%   1     5     2     2m
+hpa-demo-5d6676989b-gvbwd   24m   12Mi
+hpa-demo-5d6676989b-zglhr   25m   13Mi
+
+$ kubectl -n s13-hpa scale deploy/load-generator --replicas=4              # increase the load
+----- [19:03:46] t=120s -----
+hpa-demo   Deployment/hpa-demo   cpu: 94%/50%   1     5     2     2m46s
+hpa-demo-5d6676989b-gvbwd   55m    13Mi
+hpa-demo-5d6676989b-zglhr   133m   13Mi
+----- [19:04:01] t=135s -----
+hpa-demo   Deployment/hpa-demo   cpu: 128%/50%  1     5     4     3m1s
+hpa-demo-5d6676989b-gvbwd   127m   13Mi
+hpa-demo-5d6676989b-zglhr   129m   13Mi
+----- [19:04:16] t=150s -----
+hpa-demo   Deployment/hpa-demo   cpu: 58%/50%   1     5     5     3m16s
+hpa-demo-5d6676989b-b9w2r   57m   12Mi
+hpa-demo-5d6676989b-gvbwd   52m   13Mi
+hpa-demo-5d6676989b-rlcv5   60m   12Mi
+hpa-demo-5d6676989b-zglhr   66m   13Mi
+----- [19:05:32] t=225s -----
+hpa-demo   Deployment/hpa-demo   cpu: 59%/50%   1     5     5     4m32s
+hpa-demo-5d6676989b-5sqlk   59m   12Mi
+hpa-demo-5d6676989b-b9w2r   60m   12Mi
+hpa-demo-5d6676989b-gvbwd   58m   12Mi
+hpa-demo-5d6676989b-rlcv5   59m   13Mi
+hpa-demo-5d6676989b-zglhr   60m   12Mi
+```
+
+```console
+$ kubectl -n s13-hpa get hpa
+NAME       REFERENCE             TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+hpa-demo   Deployment/hpa-demo   cpu: 54%/50%   1         5         5          5m17s
+
+$ kubectl -n s13-hpa top pods
+NAME                              CPU(cores)   MEMORY(bytes)   
+hpa-demo-5d6676989b-5sqlk         49m          12Mi            
+hpa-demo-5d6676989b-b9w2r         52m          13Mi            
+hpa-demo-5d6676989b-gvbwd         53m          13Mi            
+hpa-demo-5d6676989b-rlcv5         58m          13Mi            
+hpa-demo-5d6676989b-zglhr         61m          13Mi            
+load-generator-7c686fd77b-jhl5q   808m         7Mi             
+load-generator-7c686fd77b-nwxzg   737m         7Mi             
+load-generator-7c686fd77b-x2gkc   805m         7Mi             
+load-generator-7c686fd77b-x92p6   804m         7Mi             
+
+$ kubectl -n s13-hpa describe hpa hpa-demo
+Metrics:                                               ( current / target )
+  resource cpu on pods  (as a percentage of request):  54% (54m) / 50%
+Min replicas:                                          1
+Max replicas:                                          5
+Deployment pods:                                       5 current / 5 desired
+Conditions:
+  Type            Status  Reason               Message
+  AbleToScale     True    ScaleDownStabilized  recent recommendations were higher than current one, applying the highest recent recommendation
+  ScalingActive   True    ValidMetricFound     the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)
+  ScalingLimited  True    TooManyReplicas      the desired replica count is more than the maximum replica count
+  ScaledToZero    False   NotScaledToZero      the HPA controller did not scale the workload to zero
+Events:
+  Normal   SuccessfulRescale  4m3s   horizontal-pod-autoscaler  New size: 2; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale  2m33s  horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale  2m18s  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+```
+
+What the numbers show:
+
+- **CPU is a percentage of the 100m request.** `82m` on one pod is `82%`. The
+  HPA scaled to `ceil(1 × 82/50) = 2`.
+- With 2 pods, one generator settled at 24%, so the HPA held at 2. Scaling the
+  generator to 4 pushed it to 94% and then **128%**: `ceil(2 × 128/50) = 6`,
+  limited to **5**, which `ScalingLimited True / TooManyReplicas` confirms.
+- At 5 pods the load spread to roughly 50–60m each (54% average). The HPA would
+  like more pods but is at `maxReplicas`.
+- `kubectl top` also shows where the CPU really went: each busybox loop used
+  about 0.8 cores, far more than nginx needed to serve it.
+
+### Stop the load, watch scale-down
+
+```console
+$ kubectl -n s13-hpa delete deploy/load-generator          (19:06:47; samples below condensed to HPA columns)
+----- [19:07:18] t=330s -----   cpu: 15%/50%   REPLICAS 5
+----- [19:07:48] t=360s -----   cpu: 0%/50%    REPLICAS 5
+  ... 0% with 5 replicas for the next ~4.5 minutes ...
+----- [19:12:21] t=630s -----   cpu: 0%/50%    REPLICAS 2
+----- [19:12:36] t=645s -----   cpu: 0%/50%    REPLICAS 1
+
+$ kubectl -n s13-hpa describe hpa hpa-demo | sed -n '/^Events:/,$p'
+  Normal   SuccessfulRescale  10m    horizontal-pod-autoscaler  New size: 2; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale  9m6s   horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale  8m51s  horizontal-pod-autoscaler  New size: 5; reason: cpu resource utilization (percentage of request) above target
+  Normal   SuccessfulRescale  50s    horizontal-pod-autoscaler  New size: 2; reason: All metrics below target
+  Normal   SuccessfulRescale  35s    horizontal-pod-autoscaler  New size: 1; reason: All metrics below target
+```
+
+Scale-up took seconds. Scale-down waited **about 5 minutes and 20 seconds**
+after CPU hit 0%. This is the default 300 s window. The HPA uses the highest
+recommendation from the last 5 minutes, which is what the `ScaleDownStabilized`
+condition in the `describe` output above refers to. Task 5 shortened this window to 60 s with
+`behavior.scaleDown.stabilizationWindowSeconds`, and this run shows what
+happens without it.
+
+---
+
+## Task 7 — Mini project
+
+The course's Session 13 mini project (PVC + HPA + all three probes on one
+Deployment, namespace `production-webapp`) is in
+[`mini-project/`](mini-project/README.md): the course manifests, every
+verification task (storage persistence across pod deletion, Service check, HPA
+2 → 4 → 5 → 2) and bonus challenges 2 and 3 (readiness gating, liveness restart
+loop), with real output.
+
+---
+
 ## What I took away
 
 - **emptyDir vs PVC is a one-experiment difference.** Same delete-and-recreate
@@ -614,6 +808,10 @@ The real default is **300 seconds**; 60 was used here only so the demo finished.
 | 5 | Generate load and observe scale-up | Done — **1 → 3 → 5 → 8 → 10** with per-pod CPU measured throughout |
 | 5 | Observe scale-down | Done — 10 → 4 → 1, with the 60s stabilisation window visible |
 | 5 | Understand HPA limits | Done — `ScalingLimited: TooManyReplicas` at 71%/50% |
+| 1 | `01-kubernetes-volumes/README.md` | Done — [standalone notes](01-kubernetes-volumes/README.md) on all six topics with examples |
+| 6 | HPA with the course's `hpa.yml` | Done — deploy, configure, verify, load generator, increased load, `kubectl top pods`, 1 → 2 → 4 → 5 → 1 |
+| 6 | Load generator | Done — [`load-generator.yaml`](manifests/hpa-course/load-generator.yaml), scaled 1 → 4 to increase load |
+| 7 | Mini project | Done — [`mini-project/`](mini-project/README.md): PVC persistence, Service, HPA 2 → 5 → 2, bonus challenges 2 and 3 |
 
 ## Raw evidence
 

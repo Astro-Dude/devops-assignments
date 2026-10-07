@@ -1,0 +1,50 @@
+$ kubectl get storageclass
+NAME                 PROVISIONER             RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+standard (default)   rancher.io/local-path   Delete          WaitForFirstConsumer   false                  24m
+
+$ kubectl get storageclass standard -o yaml | grep -v -E 'uid:|resourceVersion:|creationTimestamp:|last-applied|^    {'
+ugrep: error: error at position 64
+sion:|creationTimestamp:|last-applied|^    {
+                          invalid repeat___/
+
+
+
+$ kubectl -n local-path-storage get cm local-path-config -o jsonpath='{.data.config\.json}'
+{
+        "nodePathMap":[
+        {
+                "node":"DEFAULT_PATH_FOR_NON_LISTED_NODES",
+                "paths":["/var/local-path-provisioner"]
+        }
+        ]
+}
+$ kubectl get pvc -A
+NAMESPACE           NAME        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+production-webapp   web-data    Bound    pvc-80417924-edfd-4197-94de-c19ea7cfd7d7   500Mi      RWO            standard       <unset>                 11s
+s11-compare         data-db-0   Bound    pvc-574d697f-491b-4082-85a4-685778abcae7   64Mi       RWO            standard       <unset>                 43s
+s11-compare         data-db-1   Bound    pvc-cc303650-ede0-43d6-92b5-5b0bb3d226c8   64Mi       RWO            standard       <unset>                 39s
+
+$ kubectl get pv
+NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                        STORAGECLASS   VOLUMEATTRIBUTESCLASS   REASON   AGE
+pvc-574d697f-491b-4082-85a4-685778abcae7   64Mi       RWO            Delete           Bound    s11-compare/data-db-0        standard       <unset>                          41s
+pvc-80417924-edfd-4197-94de-c19ea7cfd7d7   500Mi      RWO            Delete           Bound    production-webapp/web-data   standard       <unset>                          8s
+pvc-cc303650-ede0-43d6-92b5-5b0bb3d226c8   64Mi       RWO            Delete           Bound    s11-compare/data-db-1        standard       <unset>                          36s
+
+$ docker exec hw-legacy-control-plane sh -c 'ls -l /var/local-path-provisioner/'
+total 12
+drwxrwxrwx 2 root root 4096 Oct  7 13:30 pvc-574d697f-491b-4082-85a4-685778abcae7_s11-compare_data-db-0
+drwxrwxrwx 2 root root 4096 Oct  7 13:31 pvc-80417924-edfd-4197-94de-c19ea7cfd7d7_production-webapp_web-data
+drwxrwxrwx 2 root root 4096 Oct  7 13:30 pvc-cc303650-ede0-43d6-92b5-5b0bb3d226c8_s11-compare_data-db-1
+
+$ kubectl get storageclass standard -o yaml | sed '/uid:/d;/resourceVersion:/d;/creationTimestamp:/d;/last-applied/d;/^    {/d'
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  annotations:
+      {"apiVersion":"storage.k8s.io/v1","kind":"StorageClass","metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"},"name":"standard"},"provisioner":"rancher.io/local-path","reclaimPolicy":"Delete","volumeBindingMode":"WaitForFirstConsumer"}
+    storageclass.kubernetes.io/is-default-class: "true"
+  name: standard
+provisioner: rancher.io/local-path
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer
+
