@@ -463,6 +463,10 @@ pushed ghcr.io/astro-dude/s17-devsecops-app@sha256:b52f45a32d7e5a5c616f530b9a03e
 `b52f45a3…` is the digest of the manifest in the registry. They are different
 hashes of the same image, and Kubernetes pulls by the second one.)
 
+Job summary written by the push job (live Actions UI, below the Docker Build and Security Gate summaries):
+
+![push summary](screenshots/run-green-push-summary.png)
+
 ![GHCR package](screenshots/ghcr-package.png)
 
 The package inherited the repository's **public** visibility, so its tags can be
@@ -544,7 +548,7 @@ and that hostile input still gets a 400 in the deployed build. The PSS probe
 shows the namespace really enforces `restricted`. The hardened Deployment was
 admitted, and a privileged pod was refused.
 
-Final green run: all ten stages passed, and the deploy job's steps:
+Final green run: all ten stages passed. The second screenshot is the deploy job with the "Verify deployment" step log expanded:
 
 ![final green run](screenshots/run-green-overview.png)
 ![deploy job](screenshots/run-green-deploy-job.png)
@@ -709,15 +713,12 @@ following run, 37632031493, is the final green one. The key was fake and already
 in history, so nothing new was exposed. Had it been real, the scanner would have
 stopped me from re-publishing it.
 
-> About the screenshots: the failed-run pages (`run-failed-gate-*`,
-> `run-history-leak-gate-summary`) were taken from the live GitHub UI while
-> signed in. After a machine reboot, the browser's GitHub session was gone, and
-> GitHub only shows job summaries and logs to signed-in users. So
-> `run-green-gate-summary.png` and `run-evidence-leak-gate-summary.png` show
-> GitHub's rendering of the **downloaded `security-gate-result` artifacts**
-> committed under [`evidence/gate-results/`](evidence/gate-results/). This is the
-> same markdown the gate wrote to the job summary. The green-run overview,
-> deploy-job and artifact screenshots are the public run pages.
+> All GitHub screenshots are from the live Actions UI while signed in
+> (`run-green-overview`, `run-green-deploy-job`, `run-green-gate-summary`,
+> `run-green-push-summary`, `run-green-artifacts`, the three `run-failed-gate-*`,
+> `run-history-leak-gate-summary` and `run-evidence-leak-gate-summary`). The same
+> gate summaries are also kept as files under
+> [`evidence/gate-results/`](evidence/gate-results/), because workflow artifacts expire.
 
 ---
 
