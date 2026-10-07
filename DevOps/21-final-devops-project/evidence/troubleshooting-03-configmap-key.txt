@@ -1,0 +1,48 @@
+## IDENTIFY
+$ kubectl -n tickethub-broken get pods -l app.kubernetes.io/name=tickethub-backend
+NAME                                 READY   STATUS                  RESTARTS   AGE
+tickethub-backend-55fdc857f7-65lsg   0/1     Init:ImagePullBackOff   0          2m4s
+tickethub-backend-db745d98f-9lvkr    0/1     Init:0/1                0          54s
+
+## INVESTIGATE: the initContainer never finishes — read its log
+$ kubectl -n tickethub-broken logs pod/tickethub-backend-db745d98f-9lvkr -c migrate --tail=6
+waiting for database ...
+waiting for database ...
+waiting for database ...
+waiting for database ...
+waiting for database ...
+waiting for database ...
+
+# which host is it trying? The app builds the URL from DB_HOST (default 'localhost')
+$ kubectl -n tickethub-broken exec pod/tickethub-backend-db745d98f-9lvkr -c migrate -- python -c 'from app.config import settings; print(settings.db_host, settings.db_port, settings.db_name)'
+localhost 5432 tickethub
+
+$ kubectl -n tickethub-broken get configmap tickethub-config -o jsonpath='{.data}' | jq .
+{
+  "APP_ENV": "troubleshooting",
+  "DB_NAME": "tickethub",
+  "DB_PORT": "5432",
+  "LOG_LEVEL": "INFO"
+}
+
+## ROOT CAUSE: ConfigMap has no DB_HOST key -> pydantic default 'localhost' -> nothing listens on 5432 inside the backend pod.
+## FIX: add the key, then restart (envFrom is only read when a container starts)
+$ kubectl -n tickethub-broken patch configmap tickethub-config --type=merge -p '{"data":{"DB_HOST":"tickethub-postgres","DEFAULT_TEAM":"L1 Support"}}'
+configmap/tickethub-config patched
+
+$ kubectl -n tickethub-broken rollout restart deploy/tickethub-backend
+deployment.apps/tickethub-backend restarted
+
+## VERIFY
+$ kubectl -n tickethub-broken logs pod/tickethub-backend-6c45b6756f-jn7mh -c migrate
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 0001_create_tickets, create tickets table
+INFO  [alembic.runtime.migration] Running upgrade 0001_create_tickets -> 0002_create_comments, create comments table
+migrations applied (alembic head)
+
+$ kubectl -n tickethub-broken get pods -l app.kubernetes.io/name=tickethub-backend
+NAME                                 READY   STATUS     RESTARTS   AGE
+tickethub-backend-6c45b6756f-jn7mh   0/1     Running    0          30s
+tickethub-backend-db745d98f-9lvkr    0/1     Init:0/1   0          85s
+

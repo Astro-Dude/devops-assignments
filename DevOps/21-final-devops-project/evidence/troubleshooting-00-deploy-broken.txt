@@ -1,0 +1,52 @@
+$ kubectl create namespace tickethub-broken
+namespace/tickethub-broken created
+
+$ kubectl -n tickethub-broken create secret generic tickethub-db --from-literal=DB_USER=tickethub --from-literal=DB_PASSWORD="$(openssl rand -hex 16)"
+secret/tickethub-db created
+
+$ kubectl apply -f troubleshooting/broken-stack.yaml
+configmap/tickethub-config created
+persistentvolumeclaim/tickethub-postgres-data created
+deployment.apps/tickethub-postgres created
+service/tickethub-postgres created
+deployment.apps/tickethub-backend created
+service/tickethub-backend created
+deployment.apps/tickethub-frontend created
+service/tickethub-frontend created
+ingress.networking.k8s.io/tickethub created
+horizontalpodautoscaler.autoscaling/tickethub-backend created
+
+# ---- 45 seconds later: what does the user see?
+$ curl -s -o /dev/null -w "GET /          -> %{http_code}\n" http://broken.tickethub.localtest.me:28080/
+GET /          -> 502
+
+$ curl -s -o /dev/null -w "GET /api/stats -> %{http_code}\n" http://broken.tickethub.localtest.me:28080/api/stats
+GET /api/stats -> 503
+
+# ---- first look at the namespace
+$ kubectl -n tickethub-broken get pods,svc,endpoints,ingress,hpa,pvc
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME                                      READY   STATUS                       RESTARTS   AGE
+pod/tickethub-backend-55fdc857f7-65lsg    0/1     Init:ImagePullBackOff        0          45s
+pod/tickethub-frontend-6fffd56df7-jnzxq   1/1     Running                      0          45s
+pod/tickethub-postgres-76f88d9556-4vhhl   0/1     CreateContainerConfigError   0          45s
+
+NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+service/tickethub-backend    ClusterIP   10.96.165.250   <none>        8000/TCP   45s
+service/tickethub-frontend   ClusterIP   10.96.148.221   <none>        80/TCP     45s
+service/tickethub-postgres   ClusterIP   10.96.128.120   <none>        5432/TCP   45s
+
+NAME                           ENDPOINTS        AGE
+endpoints/tickethub-backend                     45s
+endpoints/tickethub-frontend   10.244.0.56:80   45s
+endpoints/tickethub-postgres                    45s
+
+NAME                                  CLASS   HOSTS                           ADDRESS     PORTS   AGE
+ingress.networking.k8s.io/tickethub   nginx   broken.tickethub.localtest.me   localhost   80      45s
+
+NAME                                                    REFERENCE                      TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/tickethub-backend   Deployment/tickethub-backend   cpu: <unknown>/70%   1         3         1          45s
+
+NAME                                            STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/tickethub-postgres-data   Bound    pvc-ecef6422-9d55-48ae-bba6-9cc6b0dff856   1Gi        RWO            standard       <unset>                 45s
+

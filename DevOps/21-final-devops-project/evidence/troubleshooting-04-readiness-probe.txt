@@ -1,0 +1,60 @@
+## IDENTIFY: container is Running but never Ready, so the Service has no endpoints
+$ kubectl -n tickethub-broken get pods -l app.kubernetes.io/name=tickethub-backend
+NAME                                 READY   STATUS       RESTARTS   AGE
+tickethub-backend-6c45b6756f-jn7mh   0/1     Running      0          39s
+tickethub-backend-db745d98f-9lvkr    0/1     Init:Error   0          94s
+
+$ kubectl -n tickethub-broken get endpointslice -l kubernetes.io/service-name=tickethub-backend
+NAME                      ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+tickethub-backend-qxkc7   IPv4          8000    10.244.0.60,10.244.0.61   2m44s
+
+## INVESTIGATE
+$ kubectl -n tickethub-broken describe pod/tickethub-backend-6c45b6756f-jn7mh | grep -E 'Readiness|Unhealthy' | cut -c1-200
+    Readiness:      http-get http://:http/readyz delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=3
+  Warning  Unhealthy  34s (x2 over 35s)  kubelet            spec.containers{backend}: Readiness probe failed: Get "http://10.244.0.61:8000/readyz": dial tcp 10.244.0.61:8000: connect: connection refus
+  Warning  Unhealthy  4s (x6 over 29s)   kubelet            spec.containers{backend}: Readiness probe failed: HTTP probe failed with statuscode: 404
+
+$ kubectl -n tickethub-broken logs pod/tickethub-backend-6c45b6756f-jn7mh -c backend --tail=3
+{"ts": "2026-10-07T14:39:48", "level": "INFO", "logger": "tickethub", "msg": "request", "env": "troubleshooting", "version": "0b9665e", "method": "GET", "path": "/readyz", "status": 404, "duration_ms": 0.38}
+{"ts": "2026-10-07T14:39:53", "level": "INFO", "logger": "tickethub", "msg": "request", "env": "troubleshooting", "version": "0b9665e", "method": "GET", "path": "/readyz", "status": 404, "duration_ms": 0.61}
+{"ts": "2026-10-07T14:39:58", "level": "INFO", "logger": "tickethub", "msg": "request", "env": "troubleshooting", "version": "0b9665e", "method": "GET", "path": "/readyz", "status": 404, "duration_ms": 0.33}
+
+$ kubectl -n tickethub-broken exec pod/tickethub-backend-6c45b6756f-jn7mh -c backend -- python -c "import urllib.request as u; [print(p, u.urlopen('http://127.0.0.1:8000'+p).status) if p!='/readyz' else None for p in ('/health','/ready')]; u.urlopen('http://127.0.0.1:8000/readyz')" 2>&1 | tail -3
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 404: Not Found
+command terminated with exit code 1
+
+## ROOT CAUSE: readinessProbe points at /readyz; the API exposes /ready (and /health). 404 = probe failure forever.
+## FIX
+$ kubectl -n tickethub-broken patch deploy tickethub-backend --type=json -p '[{"op":"replace","path":"/spec/template/spec/containers/0/readinessProbe/httpGet/path","value":"/ready"}]'
+deployment.apps/tickethub-backend patched
+
+$ kubectl -n tickethub-broken rollout status deploy/tickethub-backend --timeout=180s
+Waiting for deployment "tickethub-backend" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "tickethub-backend" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "tickethub-backend" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "tickethub-backend" rollout to finish: 1 old replicas are pending termination...
+deployment "tickethub-backend" successfully rolled out
+
+## VERIFY
+$ kubectl -n tickethub-broken get pods -l app.kubernetes.io/name=tickethub-backend
+NAME                                 READY   STATUS        RESTARTS   AGE
+tickethub-backend-67d6db5695-4hztw   1/1     Running       0          11s
+tickethub-backend-6c45b6756f-jn7mh   0/1     Terminating   0          50s
+
+$ kubectl -n tickethub-broken get endpointslice -l kubernetes.io/service-name=tickethub-backend
+NAME                      ADDRESSTYPE   PORTS   ENDPOINTS                 AGE
+tickethub-backend-qxkc7   IPv4          8000    10.244.0.61,10.244.0.62   2m55s
+
+# NOTE: the ENDPOINTS column of 'get endpointslice' lists not-ready addresses too; the ready flag is in .conditions:
+$ kubectl -n tickethub-broken get endpointslice -l kubernetes.io/service-name=tickethub-backend -o jsonpath='{range .items[*].endpoints[*]}{.addresses[0]} ready={.conditions.ready} pod={.targetRef.name}{"\n"}{end}'
+10.244.0.62 ready=true pod=tickethub-backend-67d6db5695-4hztw
+
+$ kubectl -n tickethub-broken get endpoints tickethub-backend
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME                ENDPOINTS          AGE
+tickethub-backend   10.244.0.62:8000   3m2s
+
+$ kubectl -n tickethub-broken exec deploy/tickethub-backend -c backend -- python -c "import urllib.request as u; print('/ready ->', u.urlopen('http://127.0.0.1:8000/ready').read().decode())"
+/ready -> {"status":"READY"}
+

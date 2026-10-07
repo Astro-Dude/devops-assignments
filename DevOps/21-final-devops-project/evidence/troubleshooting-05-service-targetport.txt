@@ -1,0 +1,77 @@
+## IDENTIFY: every pod is Running+Ready now, yet the UI still fails
+$ kubectl -n tickethub-broken get pods
+NAME                                  READY   STATUS    RESTARTS   AGE
+tickethub-backend-67d6db5695-4hztw    1/1     Running   0          27s
+tickethub-frontend-6fffd56df7-jnzxq   1/1     Running   0          3m11s
+tickethub-postgres-6db7f7c9ff-g4nrd   1/1     Running   0          2m18s
+
+$ curl -s -o /dev/null -w "GET / -> %{http_code}\n" http://broken.tickethub.localtest.me:28080/
+GET / -> 502
+
+## INVESTIGATE
+$ kubectl -n ingress-nginx logs deploy/ingress-nginx-controller --tail=200 | grep 'tickethub-broken' | grep -E 'connect\(\) failed|upstream' | tail -2 | cut -c1-260
+
+$ kubectl -n tickethub-broken get svc tickethub-frontend -o wide
+NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE     SELECTOR
+tickethub-frontend   ClusterIP   10.96.148.221   <none>        80/TCP    3m11s   app.kubernetes.io/name=tickethub-frontend
+
+$ kubectl -n tickethub-broken get endpoints tickethub-frontend
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME                 ENDPOINTS        AGE
+tickethub-frontend   10.244.0.56:80   3m11s
+
+$ kubectl -n tickethub-broken get pod -l app.kubernetes.io/name=tickethub-frontend -o jsonpath='{.items[0].spec.containers[0].ports}'
+[{"containerPort":8080,"protocol":"TCP"}]
+$ kubectl -n tickethub-broken exec deploy/tickethub-frontend -- sh -c 'wget -qO- -T 2 http://127.0.0.1:80/ >/dev/null && echo port80 ok || echo port80 refused; wget -qO- -T 2 http://127.0.0.1:8080/nginx-health'
+wget: can't connect to remote host (127.0.0.1): Connection refused
+port80 refused
+ok
+
+## ROOT CAUSE: Service targetPort 80, but nginx-unprivileged listens on 8080 (non-root cannot bind <1024). The
+## selector matches, so endpoints exist (10.x.x.x:80) — they just point at a closed port -> ingress gets 'connection refused' -> 502.
+## FIX
+$ kubectl -n tickethub-broken patch svc tickethub-frontend --type=json -p '[{"op":"replace","path":"/spec/ports/0/targetPort","value":8080}]'
+service/tickethub-frontend patched
+
+## VERIFY
+$ kubectl -n tickethub-broken get endpoints tickethub-frontend
+Warning: v1 Endpoints is deprecated in v1.33+; use discovery.k8s.io/v1 EndpointSlice
+NAME                 ENDPOINTS          AGE
+tickethub-frontend   10.244.0.56:8080   3m14s
+
+$ curl -s -o /dev/null -w "GET / -> %{http_code} %{content_type}\n" http://broken.tickethub.localtest.me:28080/
+GET / -> 502 text/html
+
+# Still 502 although the Service and its EndpointSlice are correct. Second-level investigation
+# (outputs below were captured interactively at 14:40-14:42 UTC):
+
+$ kubectl -n ingress-nginx logs deploy/ingress-nginx-controller --since=30s | grep broken | tail -2
+2026/10/07 14:40:54 [error] 3041#3041: *90639 connect() failed (111: Connection refused) while connecting to upstream, client: 172.18.0.1, server: broken.tickethub.localtest.me, request: "GET / HTTP/1.1", upstream: "http://10.244.0.56:80/", host: "br
+172.18.0.1 - - [07/Oct/2026:14:40:54 +0000] "GET / HTTP/1.1" 502 150 "-" "curl/8.7.1" 98 0.001 [tickethub-broken-tickethub-frontend-80] [] 10.244.0.56:80, 10.244.0.56:80, 10.244.0.56:80 0, 0, 0 0.000, 0.000, 0.000 502, 502, 502 4b51ea0762f0f6656652d3
+
+$ kubectl -n tickethub-broken get endpointslice -l kubernetes.io/service-name=tickethub-frontend -o yaml | grep -E "name:|port:|- 10\.|ready"
+    - 10.244.0.56
+      ready: true
+      name: tickethub-frontend-6fffd56df7-jnzxq
+      kubernetes.io/service-name: tickethub-frontend
+    name: tickethub-frontend-8xgbf
+      name: tickethub-frontend
+  - name: http
+    port: 8080
+
+# what does the controller itself have in its dynamic (Lua) upstream table?
+$ kubectl -n ingress-nginx exec deploy/ingress-nginx-controller -- curl -s localhost:10246/configuration/backends | python3 -c '...print name, endpoints, port...'
+tickethub-broken-tickethub-backend-8080 [] 8080
+tickethub-broken-tickethub-frontend-80 [('10.244.0.56', '80')] 80
+$ kubectl -n ingress-nginx exec deploy/ingress-nginx-controller -- curl -s localhost:10246/configuration/backends | python3 -c '...print service.spec.ports of the frontend backend...'
+[{"name": "http", "protocol": "TCP", "port": 80, "targetPort": 80}]
+
+# -> ingress-nginx is still holding the OLD Service spec (targetPort 80) > 60s after the patch; it had not
+#    re-synced. Touching the Ingress forces a full sync:
+$ kubectl -n tickethub-broken annotate ingress tickethub troubleshooting/resync="$(date +%s)" --overwrite
+ingress.networking.k8s.io/tickethub annotated
+$ (4s later) controller backends:
+tickethub-broken-tickethub-backend-8080 [] [{"name": "http", "protocol": "TCP", "port": 8000, "targetPort": "http"}]
+tickethub-broken-tickethub-frontend-80 [('10.244.0.56', '8080')] [{"name": "http", "protocol": "TCP", "port": 80, "targetPort": 8080}]
+$ curl -s -o /dev/null -w "%{http_code}\n" http://broken.tickethub.localtest.me:28080/
+200

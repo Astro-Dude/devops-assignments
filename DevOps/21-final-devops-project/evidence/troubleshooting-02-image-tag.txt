@@ -1,0 +1,34 @@
+## IDENTIFY
+$ kubectl -n tickethub-broken get pods -l app.kubernetes.io/name=tickethub-backend
+NAME                                 READY   STATUS                  RESTARTS   AGE
+tickethub-backend-55fdc857f7-65lsg   0/1     Init:ImagePullBackOff   0          69s
+
+## INVESTIGATE
+$ kubectl -n tickethub-broken describe pod -l app.kubernetes.io/name=tickethub-backend | grep -E 'Image:|Failed|BackOff' | cut -c1-230
+    Image:         ghcr.io/astro-dude/s21-tickethub-backend:latest
+      Reason:       ImagePullBackOff
+    Image:          ghcr.io/astro-dude/s21-tickethub-backend:latest
+  Warning  Failed     28s (x3 over 68s)  kubelet            spec.initContainers{migrate}: Failed to pull image "ghcr.io/astro-dude/s21-tickethub-backend:latest": rpc error: code = NotFound desc = failed to pull and unpack image "g
+  Warning  Failed     28s (x3 over 68s)  kubelet            spec.initContainers{migrate}: Error: ErrImagePull
+  Normal   BackOff    4s (x4 over 68s)   kubelet            spec.initContainers{migrate}: Back-off pulling image "ghcr.io/astro-dude/s21-tickethub-backend:latest"
+  Warning  Failed     4s (x4 over 68s)   kubelet            spec.initContainers{migrate}: Error: ImagePullBackOff
+
+# which tags actually exist in the registry? (anonymous token, the package is public)
+$ T=$(curl -s "https://ghcr.io/token?scope=repository:astro-dude/s21-tickethub-backend:pull" | jq -r .token); curl -s -H "Authorization: Bearer $T" https://ghcr.io/v2/astro-dude/s21-tickethub-backend/tags/list | jq -c .
+{"name":"astro-dude/s21-tickethub-backend","tags":["055734260abf0b8f47cf2a20d7f8dd210a26b9e9","c9ba4c7618f8b5d827d3f57722fac8103cd804e4","ac6fcbbdca7f1c9449b0589a1c77f1f2d1a0a853","25d422506213bc43a6177ea19bdd3efd2c504156","0b9665e38a2db926e487fe72e9283d84e672c0d5"]}
+
+## ROOT CAUSE: the manifest asks for :latest, but CI deliberately only publishes immutable git-SHA tags.
+## FIX: pin both the initContainer and the container to the SHA that CI built, scanned and pushed
+$ kubectl -n tickethub-broken set image deploy/tickethub-backend migrate=ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5 backend=ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5
+deployment.apps/tickethub-backend image updated
+
+## VERIFY: image pulls now — and the pod moves on to the NEXT problem
+$ kubectl -n tickethub-broken get pods -l app.kubernetes.io/name=tickethub-backend
+NAME                                 READY   STATUS                  RESTARTS   AGE
+tickethub-backend-55fdc857f7-65lsg   0/1     Init:ImagePullBackOff   0          95s
+tickethub-backend-db745d98f-9lvkr    0/1     Init:0/1                0          25s
+
+$ kubectl -n tickethub-broken get pods -l app.kubernetes.io/name=tickethub-backend -o jsonpath='{range .items[*].status.initContainerStatuses[*]}{.name}: image={.image} imageID={.imageID}{"\n"}{end}'
+migrate: image=ghcr.io/astro-dude/s21-tickethub-backend:latest imageID=
+migrate: image=ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5 imageID=ghcr.io/astro-dude/s21-tickethub-backend@sha256:ad9ab2db419c2b14de07dcadb1035b6340011120153623167adddc6da1654d56
+
