@@ -2,9 +2,9 @@
 # image.*.tag is written by the CI pipeline (job "gitops-bump") after a green build — do not edit by hand.
 image:
   backend:
-    tag: "a175793751317e4c304ac83247c5ba8d753ce5f2"
+    tag: "435072442d552b3e83848d65a4bd972105914368"
   frontend:
-    tag: "a175793751317e4c304ac83247c5ba8d753ce5f2"
+    tag: "435072442d552b3e83848d65a4bd972105914368"
 config:
   appEnv: kind-gitops
   logLevel: INFO
