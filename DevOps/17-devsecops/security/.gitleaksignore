@@ -1,3 +1,10 @@
 # Gitleaks fingerprints of findings that have been triaged.
 # Format: <commit>:<file>:<rule-id>:<line>
 # Only add an entry AFTER the credential has been revoked/rotated.
+
+# 2026-10-07  hw-payment-live-key in app/config.py, introduced by commit 3d214ab
+#             (deliberate Session 17 gate demo). The value was a FAKE key; the
+#             real-world equivalent step is "revoke/rotate at the provider".
+#             Removed from HEAD in 52d5fa5; history kept (no force-push on a
+#             shared repo), so the historical finding is acknowledged here.
+3d214abf2f7b63675fefff980e7f5677434162d8:DevOps/17-devsecops/app/config.py:hw-payment-live-key:5
