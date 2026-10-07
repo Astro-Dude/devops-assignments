@@ -1,8 +1,8 @@
 # Excerpt of `gh run view 37636382434 --log` (key steps only, timestamps and docker pull noise stripped)
 
 ===== [Secret scan (Gitleaks)] Gitleaks — working tree of this project =====
-^[[36;1mdocker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" dir "/repo/$APP_DIR" \^[[0m
-^[[36;1m  --config "/repo/$APP_DIR/security/gitleaks.toml" --redact --verbose --exit-code 1^[[0m
+docker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" dir "/repo/$APP_DIR" \
+  --config "/repo/$APP_DIR/security/gitleaks.toml" --redact --verbose --exit-code 1
 Unable to find image 'ghcr.io/gitleaks/gitleaks:v8.30.1' locally
 v8.30.1: Pulling from gitleaks/gitleaks
 Digest: sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
@@ -14,13 +14,13 @@ Status: Downloaded newer image for ghcr.io/gitleaks/gitleaks:v8.30.1
     ○ ░
     ░    gitleaks
 
-^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1mscanned ~344518 bytes (344.52 KB) in 182ms^[[0m
-^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1mno leaks found^[[0m
+2:26PM INF scanned ~344518 bytes (344.52 KB) in 182ms
+2:26PM INF no leaks found
 
 ===== [Secret scan (Gitleaks)] Gitleaks — git history touching this project =====
-^[[36;1mdocker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" git /repo \^[[0m
-^[[36;1m  --log-opts="--all -- $APP_DIR" \^[[0m
-^[[36;1m  --config "/repo/$APP_DIR/security/gitleaks.toml" --redact --verbose --exit-code 1^[[0m
+docker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" git /repo \
+  --log-opts="--all -- $APP_DIR" \
+  --config "/repo/$APP_DIR/security/gitleaks.toml" --redact --verbose --exit-code 1
 
     ○
     │╲
@@ -28,13 +28,13 @@ Status: Downloaded newer image for ghcr.io/gitleaks/gitleaks:v8.30.1
     ○ ░
     ░    gitleaks
 
-^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1m7 commits scanned.^[[0m
-^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1mscanned ~375275 bytes (375.27 KB) in 225ms^[[0m
-^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1mno leaks found^[[0m
+2:26PM INF 7 commits scanned.
+2:26PM INF scanned ~375275 bytes (375.27 KB) in 225ms
+2:26PM INF no leaks found
 
 ===== [SCA (pip-audit + npm audit + Trivy fs)] pip-audit (PyPI advisories for pinned requirements) =====
-^[[36;1mpip install pip-audit^[[0m
-^[[36;1mpip-audit -r "$APP_DIR/application/backend/requirements.txt" --strict^[[0m
+pip install pip-audit
+pip-audit -r "$APP_DIR/application/backend/requirements.txt" --strict
   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
@@ -129,7 +129,7 @@ Successfully installed CacheControl-0.14.4 boolean.py-5.0 certifi-2026.7.22 char
 No known vulnerabilities found
 
 ===== [SCA (pip-audit + npm audit + Trivy fs)] npm audit (fail on high+) =====
-^[[36;1mnpm audit --audit-level=high^[[0m
+npm audit --audit-level=high
   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
@@ -137,8 +137,8 @@ No known vulnerabilities found
 found 0 vulnerabilities
 
 ===== [SCA (pip-audit + npm audit + Trivy fs)] Trivy filesystem scan of lockfiles (HIGH/CRITICAL) =====
-^[[36;1mdocker run --rm -v "$PWD:/src" "$TRIVY_IMAGE" fs --quiet --scanners vuln \^[[0m
-^[[36;1m  --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "/src/$APP_DIR/application"^[[0m
+docker run --rm -v "$PWD:/src" "$TRIVY_IMAGE" fs --quiet --scanners vuln \
+  --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "/src/$APP_DIR/application"
   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
@@ -163,7 +163,7 @@ Legend:
 
 
 ===== [Backend lint + pytest] Ruff (lint + format check) =====
-^[[36;1mruff check . && ruff format --check .^[[0m
+ruff check . && ruff format --check .
   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
@@ -172,7 +172,7 @@ All checks passed!
 13 files already formatted
 
 ===== [Backend lint + pytest] Pytest (SQLite test DB, never production) =====
-^[[36;1mpytest -v --junitxml=pytest-report.xml^[[0m
+pytest -v --junitxml=pytest-report.xml
   pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
@@ -210,10 +210,10 @@ tests/test_api.py::test_metrics_endpoint_exposes_prometheus_format PASSED [100%]
 ======================== 13 passed, 1 warning in 0.29s =========================
 
 ===== [IaC misconfiguration scan (Trivy config)] Trivy config — Dockerfiles, raw manifests, Helm chart, Terraform =====
-^[[36;1mdocker run --rm -v "$PWD:/src" -w "/src/$APP_DIR" "$TRIVY_IMAGE" config --quiet \^[[0m
-^[[36;1m  --severity HIGH,CRITICAL --exit-code 1 --ignorefile security/trivyignore.yaml \^[[0m
-^[[36;1m  --skip-dirs application --skip-dirs troubleshooting --skip-dirs evidence \^[[0m
-^[[36;1m  --skip-files kubernetes/cluster/ingress-nginx-kind-v1.15.1.yaml .^[[0m
+docker run --rm -v "$PWD:/src" -w "/src/$APP_DIR" "$TRIVY_IMAGE" config --quiet \
+  --severity HIGH,CRITICAL --exit-code 1 --ignorefile security/trivyignore.yaml \
+  --skip-dirs application --skip-dirs troubleshooting --skip-dirs evidence \
+  --skip-files kubernetes/cluster/ingress-nginx-kind-v1.15.1.yaml .
 Unable to find image 'aquasec/trivy:0.75.0' locally
 0.75.0: Pulling from aquasec/trivy
 Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
@@ -282,8 +282,8 @@ Legend:
 
 
 ===== [SAST (Bandit + Semgrep)] Bandit — Python security linter (fail on medium+) =====
-^[[36;1mpip install bandit==1.9.4^[[0m
-^[[36;1mbandit -r "$APP_DIR/application/backend/app" -ll -f txt^[[0m
+pip install bandit==1.9.4
+bandit -r "$APP_DIR/application/backend/app" -ll -f txt
 Defaulting to user installation because normal site-packages is not writeable
 Collecting bandit==1.9.4
   Downloading bandit-1.9.4-py3-none-any.whl.metadata (7.1 kB)
@@ -329,9 +329,9 @@ Run metrics:
 Files skipped (0):
 
 ===== [SAST (Bandit + Semgrep)] Semgrep — Python / JavaScript / React / Dockerfile rules =====
-^[[36;1mdocker run --rm -v "$PWD:/src" -w /src "$SEMGREP_IMAGE" semgrep scan \^[[0m
-^[[36;1m  --config p/python --config p/javascript --config p/react --config p/dockerfile \^[[0m
-^[[36;1m  --error --metrics=off "$APP_DIR/application" "$APP_DIR/docker"^[[0m
+docker run --rm -v "$PWD:/src" -w /src "$SEMGREP_IMAGE" semgrep scan \
+  --config p/python --config p/javascript --config p/react --config p/dockerfile \
+  --error --metrics=off "$APP_DIR/application" "$APP_DIR/docker"
 Unable to find image 'semgrep/semgrep:1.179.0' locally
 1.179.0: Pulling from semgrep/semgrep
 Digest: sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b
@@ -371,9 +371,9 @@ If Semgrep missed a finding, please send us feedback to let us know!
 See https://semgrep.dev/docs/reporting-false-negatives/
 
 ===== [Docker build + Trivy image scan (frontend)] Trivy image scan — gate on fixable HIGH/CRITICAL =====
-^[[36;1mdocker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \^[[0m
-^[[36;1m  --quiet --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \^[[0m
-^[[36;1m  "$IMAGE_PREFIX-frontend:$GITHUB_SHA"^[[0m
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \
+  --quiet --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \
+  "$IMAGE_PREFIX-frontend:$GITHUB_SHA"
 Unable to find image 'aquasec/trivy:0.75.0' locally
 0.75.0: Pulling from aquasec/trivy
 Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
@@ -393,9 +393,9 @@ Legend:
 
 
 ===== [Docker build + Trivy image scan (backend)] Trivy image scan — gate on fixable HIGH/CRITICAL =====
-^[[36;1mdocker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \^[[0m
-^[[36;1m  --quiet --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \^[[0m
-^[[36;1m  "$IMAGE_PREFIX-backend:$GITHUB_SHA"^[[0m
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \
+  --quiet --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \
+  "$IMAGE_PREFIX-backend:$GITHUB_SHA"
 Unable to find image 'aquasec/trivy:0.75.0' locally
 0.75.0: Pulling from aquasec/trivy
 Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
@@ -471,16 +471,16 @@ Legend:
 
 
 ===== [Security gate] Every quality and security check must have passed =====
-^[[36;1mecho "## Security gate" >> "$GITHUB_STEP_SUMMARY"^[[0m
-^[[36;1mecho "| check | result |" >> "$GITHUB_STEP_SUMMARY"^[[0m
-^[[36;1mecho "|---|---|" >> "$GITHUB_STEP_SUMMARY"^[[0m
-^[[36;1mecho "$RESULTS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"' >> "$GITHUB_STEP_SUMMARY"^[[0m
-^[[36;1mfailed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result != "success") | .key] | join(", ")')^[[0m
-^[[36;1mif [ -n "$failed" ]; then^[[0m
-^[[36;1m  echo "Gate CLOSED - failed/skipped: $failed" | tee -a "$GITHUB_STEP_SUMMARY"^[[0m
-^[[36;1m  exit 1^[[0m
-^[[36;1mfi^[[0m
-^[[36;1mecho "Gate OPEN - image may be published" | tee -a "$GITHUB_STEP_SUMMARY"^[[0m
+echo "## Security gate" >> "$GITHUB_STEP_SUMMARY"
+echo "| check | result |" >> "$GITHUB_STEP_SUMMARY"
+echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+echo "$RESULTS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"' >> "$GITHUB_STEP_SUMMARY"
+failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result != "success") | .key] | join(", ")')
+if [ -n "$failed" ]; then
+  echo "Gate CLOSED - failed/skipped: $failed" | tee -a "$GITHUB_STEP_SUMMARY"
+  exit 1
+fi
+echo "Gate OPEN - image may be published" | tee -a "$GITHUB_STEP_SUMMARY"
   "backend-test": {
     "result": "success",
     "outputs": {}
@@ -513,11 +513,11 @@ Legend:
 Gate OPEN - image may be published
 
 ===== [Push images to GHCR] Push SHA-tagged images (never :latest) =====
-^[[36;1mfor c in backend frontend; do^[[0m
-^[[36;1m  gunzip -c "image-$c.tar.gz" | docker load^[[0m
-^[[36;1m  docker push "$IMAGE_PREFIX-$c:$GITHUB_SHA"^[[0m
-^[[36;1m  echo "- \`$IMAGE_PREFIX-$c:$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"^[[0m
-^[[36;1mdone^[[0m
+for c in backend frontend; do
+  gunzip -c "image-$c.tar.gz" | docker load
+  docker push "$IMAGE_PREFIX-$c:$GITHUB_SHA"
+  echo "- \`$IMAGE_PREFIX-$c:$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+done
 Loaded image: ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5
 The push refers to repository [ghcr.io/astro-dude/s21-tickethub-backend]
 a485790f02e2: Preparing
@@ -570,13 +570,13 @@ bbf693738c79: Pushed
 0b9665e38a2db926e487fe72e9283d84e672c0d5: digest: sha256:2f2428c197e8f760f50c6671486b6114c00e6e446bf55382b3320533a788ca85 size: 2824
 
 ===== [Deploy to ephemeral kind cluster + smoke test] helm upgrade --install (images pulled from GHCR by SHA) =====
-^[[36;1mhelm upgrade --install tickethub "$APP_DIR/helm/tickethub" -n tickethub \^[[0m
-^[[36;1m  -f "$APP_DIR/helm/tickethub/values-dev.yaml" \^[[0m
-^[[36;1m  --set image.backend.tag="$GITHUB_SHA" --set image.frontend.tag="$GITHUB_SHA" \^[[0m
-^[[36;1m  --set database.existingSecret=tickethub-db \^[[0m
-^[[36;1m  --set "imagePullSecrets[0].name=ghcr-pull" \^[[0m
-^[[36;1m  --wait --timeout 5m^[[0m
-^[[36;1mkubectl -n tickethub get deploy,pods,svc,ingress,hpa,pvc -o wide^[[0m
+helm upgrade --install tickethub "$APP_DIR/helm/tickethub" -n tickethub \
+  -f "$APP_DIR/helm/tickethub/values-dev.yaml" \
+  --set image.backend.tag="$GITHUB_SHA" --set image.frontend.tag="$GITHUB_SHA" \
+  --set database.existingSecret=tickethub-db \
+  --set "imagePullSecrets[0].name=ghcr-pull" \
+  --wait --timeout 5m
+kubectl -n tickethub get deploy,pods,svc,ingress,hpa,pvc -o wide
 Release "tickethub" does not exist. Installing it now.
 NAME: tickethub
 LAST DEPLOYED: Wed Oct  7 14:29:11 2026
@@ -618,15 +618,15 @@ NAME                                            STATUS   VOLUME                 
 persistentvolumeclaim/tickethub-postgres-data   Bound    pvc-28f4df02-0e3d-45c4-8f75-594b661c3974   1Gi        RWO            standard       <unset>                 28s   Filesystem
 
 ===== [Deploy to ephemeral kind cluster + smoke test] Smoke test through the Ingress =====
-^[[36;1mH="Host: tickethub.localtest.me"^[[0m
-^[[36;1mfor i in $(seq 1 30); do curl -sf -H "$H" http://localhost/api/info && break; sleep 2; done^[[0m
-^[[36;1mecho^[[0m
-^[[36;1mcurl -sf -H "$H" http://localhost/api/info | jq -e --arg v "${GITHUB_SHA::7}" '.version == $v'^[[0m
-^[[36;1mcurl -sf -H "$H" -X POST http://localhost/api/tickets -H 'content-type: application/json' \^[[0m
-^[[36;1m  -d '{"subject":"CI smoke test ticket","requester":"ci@github","priority":"LOW"}' | jq .^[[0m
-^[[36;1mcurl -sf -H "$H" http://localhost/api/stats | jq -e '.total >= 1'^[[0m
-^[[36;1mcurl -sf -H "$H" http://localhost/ | grep -q '<div id="root">'^[[0m
-^[[36;1mecho "UI and API reachable through ingress-nginx"^[[0m
+H="Host: tickethub.localtest.me"
+for i in $(seq 1 30); do curl -sf -H "$H" http://localhost/api/info && break; sleep 2; done
+echo
+curl -sf -H "$H" http://localhost/api/info | jq -e --arg v "${GITHUB_SHA::7}" '.version == $v'
+curl -sf -H "$H" -X POST http://localhost/api/tickets -H 'content-type: application/json' \
+  -d '{"subject":"CI smoke test ticket","requester":"ci@github","priority":"LOW"}' | jq .
+curl -sf -H "$H" http://localhost/api/stats | jq -e '.total >= 1'
+curl -sf -H "$H" http://localhost/ | grep -q '<div id="root">'
+echo "UI and API reachable through ingress-nginx"
 {"service":"TicketHub API","version":"0b9665e","environment":"dev","pod":"tickethub-backend-6f7d6f4759-wb7vg","default_team":"L1 Support"}
 true
 {
@@ -645,7 +645,7 @@ true
 UI and API reachable through ingress-nginx
 
 ===== [Deploy to ephemeral kind cluster + smoke test] helm test =====
-^[[36;1mhelm test tickethub -n tickethub --logs^[[0m
+helm test tickethub -n tickethub --logs
 NAME: tickethub
 LAST DEPLOYED: Wed Oct  7 14:29:11 2026
 NAMESPACE: tickethub
