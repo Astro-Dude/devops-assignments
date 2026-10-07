@@ -1,0 +1,29 @@
+$ docker run --rm --name hw-localstack-try -p 4570:4566 localstack/localstack:latest
+89212d05a000: Pull complete
+2f86ab73331c: Pull complete
+Digest: sha256:0c644ede65c2d0c95737e09a39007828bd381bdb07ca8200c6bf17d66a4ed191
+Status: Downloaded newer image for localstack/localstack:latest
+LocalStack version: 2026.9.1
+LocalStack build date: 2026-10-07
+LocalStack build git hash: f6d6999e
+Localstack returning with exit code 55. Reason: 
+===============================================
+License activation failed! 🔑❌
+Reason: No credentials were found in the environment. Please set the LOCALSTACK_AUTH_TOKEN variable to a valid auth token. Alternatively, run `lstk login` and start LocalStack with the lstk CLI, which configures the credentials for you.
+Due to this error, Localstack has quit. LocalStack pro features can only be used with a valid license.
+- Please check that your credentials are set up correctly and that you have an active license.
+  You can find your credentials in our webapp at https://app.localstack.cloud.
+[exit code: 55]
+
+$ docker run -d --name hw-localstack -p 4566:5000 -m 768m motoserver/moto:latest
+$ docker ps --filter name=hw-localstack --format "{{.Names}}  {{.Image}}  {{.Status}}  {{.Ports}}"
+hw-localstack  motoserver/moto:latest  Up 3 minutes  0.0.0.0:4566->5000/tcp, [::]:4566->5000/tcp
+$ docker exec hw-localstack pip show moto | head -2
+Name: moto
+Version: 5.2.3.dev0
+$ aws --endpoint-url http://localhost:4566 sts get-caller-identity
+{
+    "UserId": "AKIAIOSFODNN7EXAMPLE",
+    "Account": "123456789012",
+    "Arn": "arn:aws:sts::123456789012:user/moto"
+}

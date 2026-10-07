@@ -1,0 +1,83 @@
+$ aws --endpoint-url http://localhost:4566 s3 ls
+2026-10-07 19:45:22 astro-dude-24bcs10151-s18-demo
+
+$ aws --endpoint-url http://localhost:4566 s3api head-bucket --bucket astro-dude-24bcs10151-s18-demo
+{
+    "BucketRegion": "ap-south-1"
+}
+
+$ aws --endpoint-url http://localhost:4566 s3api get-bucket-versioning --bucket astro-dude-24bcs10151-s18-demo
+{
+    "Status": "Enabled"
+}
+
+$ aws --endpoint-url http://localhost:4566 s3api get-bucket-encryption --bucket astro-dude-24bcs10151-s18-demo
+{
+    "ServerSideEncryptionConfiguration": {
+        "Rules": [
+            {
+                "ApplyServerSideEncryptionByDefault": {
+                    "SSEAlgorithm": "AES256"
+                },
+                "BucketKeyEnabled": false
+            }
+        ]
+    }
+}
+
+$ aws --endpoint-url http://localhost:4566 s3api get-public-access-block --bucket astro-dude-24bcs10151-s18-demo
+{
+    "PublicAccessBlockConfiguration": {
+        "BlockPublicAcls": true,
+        "IgnorePublicAcls": true,
+        "BlockPublicPolicy": true,
+        "RestrictPublicBuckets": true
+    }
+}
+
+$ aws --endpoint-url http://localhost:4566 s3api get-bucket-tagging --bucket astro-dude-24bcs10151-s18-demo
+{
+    "TagSet": [
+        {
+            "Key": "Owner",
+            "Value": "shaurya-verma-24bcs10151"
+        },
+        {
+            "Key": "Project",
+            "Value": "Session18-S3-Demo"
+        },
+        {
+            "Key": "Environment",
+            "Value": "dev"
+        },
+        {
+            "Key": "ManagedBy",
+            "Value": "Terraform"
+        },
+        {
+            "Key": "Name",
+            "Value": "astro-dude-24bcs10151-s18-demo"
+        }
+    ]
+}
+
+$ aws --endpoint-url http://localhost:4566 s3 ls s3://astro-dude-24bcs10151-s18-demo/
+2026-10-07 19:45:22         63 hello.txt
+
+$ aws --endpoint-url http://localhost:4566 s3 cp s3://astro-dude-24bcs10151-s18-demo/hello.txt -
+Created by Terraform for Session 18 - shaurya-verma-24bcs10151
+
+# upload a second version of hello.txt to prove versioning keeps both
+$ aws --endpoint-url http://localhost:4566 s3 cp /tmp/v2.txt s3://astro-dude-24bcs10151-s18-demo/hello.txt
+Completed 24 Bytes/24 Bytes (2.2 KiB/s) with 1 file(s) remainingupload: ../../../../../../tmp/v2.txt to s3://astro-dude-24bcs10151-s18-demo/hello.txt
+
+$ aws --endpoint-url http://localhost:4566 s3api list-object-versions --bucket astro-dude-24bcs10151-s18-demo --query Versions[].{Key:Key,VersionId:VersionId,IsLatest:IsLatest,Size:Size} --output table
+---------------------------------------------------------------------------
+|                           ListObjectVersions                            |
++----------+------------+-------+-----------------------------------------+
+| IsLatest |    Key     | Size  |                VersionId                |
++----------+------------+-------+-----------------------------------------+
+|  True    |  hello.txt |  24   |  622d98bf-eb9f-4a78-b836-6edc4bd67b83   |
+|  False   |  hello.txt |  63   |  0af8f759-2e89-435e-89fc-1aba7039dfa1   |
++----------+------------+-------+-----------------------------------------+
+

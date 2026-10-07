@@ -1,0 +1,145 @@
+$ terraform show -no-color
+# aws_s3_bucket.demo:
+resource "aws_s3_bucket" "demo" {
+    acceleration_status         = null
+    arn                         = "arn:aws:s3:::astro-dude-24bcs10151-s18-demo"
+    bucket                      = "astro-dude-24bcs10151-s18-demo"
+    bucket_domain_name          = "astro-dude-24bcs10151-s18-demo.s3.amazonaws.com"
+    bucket_namespace            = "global"
+    bucket_prefix               = null
+    bucket_region               = "ap-south-1"
+    bucket_regional_domain_name = "astro-dude-24bcs10151-s18-demo.s3.ap-south-1.amazonaws.com"
+    force_destroy               = true
+    hosted_zone_id              = "Z11RGJOFQNVJUP"
+    id                          = "astro-dude-24bcs10151-s18-demo"
+    object_lock_enabled         = false
+    policy                      = null
+    region                      = "ap-south-1"
+    request_payer               = null
+    tags                        = {
+        "Environment" = "dev"
+        "Name"        = "astro-dude-24bcs10151-s18-demo"
+        "Project"     = "Session18-S3-Demo"
+    }
+    tags_all                    = {
+        "Environment" = "dev"
+        "ManagedBy"   = "Terraform"
+        "Name"        = "astro-dude-24bcs10151-s18-demo"
+        "Owner"       = "shaurya-verma-24bcs10151"
+        "Project"     = "Session18-S3-Demo"
+    }
+
+    grant {
+        id          = "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a"
+        permissions = [
+            "FULL_CONTROL",
+        ]
+        type        = "CanonicalUser"
+        uri         = null
+    }
+
+    server_side_encryption_configuration {
+        rule {
+            bucket_key_enabled = false
+
+            apply_server_side_encryption_by_default {
+                kms_master_key_id = null
+                sse_algorithm     = "AES256"
+            }
+        }
+    }
+
+    versioning {
+        enabled    = true
+        mfa_delete = false
+    }
+}
+
+# aws_s3_bucket_public_access_block.demo:
+resource "aws_s3_bucket_public_access_block" "demo" {
+    block_public_acls       = true
+    block_public_policy     = true
+    bucket                  = "astro-dude-24bcs10151-s18-demo"
+    id                      = "astro-dude-24bcs10151-s18-demo"
+    ignore_public_acls      = true
+    region                  = "ap-south-1"
+    restrict_public_buckets = true
+}
+
+# aws_s3_bucket_server_side_encryption_configuration.demo:
+resource "aws_s3_bucket_server_side_encryption_configuration" "demo" {
+    bucket                = "astro-dude-24bcs10151-s18-demo"
+    expected_bucket_owner = null
+    id                    = "astro-dude-24bcs10151-s18-demo"
+    region                = "ap-south-1"
+
+    rule {
+        blocked_encryption_types = []
+        bucket_key_enabled       = false
+
+        apply_server_side_encryption_by_default {
+            kms_master_key_id = null
+            sse_algorithm     = "AES256"
+        }
+    }
+}
+
+# aws_s3_bucket_versioning.demo:
+resource "aws_s3_bucket_versioning" "demo" {
+    bucket                = "astro-dude-24bcs10151-s18-demo"
+    expected_bucket_owner = null
+    id                    = "astro-dude-24bcs10151-s18-demo"
+    region                = "ap-south-1"
+
+    versioning_configuration {
+        mfa_delete = "Disabled"
+        status     = "Enabled"
+    }
+}
+
+# aws_s3_object.hello:
+resource "aws_s3_object" "hello" {
+    arn                           = "arn:aws:s3:::astro-dude-24bcs10151-s18-demo/hello.txt"
+    bucket                        = "astro-dude-24bcs10151-s18-demo"
+    bucket_key_enabled            = false
+    cache_control                 = null
+    checksum_crc32                = null
+    checksum_crc32c               = null
+    checksum_crc64nvme            = null
+    checksum_sha1                 = null
+    checksum_sha256               = null
+    content                       = <<-EOT
+        Created by Terraform for Session 18 - shaurya-verma-24bcs10151
+    EOT
+    content_disposition           = null
+    content_encoding              = null
+    content_language              = null
+    content_type                  = "text/plain"
+    etag                          = "dcffcbc6416e209474a1aeae6c79b82b"
+    force_destroy                 = false
+    id                            = "astro-dude-24bcs10151-s18-demo/hello.txt"
+    key                           = "hello.txt"
+    metadata                      = {}
+    object_lock_legal_hold_status = null
+    object_lock_mode              = null
+    object_lock_retain_until_date = null
+    region                        = "ap-south-1"
+    server_side_encryption        = "AES256"
+    storage_class                 = "STANDARD"
+    tags                          = {}
+    tags_all                      = {
+        "ManagedBy" = "Terraform"
+        "Owner"     = "shaurya-verma-24bcs10151"
+    }
+    version_id                    = "0af8f759-2e89-435e-89fc-1aba7039dfa1"
+    website_redirect              = null
+}
+
+
+Outputs:
+
+bucket_arn = "arn:aws:s3:::astro-dude-24bcs10151-s18-demo"
+bucket_name = "astro-dude-24bcs10151-s18-demo"
+bucket_region = "ap-south-1"
+object_url = "http://localhost:4566/astro-dude-24bcs10151-s18-demo/hello.txt"
+versioning_status = "Enabled"

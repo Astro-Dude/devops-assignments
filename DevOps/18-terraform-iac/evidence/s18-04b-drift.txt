@@ -1,0 +1,100 @@
+$ terraform plan -no-color -detailed-exitcode
+aws_s3_bucket.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket_versioning.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket_public_access_block.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket_server_side_encryption_configuration.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_object.hello: Refreshing state... [id=astro-dude-24bcs10151-s18-demo/hello.txt]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # aws_s3_bucket.demo will be updated in-place
+  ~ resource "aws_s3_bucket" "demo" {
+        id                          = "astro-dude-24bcs10151-s18-demo"
+      ~ tags                        = {
+          + "Environment" = "dev"
+          + "Name"        = "astro-dude-24bcs10151-s18-demo"
+          + "Project"     = "Session18-S3-Demo"
+        }
+      ~ tags_all                    = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "astro-dude-24bcs10151-s18-demo"
+          + "Owner"       = "shaurya-verma-24bcs10151"
+          + "Project"     = "Session18-S3-Demo"
+        }
+        # (14 unchanged attributes hidden)
+
+        # (3 unchanged blocks hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
+[exit code: 2]
+
+$ terraform apply -auto-approve -no-color
+aws_s3_bucket.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket_public_access_block.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket_versioning.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket_server_side_encryption_configuration.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_object.hello: Refreshing state... [id=astro-dude-24bcs10151-s18-demo/hello.txt]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  ~ update in-place
+
+Terraform will perform the following actions:
+
+  # aws_s3_bucket.demo will be updated in-place
+  ~ resource "aws_s3_bucket" "demo" {
+        id                          = "astro-dude-24bcs10151-s18-demo"
+      ~ tags                        = {
+          + "Environment" = "dev"
+          + "Name"        = "astro-dude-24bcs10151-s18-demo"
+          + "Project"     = "Session18-S3-Demo"
+        }
+      ~ tags_all                    = {
+          + "Environment" = "dev"
+          + "ManagedBy"   = "Terraform"
+          + "Name"        = "astro-dude-24bcs10151-s18-demo"
+          + "Owner"       = "shaurya-verma-24bcs10151"
+          + "Project"     = "Session18-S3-Demo"
+        }
+        # (14 unchanged attributes hidden)
+
+        # (3 unchanged blocks hidden)
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy.
+aws_s3_bucket.demo: Modifying... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket.demo: Modifications complete after 0s [id=astro-dude-24bcs10151-s18-demo]
+
+Apply complete! Resources: 0 added, 1 changed, 0 destroyed.
+
+Outputs:
+
+bucket_arn = "arn:aws:s3:::astro-dude-24bcs10151-s18-demo"
+bucket_name = "astro-dude-24bcs10151-s18-demo"
+bucket_region = "ap-south-1"
+object_url = "http://localhost:4566/astro-dude-24bcs10151-s18-demo/hello.txt"
+versioning_status = "Enabled"
+
+$ terraform plan -no-color -detailed-exitcode
+aws_s3_bucket.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket_server_side_encryption_configuration.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket_public_access_block.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_bucket_versioning.demo: Refreshing state... [id=astro-dude-24bcs10151-s18-demo]
+aws_s3_object.hello: Refreshing state... [id=astro-dude-24bcs10151-s18-demo/hello.txt]
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
+[exit code: 0]
