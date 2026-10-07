@@ -1,0 +1,5 @@
+$ gh run list -R Astro-Dude/devops-assignments --workflow s17-devsecops.yml
+completed	success	Session 17: triage historical gitleaks finding for the revoked demo k…	S17 DevSecOps pipeline	main	push	37630491334	4m31s	2026-10-07T13:41:17Z
+completed	failure	Session 17 gate demo fix: remove shell=True ping endpoint, read payme…	S17 DevSecOps pipeline	main	push	37629854333	3m27s	2026-10-07T13:36:34Z
+completed	failure	Session 17 gate demo: add ping diagnostics endpoint, payment config a…	S17 DevSecOps pipeline	main	push	37629169373	3m19s	2026-10-07T13:31:29Z
+completed	success	Session 17: add DevSecOps pipeline (app, tests, hardened Dockerfile, …	S17 DevSecOps pipeline	main	push	37628343023	4m52s	2026-10-07T13:25:18Z

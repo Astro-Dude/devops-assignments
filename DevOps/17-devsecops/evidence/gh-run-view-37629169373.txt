@@ -1,0 +1,44 @@
+$ gh run view 37629169373 -R Astro-Dude/devops-assignments
+
+X main S17 DevSecOps pipeline · 37629169373
+Triggered via push about 15 minutes ago
+
+JOBS
+✓ 1. Build in 11s (ID 112818627300)
+✓ 2. Unit Test in 18s (ID 112818738192)
+✓ 3. SAST (Semgrep, Bandit, Trivy config) in 39s (ID 112818899913)
+✓ 4. SCA (pip-audit, Trivy fs) in 27s (ID 112819227618)
+✓ 5. Secret Scan (Gitleaks) in 6s (ID 112819457294)
+✓ 6. Docker Build in 41s (ID 112819529818)
+✓ 7. Container Image Scan (Trivy) in 22s (ID 112819868673)
+X 8. Security Gate in 7s (ID 112820060465)
+  ✓ Set up job
+  ✓ Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Run actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+  ✓ List collected reports
+  ✓ Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+  X Evaluate gate policy (blocks push + deploy on failure)
+  ✓ Run actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+  - Post Run actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+  ✓ Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+  ✓ Complete job
+- 9. Push Image (GHCR) in 0s (ID 112820137406)
+- 10. Deploy to Kubernetes (kind) in 0s (ID 112820137471)
+
+ANNOTATIONS
+X Process completed with exit code 1.
+8. Security Gate: .github#69
+
+
+ARTIFACTS
+Astro-Dude~devops-assignments~IF7QPH.dockerbuild
+reports-sast
+reports-image
+reports-sca
+security-gate-result
+reports-secrets
+reports-tests
+image-tar
+
+To see what failed, try: gh run view 37629169373 --log-failed
+View this run on GitHub: https://github.com/Astro-Dude/devops-assignments/actions/runs/37629169373

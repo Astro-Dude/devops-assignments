@@ -1,0 +1,1079 @@
+# Cleaned log of GitHub Actions run 37629169373
+# https://github.com/Astro-Dude/devops-assignments/actions/runs/37629169373
+# (source: gh run view 37629169373 --log; timestamps, ANSI colours, env dumps and setup/checkout steps removed)
+
+===== [1. Build] Workflow copy in folder is in sync with the executed workflow
+^[[36;1mdiff -u "$GITHUB_WORKSPACE/.github/workflows/s17-devsecops.yml" ci/s17-devsecops.yml^[[0m
+
+===== [1. Build] Install pinned, hash-verified dependencies
+^[[36;1mpython -m pip install --upgrade pip^[[0m
+^[[36;1mpip install --require-hashes --no-deps -r requirements.txt^[[0m
+^[[36;1mpip check^[[0m
+No broken requirements found.
+
+===== [1. Build] Compile and import the application
+^[[36;1mpython -m compileall -q app^[[0m
+^[[36;1mpython -c "from app.main import app; print('routes:', sorted(r.rule for r in app.url_map.iter_rules()))"^[[0m
+routes: ['/', '/api/calculate', '/api/diag/ping', '/api/greet/<name>', '/api/status', '/health', '/ready', '/static/<path:filename>']
+
+===== [2. Unit Test] Install dependencies
+^[[36;1mpip install --require-hashes --no-deps -r requirements.txt^[[0m
+^[[36;1mpip install -r requirements-dev.txt^[[0m
+
+===== [2. Unit Test] pytest with coverage (fails under 90%)
+^[[36;1mmkdir -p "$REPORTS/tests"^[[0m
+^[[36;1mpython -m pytest -v \^[[0m
+^[[36;1m  --junitxml="$REPORTS/tests/junit.xml" \^[[0m
+^[[36;1m  --cov=app --cov-report=term-missing \^[[0m
+^[[36;1m  --cov-report=xml:"$REPORTS/tests/coverage.xml" \^[[0m
+^[[36;1m  --cov-fail-under=90^[[0m
+============================= test session starts ==============================
+platform linux -- Python 3.12.14, pytest-9.1.1, pluggy-1.6.0 -- /opt/hostedtoolcache/Python/3.12.14/x64/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/work/devops-assignments/devops-assignments/DevOps/17-devsecops
+configfile: pytest.ini
+testpaths: tests
+plugins: cov-7.1.0
+collecting ... collected 17 items
+tests/test_app.py::test_home_renders PASSED                              [  5%]
+tests/test_app.py::test_health PASSED                                    [ 11%]
+tests/test_app.py::test_ready PASSED                                     [ 17%]
+tests/test_app.py::test_status_fields PASSED                             [ 23%]
+tests/test_app.py::test_security_headers PASSED                          [ 29%]
+tests/test_app.py::test_greet PASSED                                     [ 35%]
+tests/test_app.py::test_greet_rejects_bad_input[<script>] PASSED         [ 41%]
+tests/test_app.py::test_greet_rejects_bad_input[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] PASSED [ 47%]
+tests/test_app.py::test_greet_rejects_bad_input[x;rm -rf] PASSED         [ 52%]
+tests/test_app.py::test_calculate[add-2-3-5] PASSED                      [ 58%]
+tests/test_app.py::test_calculate[subtract-9-4-5] PASSED                 [ 64%]
+tests/test_app.py::test_calculate[multiply-6-3-18] PASSED                [ 70%]
+tests/test_app.py::test_calculate[divide-9-3-3] PASSED                   [ 76%]
+tests/test_app.py::test_calculate_divide_by_zero PASSED                  [ 82%]
+tests/test_app.py::test_calculate_bad_operation PASSED                   [ 88%]
+tests/test_app.py::test_calculate_requires_json PASSED                   [ 94%]
+tests/test_app.py::test_404_is_json PASSED                               [100%]
+- generated xml file: /home/runner/work/devops-assignments/devops-assignments/reports/tests/junit.xml -
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.14-final-0 _______________
+Name              Stmts   Miss  Cover   Missing
+-----------------------------------------------
+app/__init__.py       0      0   100%
+app/config.py         2      0   100%
+app/main.py          64      3    95%   114-116
+-----------------------------------------------
+TOTAL                66      3    95%
+Coverage XML written to file /home/runner/work/devops-assignments/devops-assignments/reports/tests/coverage.xml
+Required test coverage of 90% reached. Total coverage: 95.45%
+============================== 17 passed in 0.47s ==============================
+
+===== [3. SAST (Semgrep, Bandit, Trivy config)] Semgrep - custom rules + p/python + p/flask
+^[[36;1mmkdir -p "$REPORTS/sast"^[[0m
+^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$SEMGREP_IMAGE" \^[[0m
+^[[36;1m  semgrep scan \^[[0m
+^[[36;1m    --config "$APP_DIR/security/semgrep/rules.yml" \^[[0m
+^[[36;1m    --config p/python --config p/flask \^[[0m
+^[[36;1m    --metrics=off --text \^[[0m
+^[[36;1m    --json-output=reports/sast/semgrep.json \^[[0m
+^[[36;1m    --sarif-output=reports/sast/semgrep.sarif \^[[0m
+^[[36;1m    "$APP_DIR/app"^[[0m
+Unable to find image 'semgrep/semgrep:1.178.0@sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b' locally
+docker.io/semgrep/semgrep@sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b: Pulling from semgrep/semgrep
+Digest: sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b
+Status: Downloaded newer image for semgrep/semgrep@sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 5 files tracked by git with 156 Code rules:
+  Scanning 3 files with 156 python rules.
+┌─────────────────┐
+│ 5 Code Findings │
+└─────────────────┘
+    DevOps/17-devsecops/app/config.py
+    ❯❱ DevOps.17-devsecops.security.semgrep.s17-hardcoded-credential
+          ❰❰ Blocking ❱❱
+          Credential-looking variable assigned a string literal. Read it from the environment / a Kubernetes
+          Secret instead (secret scanning also checks this).                                                
+            5┆ PAYMENT_API_KEY = "pay_live_GGRUBF6aFwikk3RobMpUesqKNv9kd5lZ"
+    DevOps/17-devsecops/app/main.py
+   ❯❯❱ DevOps.17-devsecops.security.semgrep.s17-subprocess-shell-true
+          ❰❰ Blocking ❱❱
+          subprocess called with shell=True. If any part of the command comes from the request this is OS
+          command injection (CWE-78). Pass an argument list instead.                                     
+          115┆ out = subprocess.run(f"ping -c 1 {host}", shell=True, capture_output=True, text=True,
+               timeout=5)                                                                           
+   ❯❯❱ python.flask.security.injection.subprocess-injection.subprocess-injection
+          ❰❰ Blocking ❱❱
+          Detected user input entering a `subprocess` call unsafely. This could result in a command injection 
+          vulnerability. An attacker could use this vulnerability to execute arbitrary commands on the host,  
+          which allows them to download malware, scan sensitive data, or run any command they wish on the     
+          server. Do not let users choose the command to run. In general, prefer to use Python API versions of
+          system commands. If you must use subprocess, use a dictionary to allowlist a set of commands.       
+          Details: https://sg.run/5gW3                                                                        
+          115┆ out = subprocess.run(f"ping -c 1 {host}", shell=True, capture_output=True, text=True,
+               timeout=5)                                                                           
+   ❯❯❱ python.lang.security.dangerous-subprocess-use.dangerous-subprocess-use
+          ❰❰ Blocking ❱❱
+          Detected subprocess function 'run' with user controlled data. A malicious actor could leverage this
+          to perform command injection. You may consider using 'shlex.escape()'.                             
+          Details: https://sg.run/NWxp                                                                       
+          115┆ out = subprocess.run(f"ping -c 1 {host}", shell=True, capture_output=True, text=True,
+               timeout=5)                                                                           
+   ❯❯❱ python.lang.security.audit.subprocess-shell-true.subprocess-shell-true
+          ❰❰ Blocking ❱❱
+          Found 'subprocess' function 'run' with 'shell=True'. This is dangerous because this call will spawn
+          the command using a shell process. Doing so propagates current shell settings and variables, which 
+          makes it much easier for a malicious actor to execute commands. Use 'shell=False' instead.         
+          Details: https://sg.run/J92w                                                                       
+           ▶▶┆ Autofix ▶ False
+          115┆ out = subprocess.run(f"ping -c 1 {host}", shell=True, capture_output=True, text=True,
+               timeout=5)                                                                           
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 5 (5 blocking)
+ • Rules run: 156
+ • Targets scanned: 3
+ • Parsed lines: ~100.0%
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 156 rules on 3 files: 5 findings.
+
+===== [3. SAST (Semgrep, Bandit, Trivy config)] Bandit - Python security linter
+^[[36;1mpip install "bandit[sarif]==${BANDIT_VERSION}"^[[0m
+^[[36;1mcd "$APP_DIR"^[[0m
+^[[36;1mbandit -c security/bandit.yaml -r app -f json -o "$REPORTS/sast/bandit.json" --exit-zero^[[0m
+^[[36;1mbandit -c security/bandit.yaml -r app -f sarif -o "$REPORTS/sast/bandit.sarif" --exit-zero^[[0m
+^[[36;1mbandit -c security/bandit.yaml -r app --exit-zero^[[0m
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[json]	INFO	JSON output written to file: /home/runner/work/devops-assignments/devops-assignments/reports/sast/bandit.json
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	using config: security/bandit.yaml
+[main]	INFO	running on Python 3.12.14
+[sarif]	INFO	SARIF output written to file: /home/runner/work/devops-assignments/devops-assignments/reports/sast/bandit.sarif
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	using config: security/bandit.yaml
+[main]	INFO	running on Python 3.12.14
+Run started:2026-10-07 13:32:38.573213+00:00
+Test results:
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   More Info: https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: app/main.py:16:0
+15	import platform
+16	import subprocess
+17	import sys
+--------------------------------------------------
+>> Issue: [B602:subprocess_popen_with_shell_equals_true] subprocess call with shell=True identified, security issue.
+   Severity: High   Confidence: High
+   More Info: https://bandit.readthedocs.io/en/1.9.4/plugins/b602_subprocess_popen_with_shell_equals_true.html
+   Location: app/main.py:115:10
+114	    host = request.args.get("host", "127.0.0.1")
+115	    out = subprocess.run(f"ping -c 1 {host}", shell=True, capture_output=True, text=True, timeout=5)
+116	    return jsonify(host=host, rc=out.returncode, output=out.stdout[-500:])
+--------------------------------------------------
+Code scanned:
+	Total lines of code: 97
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 1
+		Medium: 0
+		High: 1
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 2
+Files skipped (0):
+
+===== [3. SAST (Semgrep, Bandit, Trivy config)] Trivy config - Dockerfile and Kubernetes manifest misconfigurations
+^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
+^[[36;1m  config --config "$APP_DIR/security/trivy.yaml" \^[[0m
+^[[36;1m  --format json -o reports/sast/trivy-config.json "$APP_DIR"^[[0m
+^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
+^[[36;1m  convert --format table reports/sast/trivy-config.json^[[0m
+Unable to find image 'aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa' locally
+docker.io/aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa: Pulling from aquasec/trivy
+e2de96513ba9: Already exists
+Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+Status: Downloaded newer image for aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+2026-10-07T13:32:41Z	INFO	Loaded	file_path="DevOps/17-devsecops/security/trivy.yaml"
+2026-10-07T13:32:41Z	INFO	[misconfig] Misconfiguration scanning is enabled
+2026-10-07T13:32:41Z	INFO	[checks-client] Need to update the checks bundle
+234.65 KiB / 234.65 KiB [------------------------------------------------------] 100.00% ? p/s 100ms2026-10-07T13:32:43Z	INFO	Detected config files	num=6
+2026-10-07T13:32:44Z	WARN	[report] No enabled scanners found. Summary table will not be displayed.
+
+===== [4. SCA (pip-audit, Trivy fs)] pip-audit - PyPI advisory database (OSV/PYSEC)
+^[[36;1mpip install "pip-audit==${PIP_AUDIT_VERSION}"^[[0m
+^[[36;1mmkdir -p "$REPORTS/sca"^[[0m
+^[[36;1mcd "$APP_DIR"^[[0m
+^[[36;1m# exit 1 just means "vulnerabilities found"; the gate decides. The^[[0m
+^[[36;1m# report file must exist, otherwise the gate fails closed.^[[0m
+^[[36;1mpip-audit -r requirements.txt --require-hashes --disable-pip --progress-spinner off \^[[0m
+^[[36;1m  --format json -o "$REPORTS/sca/pip-audit.json" || true^[[0m
+^[[36;1mpython - <<'EOF'^[[0m
+^[[36;1mimport json, os^[[0m
+^[[36;1md = json.load(open(os.path.join(os.environ["REPORTS"], "sca", "pip-audit.json")))^[[0m
+^[[36;1mfor dep in d["dependencies"]:^[[0m
+^[[36;1m    ids = ", ".join(v["id"] + " (fix " + ",".join(v["fix_versions"]) + ")" for v in dep["vulns"]) or "no known vulnerabilities"^[[0m
+^[[36;1m    print(f'{dep["name"]:<14} {dep["version"]:<10} {ids}')^[[0m
+^[[36;1mEOF^[[0m
+Found 4 known vulnerabilities in 1 package
+blinker        1.9.0      no known vulnerabilities
+click          8.5.0      no known vulnerabilities
+flask          3.1.3      no known vulnerabilities
+gunicorn       21.2.0     PYSEC-2026-1434 (fix 22.0.0), PYSEC-2026-1433 (fix 22.0.0), PYSEC-2026-1434 (fix 22.0.0), PYSEC-2026-1433 (fix 22.0.0)
+itsdangerous   2.2.0      no known vulnerabilities
+jinja2         3.1.6      no known vulnerabilities
+markupsafe     3.0.4      no known vulnerabilities
+packaging      26.3       no known vulnerabilities
+werkzeug       3.1.9      no known vulnerabilities
+
+===== [4. SCA (pip-audit, Trivy fs)] Trivy fs - dependency manifests
+^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
+^[[36;1m  fs --config "$APP_DIR/security/trivy.yaml" --scanners vuln \^[[0m
+^[[36;1m  --format json -o reports/sca/trivy-fs.json "$APP_DIR"^[[0m
+^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
+^[[36;1m  convert --format table reports/sca/trivy-fs.json^[[0m
+Unable to find image 'aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa' locally
+docker.io/aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa: Pulling from aquasec/trivy
+e2de96513ba9: Already exists
+Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+Status: Downloaded newer image for aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+2026-10-07T13:33:06Z	INFO	Loaded	file_path="DevOps/17-devsecops/security/trivy.yaml"
+2026-10-07T13:33:06Z	INFO	[vulndb] Need to update DB
+35.10 MiB / 119.53 MiB [----------------->__________________________________________] 29.37% ? p/s ?80.54 MiB / 119.53 MiB [---------------------------------------->___________________] 67.38% ? p/s ?119.53 MiB / 119.53 MiB [--------------------------------------------------------->] 100.00% ? p/s ?119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 140.51 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 140.51 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 140.51 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 131.45 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 131.45 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 131.45 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 122.97 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 122.97 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 122.97 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 115.03 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 115.03 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 115.03 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 107.61 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 107.61 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 107.61 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 100.67 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [-----------------------------------------------] 100.00% 32.68 MiB p/s 3.9s2026-10-07T13:33:11Z	INFO	[vulndb] Artifact successfully downloaded	repo="mirror.gcr.io/aquasec/trivy-db:2"
+2026-10-07T13:33:11Z	INFO	[vuln] Vulnerability scanning is enabled
+2026-10-07T13:33:11Z	WARN	[pip] Unable to find python `site-packages` directory. License detection is skipped.	err="unable to find path to Python executable"
+2026-10-07T13:33:11Z	INFO	Number of language-specific files	num=1
+2026-10-07T13:33:11Z	INFO	[pip] Detecting vulnerabilities...
+2026-10-07T13:33:15Z	WARN	[report] No enabled scanners found. Summary table will not be displayed.
+requirements.txt (pip)
+======================
+Total: 2 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 2, CRITICAL: 0)
+┌──────────┬───────────────┬──────────┬────────┬───────────────────┬───────────────┬─────────────────────────────────────────────────────────┐
+│ Library  │ Vulnerability │ Severity │ Status │ Installed Version │ Fixed Version │                          Title                          │
+├──────────┼───────────────┼──────────┼────────┼───────────────────┼───────────────┼─────────────────────────────────────────────────────────┤
+│ gunicorn │ CVE-2024-1135 │ HIGH     │ fixed  │ 21.2.0            │ 22.0.0        │ python-gunicorn: HTTP Request Smuggling due to improper │
+│          │               │          │        │                   │               │ validation of Transfer-Encoding headers                 │
+│          │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2024-1135               │
+│          ├───────────────┤          │        │                   │               ├─────────────────────────────────────────────────────────┤
+│          │ CVE-2024-6827 │          │        │                   │               │ gunicorn: HTTP Request Smuggling in benoitc/gunicorn    │
+│          │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2024-6827               │
+└──────────┴───────────────┴──────────┴────────┴───────────────────┴───────────────┴─────────────────────────────────────────────────────────┘
+
+===== [5. Secret Scan (Gitleaks)] Install Gitleaks (pinned version, checksum verified)
+^[[36;1mcurl -sSfL -o /tmp/gitleaks.tgz \^[[0m
+^[[36;1m  "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"^[[0m
+^[[36;1mecho "${GITLEAKS_SHA256}  /tmp/gitleaks.tgz" | sha256sum -c -^[[0m
+^[[36;1mtar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks^[[0m
+^[[36;1m/tmp/gitleaks version^[[0m
+/tmp/gitleaks.tgz: OK
+8.30.1
+
+===== [5. Secret Scan (Gitleaks)] Gitleaks - full git history of this folder only
+^[[36;1mmkdir -p "$REPORTS/secrets"^[[0m
+^[[36;1m/tmp/gitleaks git . \^[[0m
+^[[36;1m  --config "$APP_DIR/security/gitleaks.toml" \^[[0m
+^[[36;1m  --gitleaks-ignore-path "$APP_DIR/security/.gitleaksignore" \^[[0m
+^[[36;1m  --log-opts="-- $APP_DIR" \^[[0m
+^[[36;1m  --redact --no-banner --verbose \^[[0m
+^[[36;1m  --exit-code 0 \^[[0m
+^[[36;1m  --report-format json --report-path "$REPORTS/secrets/gitleaks.json"^[[0m
+^[[36;1mecho "findings: $(python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))))" "$REPORTS/secrets/gitleaks.json")"^[[0m
+Finding:     PAYMENT_API_KEY = "^[[1;3;mREDACTED^[[0m
+Secret:      ^[[1;3;mREDACTED^[[0m
+RuleID:      hw-payment-live-key
+Entropy:     4.704994
+Tags:        [key payment custom]
+File:        DevOps/17-devsecops/app/config.py
+Line:        5
+Commit:      3d214abf2f7b63675fefff980e7f5677434162d8
+Author:      astro-dude
+Email:       sagittariusshaurya5@gmail.com
+Date:        2026-10-07T13:31:14Z
+Fingerprint: 3d214abf2f7b63675fefff980e7f5677434162d8:DevOps/17-devsecops/app/config.py:hw-payment-live-key:5
+Link:        https://github.com/Astro-Dude/devops-assignments/blob/3d214abf2f7b63675fefff980e7f5677434162d8/DevOps/17-devsecops/app/config.py#L5
+^[[90m1:33PM^[[0m ^[[32mINF^[[0m ^[[1m2 commits scanned.^[[0m
+^[[90m1:33PM^[[0m ^[[32mINF^[[0m ^[[1mscanned ~63481 bytes (63.48 KB) in 97.4ms^[[0m
+^[[90m1:33PM^[[0m ^[[33mWRN^[[0m ^[[1mleaks found: 1^[[0m
+findings: 1
+
+===== [6. Docker Build] Build image (not pushed - it has not been scanned yet)
+with:
+  context: DevOps/17-devsecops
+  platforms: linux/amd64
+  build-args: GIT_SHA=3d214abf2f7b63675fefff980e7f5677434162d8
+APP_VERSION=1.0.0
+  tags: ghcr.io/astro-dude/s17-devsecops-app:3d214abf2f7b63675fefff980e7f5677434162d8
+  outputs: type=docker,dest=/tmp/image.tar
+  cache-from: type=gha,scope=s17
+  cache-to: type=gha,scope=s17,mode=max
+  load: false
+  no-cache: false
+  pull: false
+  push: false
+  github-token: ***
+refs/heads/main: read/write
+[command]/usr/bin/docker version
+Client: Docker Engine - Community
+ Version:           28.0.4
+ API version:       1.48
+ Go version:        go1.23.7
+ Git commit:        b8034c0
+ Built:             Tue Mar 25 15:07:16 2025
+ OS/Arch:           linux/amd64
+ Context:           default
+Server: Docker Engine - Community
+ Engine:
+  Version:          28.0.4
+  API version:      1.48 (minimum version 1.24)
+  Go version:       go1.23.7
+  Git commit:       6430e49
+  Built:            Tue Mar 25 15:07:16 2025
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v2.3.6
+  GitCommit:        ee2735368117d2eb259779949d5e75cdafec9761
+ runc:
+  Version:          1.5.1
+  GitCommit:        v1.5.1-0-g8f2685a4
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+[command]/usr/bin/docker info
+Client: Docker Engine - Community
+ Version:    28.0.4
+ Context:    default
+ Debug Mode: false
+ Plugins:
+  buildx: Docker Buildx (Docker Inc.)
+    Version:  v0.37.2
+    Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+  compose: Docker Compose (Docker Inc.)
+    Version:  v2.38.2
+    Path:     /usr/libexec/docker/cli-plugins/docker-compose
+Server:
+ Containers: 1
+  Running: 1
+  Paused: 0
+  Stopped: 0
+ Images: 7
+ Server Version: 28.0.4
+ Storage Driver: overlay2
+  Backing Filesystem: extfs
+  Supports d_type: true
+  Using metacopy: false
+  Native Overlay Diff: false
+  userxattr: false
+ Logging Driver: json-file
+ Cgroup Driver: systemd
+ Cgroup Version: 2
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+ Swarm: inactive
+ Runtimes: io.containerd.runc.v2 runc
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: ee2735368117d2eb259779949d5e75cdafec9761
+ runc version: v1.5.1-0-g8f2685a4
+ init version: de40ad0
+ Security Options:
+  apparmor
+  seccomp
+   Profile: builtin
+  cgroupns
+ Kernel Version: 6.17.0-1022-azure
+ Operating System: Ubuntu 24.04.5 LTS
+ OSType: linux
+ Architecture: x86_64
+ CPUs: 4
+ Total Memory: 15.61GiB
+ Name: runnervmmprz5
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: false
+ Username: githubactions
+ Experimental: false
+ Insecure Registries:
+  ::1/128
+  127.0.0.0/8
+ Live Restore Enabled: false
+No proxy configuration found
+[command]/usr/bin/docker buildx version
+github.com/docker/buildx v0.37.2 2d379c0c3f22da0d2759d132a0ec81ca949098f0
+{
+  "nodes": [
+    {
+      "name": "builder-894c5094-1f44-4c38-a841-c3f12e389b950",
+      "endpoint": "unix:///var/run/docker.sock",
+      "status": "running",
+      "buildkitd-flags": "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host",
+      "buildkit": "v0.33.1",
+      "platforms": "linux/amd64,linux/amd64/v2,linux/amd64/v3,linux/amd64/v4,linux/386",
+      "features": {
+        "Automatically load images to the Docker Engine image store": true,
+        "Cache export": true,
+        "Direct push": true,
+        "Docker exporter": true,
+        "Multi-platform build": true,
+        "OCI exporter": true
+      },
+      "labels": {
+        "org.mobyproject.buildkit.worker.executor": "oci",
+        "org.mobyproject.buildkit.worker.hostname": "5743a2228fb9",
+        "org.mobyproject.buildkit.worker.network": "host",
+        "org.mobyproject.buildkit.worker.oci.process-mode": "sandbox",
+        "org.mobyproject.buildkit.worker.selinux.enabled": "false",
+        "org.mobyproject.buildkit.worker.snapshotter": "overlayfs"
+      },
+      "gcPolicy": [
+        {
+          "all": false,
+          "filter": [
+            "type==source.local type==exec.cachemount type==source.git.checkout"
+          ],
+          "keepDuration": "48h0m0s",
+          "maxUsedSpace": "488.3MiB"
+        },
+        {
+          "all": false,
+          "keepDuration": "1440h0m0s",
+          "reservedSpace": "9.313GiB",
+          "maxUsedSpace": "93.13GiB",
+          "minFreeSpace": "27.01GiB"
+        },
+        {
+          "all": false,
+          "reservedSpace": "9.313GiB",
+          "maxUsedSpace": "93.13GiB",
+          "minFreeSpace": "27.01GiB"
+        },
+        {
+          "all": true,
+          "reservedSpace": "9.313GiB",
+          "maxUsedSpace": "93.13GiB",
+          "minFreeSpace": "27.01GiB"
+        }
+      ]
+    }
+  ],
+  "name": "builder-894c5094-1f44-4c38-a841-c3f12e389b95",
+  "driver": "docker-container",
+  "lastActivity": "2026-10-07T13:33:48.000Z"
+}
+[command]/usr/bin/docker buildx build --build-arg GIT_SHA=3d214abf2f7b63675fefff980e7f5677434162d8 --build-arg APP_VERSION=1.0.0 --cache-from type=gha,scope=s17 --cache-to type=gha,scope=s17,mode=max --iidfile /home/runner/work/_temp/docker-actions-toolkit-PWn9Z8/build-iidfile-4c7cba96c3.txt --output type=docker,dest=/tmp/image.tar --platform linux/amd64 --tag ghcr.io/astro-dude/s17-devsecops-app:3d214abf2f7b63675fefff980e7f5677434162d8 --metadata-file /home/runner/work/_temp/docker-actions-toolkit-PWn9Z8/build-metadata-b52ba29224.json DevOps/17-devsecops
+sha256:ef22dbf1b7133146a3bc3fb7bf5642d595c241e6e78254dc4a7403c197ff76ac
+sha256:f2ccddb94071892b97033d59c92863dff0d4107516f9ab4832990f239a1b3b86
+::stop-commands::***
+{
+  "buildx.build.provenance": {
+    "builder": {
+      "id": ""
+    },
+    "buildType": "https://mobyproject.org/buildkit@v1",
+    "materials": [
+      {
+        "uri": "pkg:docker/docker/dockerfile@1",
+        "digest": {
+          "sha256": "4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e"
+        }
+      },
+      {
+        "uri": "pkg:docker/python@3.12-slim?digest=sha256:05cda9777409a9c3ffddd94a4c476b79f0769a0b4857f0c7ed9226b6800b0d6f&platform=linux%2Famd64",
+        "digest": {
+          "sha256": "05cda9777409a9c3ffddd94a4c476b79f0769a0b4857f0c7ed9226b6800b0d6f"
+        }
+      }
+    ],
+    "invocation": {
+      "configSource": {
+        "entryPoint": "Dockerfile"
+      },
+      "parameters": {
+        "frontend": "gateway.v0",
+        "args": {
+          "build-arg:APP_VERSION": "1.0.0",
+          "build-arg:GIT_SHA": "3d214abf2f7b63675fefff980e7f5677434162d8",
+          "cmdline": "docker/dockerfile:1",
+          "source": "docker/dockerfile:1"
+        },
+        "locals": [
+          {
+            "name": "context"
+          },
+          {
+            "name": "dockerfile"
+          }
+        ],
+        "root": {
+          "configSource": {
+            "path": "Dockerfile"
+          },
+          "request": {
+            "args": {
+              "build-arg:APP_VERSION": "1.0.0",
+              "build-arg:GIT_SHA": "3d214abf2f7b63675fefff980e7f5677434162d8",
+              "vcs:localdir:context": "DevOps/17-devsecops",
+              "vcs:localdir:dockerfile": "DevOps/17-devsecops",
+              "vcs:revision": "3d214abf2f7b63675fefff980e7f5677434162d8",
+              "vcs:source": "https://github.com/Astro-Dude/devops-assignments"
+            }
+          }
+        },
+        "compatibilityVersion": 30
+      },
+      "environment": {
+        "github_actor": "Astro-Dude",
+        "github_actor_id": "172935099",
+        "github_event_name": "push",
+        "github_event_payload": {
+          "after": "3d214abf2f7b63675fefff980e7f5677434162d8",
+          "base_ref": null,
+          "before": "fa73caf8cde7f81a3acb4b3198ee4baf6b4c56fd",
+          "commits": [
+            {
+              "author": {
+                "email": "sagittariusshaurya5@gmail.com",
+                "name": "astro-dude",
+                "username": "Astro-Dude"
+              },
+              "committer": {
+                "email": "sagittariusshaurya5@gmail.com",
+                "name": "astro-dude",
+                "username": "Astro-Dude"
+              },
+              "distinct": true,
+              "id": "3d214abf2f7b63675fefff980e7f5677434162d8",
+              "message": "Session 17 gate demo: add ping diagnostics endpoint, payment config and pin gunicorn 21.2.0 (intentionally insecure)",
+              "timestamp": "2026-10-07T19:01:23+05:30",
+              "tree_id": "2e2b68792503715ce5f4dd982c6f9c04ae6e7115",
+              "url": "https://github.com/Astro-Dude/devops-assignments/commit/3d214abf2f7b63675fefff980e7f5677434162d8"
+            }
+          ],
+          "compare": "https://github.com/Astro-Dude/devops-assignments/compare/fa73caf8cde7...3d214abf2f7b",
+          "created": false,
+          "deleted": false,
+          "forced": false,
+          "head_commit": {
+            "author": {
+              "email": "sagittariusshaurya5@gmail.com",
+              "name": "astro-dude",
+              "username": "Astro-Dude"
+            },
+            "committer": {
+              "email": "sagittariusshaurya5@gmail.com",
+              "name": "astro-dude",
+              "username": "Astro-Dude"
+            },
+            "distinct": true,
+            "id": "3d214abf2f7b63675fefff980e7f5677434162d8",
+            "message": "Session 17 gate demo: add ping diagnostics endpoint, payment config and pin gunicorn 21.2.0 (intentionally insecure)",
+            "timestamp": "2026-10-07T19:01:23+05:30",
+            "tree_id": "2e2b68792503715ce5f4dd982c6f9c04ae6e7115",
+            "url": "https://github.com/Astro-Dude/devops-assignments/commit/3d214abf2f7b63675fefff980e7f5677434162d8"
+          },
+          "pusher": {
+            "email": "sagittariusshaurya5@gmail.com",
+            "name": "Astro-Dude"
+          },
+          "ref": "refs/heads/main",
+          "repository": {
+            "allow_forking": true,
+            "archive_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/{archive_format}{/ref}",
+            "archived": false,
+            "assignees_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/assignees{/user}",
+            "blobs_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/git/blobs{/sha}",
+            "branches_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/branches{/branch}",
+            "clone_url": "https://github.com/Astro-Dude/devops-assignments.git",
+            "collaborators_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/collaborators{/collaborator}",
+            "comments_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/comments{/number}",
+            "commits_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/commits{/sha}",
+            "compare_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/compare/{base}...{head}",
+            "contents_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/contents/{+path}",
+            "contributors_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/contributors",
+            "created_at": 1788455339,
+            "default_branch": "main",
+            "deployments_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/deployments",
+            "description": "DevOps course homework: Linux, shell scripting, networking, Git and Docker - documented with real captured command output",
+            "disabled": false,
+            "downloads_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/downloads",
+            "events_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/events",
+            "fork": false,
+            "forks": 0,
+            "forks_count": 0,
+            "forks_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/forks",
+            "full_name": "Astro-Dude/devops-assignments",
+            "git_commits_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/git/commits{/sha}",
+            "git_refs_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/git/refs{/sha}",
+            "git_tags_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/git/tags{/sha}",
+            "git_url": "git://github.com/Astro-Dude/devops-assignments.git",
+            "has_discussions": false,
+            "has_downloads": true,
+            "has_issues": true,
+            "has_pages": false,
+            "has_projects": true,
+            "has_pull_requests": true,
+            "has_wiki": false,
+            "homepage": null,
+            "hooks_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/hooks",
+            "html_url": "https://github.com/Astro-Dude/devops-assignments",
+            "id": 1356229040,
+            "is_template": false,
+            "issue_comment_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/issues/comments{/number}",
+            "issue_events_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/issues/events{/number}",
+            "issues_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/issues{/number}",
+            "keys_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/keys{/key_id}",
+            "labels_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/labels{/name}",
+            "language": "Python",
+            "languages_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/languages",
+            "license": null,
+            "master_branch": "main",
+            "merges_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/merges",
+            "milestones_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/milestones{/number}",
+            "mirror_url": null,
+            "name": "devops-assignments",
+            "node_id": "R_kgDOUNZpsA",
+            "notifications_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/notifications{?since,all,participating}",
+            "open_issues": 0,
+            "open_issues_count": 0,
+            "owner": {
+              "avatar_url": "https://avatars.githubusercontent.com/u/172935099?v=4",
+              "email": "sagittariusshaurya5@gmail.com",
+              "events_url": "https://api.github.com/users/Astro-Dude/events{/privacy}",
+              "followers_url": "https://api.github.com/users/Astro-Dude/followers",
+              "following_url": "https://api.github.com/users/Astro-Dude/following{/other_user}",
+              "gists_url": "https://api.github.com/users/Astro-Dude/gists{/gist_id}",
+              "gravatar_id": "",
+              "html_url": "https://github.com/Astro-Dude",
+              "id": 172935099,
+              "login": "Astro-Dude",
+              "name": "Astro-Dude",
+              "node_id": "U_kgDOCk7Huw",
+              "organizations_url": "https://api.github.com/users/Astro-Dude/orgs",
+              "received_events_url": "https://api.github.com/users/Astro-Dude/received_events",
+              "repos_url": "https://api.github.com/users/Astro-Dude/repos",
+              "site_admin": false,
+              "starred_url": "https://api.github.com/users/Astro-Dude/starred{/owner}{/repo}",
+              "subscriptions_url": "https://api.github.com/users/Astro-Dude/subscriptions",
+              "type": "User",
+              "url": "https://api.github.com/users/Astro-Dude",
+              "user_view_type": "public"
+            },
+            "private": false,
+            "pull_request_creation_policy": "all",
+            "pulls_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/pulls{/number}",
+            "pushed_at": 1791379887,
+            "releases_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/releases{/id}",
+            "size": 376,
+            "ssh_url": "git@github.com:Astro-Dude/devops-assignments.git",
+            "stargazers": 0,
+            "stargazers_count": 0,
+            "stargazers_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/stargazers",
+            "statuses_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/statuses/{sha}",
+            "subscribers_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/subscribers",
+            "subscription_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/subscription",
+            "svn_url": "https://github.com/Astro-Dude/devops-assignments",
+            "tags_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/tags",
+            "teams_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/teams",
+            "topics": [],
+            "trees_url": "https://api.github.com/repos/Astro-Dude/devops-assignments/git/trees{/sha}",
+            "updated_at": "2026-10-07T13:30:54Z",
+            "url": "https://api.github.com/repos/Astro-Dude/devops-assignments",
+            "visibility": "public",
+            "watchers": 0,
+            "watchers_count": 0,
+            "web_commit_signoff_required": false
+          },
+          "sender": {
+            "avatar_url": "https://avatars.githubusercontent.com/u/172935099?v=4",
+            "events_url": "https://api.github.com/users/Astro-Dude/events{/privacy}",
+            "followers_url": "https://api.github.com/users/Astro-Dude/followers",
+            "following_url": "https://api.github.com/users/Astro-Dude/following{/other_user}",
+            "gists_url": "https://api.github.com/users/Astro-Dude/gists{/gist_id}",
+            "gravatar_id": "",
+            "html_url": "https://github.com/Astro-Dude",
+            "id": 172935099,
+            "login": "Astro-Dude",
+            "node_id": "U_kgDOCk7Huw",
+            "organizations_url": "https://api.github.com/users/Astro-Dude/orgs",
+            "received_events_url": "https://api.github.com/users/Astro-Dude/received_events",
+            "repos_url": "https://api.github.com/users/Astro-Dude/repos",
+            "site_admin": false,
+            "starred_url": "https://api.github.com/users/Astro-Dude/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/Astro-Dude/subscriptions",
+            "type": "User",
+            "url": "https://api.github.com/users/Astro-Dude",
+            "user_view_type": "public"
+          }
+        },
+        "github_job": "docker-build",
+        "github_ref": "refs/heads/main",
+        "github_ref_name": "main",
+        "github_ref_protected": "false",
+        "github_ref_type": "branch",
+        "github_repository": "Astro-Dude/devops-assignments",
+        "github_repository_id": "1356229040",
+        "github_repository_owner": "Astro-Dude",
+        "github_repository_owner_id": "172935099",
+        "github_run_attempt": "1",
+        "github_run_id": "37629169373",
+        "github_run_number": "2",
+        "github_runner_arch": "X64",
+        "github_runner_environment": "github-hosted",
+        "github_runner_image_os": "ubuntu24",
+        "github_runner_image_version": "20261004.327.1",
+        "github_runner_name": "GitHub Actions 1000001586",
+        "github_runner_os": "Linux",
+        "github_runner_tracking_id": "github_8eb4cd28-f38f-4bfc-a080-fc207fb26a68",
+        "github_server_url": "https://github.com",
+        "github_triggering_actor": "Astro-Dude",
+        "github_workflow": "S17 DevSecOps pipeline",
+        "github_workflow_ref": "Astro-Dude/devops-assignments/.github/workflows/s17-devsecops.yml@refs/heads/main",
+        "github_workflow_sha": "3d214abf2f7b63675fefff980e7f5677434162d8",
+        "platform": "linux/amd64"
+      }
+    }
+  },
+  "buildx.build.ref": "builder-894c5094-1f44-4c38-a841-c3f12e389b95/builder-894c5094-1f44-4c38-a841-c3f12e389b950/if7qphppucsmq8il24u6lza7a",
+  "containerimage.config.digest": "sha256:ef22dbf1b7133146a3bc3fb7bf5642d595c241e6e78254dc4a7403c197ff76ac",
+  "containerimage.descriptor": {
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "digest": "sha256:f2ccddb94071892b97033d59c92863dff0d4107516f9ab4832990f239a1b3b86",
+    "size": 1814,
+    "annotations": {
+      "org.opencontainers.image.created": "2026-10-07T13:33:57Z"
+    },
+    "platform": {
+      "architecture": "amd64",
+      "os": "linux"
+    }
+  },
+  "containerimage.digest": "sha256:f2ccddb94071892b97033d59c92863dff0d4107516f9ab4832990f239a1b3b86",
+  "image.name": "ghcr.io/astro-dude/s17-devsecops-app:3d214abf2f7b63675fefff980e7f5677434162d8"
+}
+::***::
+builder-894c5094-1f44-4c38-a841-c3f12e389b95/builder-894c5094-1f44-4c38-a841-c3f12e389b950/if7qphppucsmq8il24u6lza7a
+Build summary supported!
+
+===== [6. Docker Build] Inspect image
+^[[36;1mdocker load -i /tmp/image.tar^[[0m
+^[[36;1mdocker image inspect "$IMAGE_NAME:3d214abf2f7b63675fefff980e7f5677434162d8" \^[[0m
+^[[36;1m  --format 'id={{.Id}} user={{.Config.User}} size={{.Size}} cmd={{json .Config.Cmd}}'^[[0m
+^[[36;1mecho "image_id=$(docker image inspect "$IMAGE_NAME:3d214abf2f7b63675fefff980e7f5677434162d8" --format '{{.Id}}')" >> "$GITHUB_OUTPUT"^[[0m
+^[[36;1mdocker history --format '{{.Size}}\t{{.CreatedBy}}' "$IMAGE_NAME:3d214abf2f7b63675fefff980e7f5677434162d8"^[[0m
+Loaded image: ghcr.io/astro-dude/s17-devsecops-app:3d214abf2f7b63675fefff980e7f5677434162d8
+id=sha256:ef22dbf1b7133146a3bc3fb7bf5642d595c241e6e78254dc4a7403c197ff76ac user=10001:10001 size=126569968 cmd=["gunicorn","--bind","0.0.0.0:8000","--workers","2","--worker-tmp-dir","/tmp","--access-logfile","-","app.main:app"]
+0B	CMD ["gunicorn" "--bind" "0.0.0.0:8000" "--w…
+0B	HEALTHCHECK {Test:[CMD python -c import urll…
+0B	EXPOSE [8000/tcp]
+0B	USER 10001:10001
+5.85kB	COPY --chown=root:root app ./app # buildkit
+2.98MB	COPY /opt/venv /opt/venv # buildkit
+0B	WORKDIR /srv
+0B	ENV PATH=/opt/venv/bin:/usr/local/bin:/usr/l…
+4.15MB	RUN |2 GIT_SHA=3d214abf2f7b63675fefff980e7f5…
+0B	LABEL org.opencontainers.image.source=https:…
+0B	ARG APP_VERSION=1.0.0
+0B	ARG GIT_SHA=3d214abf2f7b63675fefff980e7f5677…
+0B	CMD ["python3"]
+0B	RUN /bin/sh -c set -eux;  for src in idle3 p…
+36.8MB	RUN /bin/sh -c set -eux;   savedAptMark="$(a…
+0B	ENV PYTHON_SHA256=c2c4321961fab0fb999d66e0ce…
+0B	ENV PYTHON_VERSION=3.12.15
+0B	ENV GPG_KEY=7169605F62C751356D054A26A821E680…
+3.8MB	RUN /bin/sh -c set -eux;  apt-get update;  a…
+0B	ENV LANG=C.UTF-8
+0B	ENV PATH=/usr/local/bin:/usr/local/sbin:/usr…
+78.8MB	# debian.sh --arch 'amd64' out/ 'trixie' '@1…
+
+===== [7. Container Image Scan (Trivy)] Trivy image - OS packages and Python libraries in the built image
+^[[36;1mmkdir -p "$REPORTS/image"^[[0m
+^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -v /tmp/image.tar:/image.tar:ro -w /src "$TRIVY_IMAGE" \^[[0m
+^[[36;1m  image --config "$APP_DIR/security/trivy.yaml" --scanners vuln --list-all-pkgs \^[[0m
+^[[36;1m  --input /image.tar --format json -o reports/image/trivy-image.json^[[0m
+^[[36;1mfor fmt in sarif cyclonedx; do^[[0m
+^[[36;1m  docker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
+^[[36;1m    convert --format "$fmt" -o "reports/image/trivy-image.$fmt" reports/image/trivy-image.json^[[0m
+^[[36;1mdone^[[0m
+^[[36;1mmv reports/image/trivy-image.cyclonedx reports/image/sbom.cdx.json^[[0m
+^[[36;1mdocker run --rm -v "$GITHUB_WORKSPACE:/src" -w /src "$TRIVY_IMAGE" \^[[0m
+^[[36;1m  convert --format table --severity HIGH,CRITICAL reports/image/trivy-image.json^[[0m
+Unable to find image 'aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa' locally
+docker.io/aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa: Pulling from aquasec/trivy
+e2de96513ba9: Already exists
+Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+Status: Downloaded newer image for aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+2026-10-07T13:34:26Z	INFO	Loaded	file_path="DevOps/17-devsecops/security/trivy.yaml"
+2026-10-07T13:34:26Z	INFO	[vulndb] Need to update DB
+17.84 MiB / 119.53 MiB [-------->___________________________________________________] 14.92% ? p/s ?64.00 MiB / 119.53 MiB [-------------------------------->___________________________] 53.54% ? p/s ?119.53 MiB / 119.53 MiB [--------------------------------------------------------->] 100.00% ? p/s ?119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 169.34 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 169.34 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 169.34 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 158.42 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 158.42 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 158.42 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 148.20 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 148.20 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 148.20 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 138.64 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 138.64 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 138.64 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 129.69 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 129.69 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [------------------------------------------->] 100.00% 129.69 MiB p/s ETA 0s119.53 MiB / 119.53 MiB [-----------------------------------------------] 100.00% 33.43 MiB p/s 3.8s2026-10-07T13:34:30Z	INFO	[vulndb] Artifact successfully downloaded	repo="mirror.gcr.io/aquasec/trivy-db:2"
+2026-10-07T13:34:30Z	INFO	[vuln] Vulnerability scanning is enabled
+2026-10-07T13:34:31Z	INFO	[python] Licenses acquired from one or more METADATA files may be subject to additional terms. Use `--debug` flag to see all affected packages.
+2026-10-07T13:34:32Z	INFO	Detected OS	family="debian" version="13.7"
+2026-10-07T13:34:32Z	INFO	[debian] Detecting vulnerabilities...	os_version="13" pkg_num=87
+2026-10-07T13:34:32Z	INFO	Number of language-specific files	num=1
+2026-10-07T13:34:32Z	INFO	[python-pkg] Detecting vulnerabilities...
+2026-10-07T13:34:32Z	WARN	Using severities from other vendors for some vulnerabilities. Read https://trivy.dev/docs/v0.75/guide/scanner/vulnerability#severity-selection for details.
+2026-10-07T13:34:34Z	INFO	"--format cyclonedx" disables security scanning. Specify "--scanners vuln" explicitly if you want to include vulnerabilities in the "cyclonedx" report.
+2026-10-07T13:34:35Z	WARN	[report] No enabled scanners found. Summary table will not be displayed.
+2026-10-07T13:34:35Z	INFO	Table result includes only package filenames. Use '--format json' option to get the full path to the package file.
+/image.tar (debian 13.7)
+========================
+Total: 44 (HIGH: 44, CRITICAL: 0)
+┌───────────────┬────────────────┬──────────┬──────────────┬───────────────────────────────────┬───────────────┬─────────────────────────────────────────────────────────────┐
+│    Library    │ Vulnerability  │ Severity │    Status    │         Installed Version         │ Fixed Version │                            Title                            │
+├───────────────┼────────────────┼──────────┼──────────────┼───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ bsdutils      │ CVE-2026-76642 │ HIGH     │ affected     │ 1:2.41.5-0+deb13u1                │               │ util-linux: util-linux: failed external mount helper still  │
+│               │                │          │              │                                   │               │ runs privileged X-mount post-hooks                          │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-76642                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78408 │          │              │                                   │               │ util-linux: util-linux: nsenter --join-cgroup leaks root    │
+│               │                │          │              │                                   │               │ cgroup migration authority                                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78408                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78409 │          │              │                                   │               │ util-linux: util-linux: X-mount.subdir detached-tree        │
+│               │                │          │              │                                   │               │ resolution can escape via intermediate symlinks             │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78409                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78410 │          │              │                                   │               │ util-linux: util-linux: restricted bind mounts do not pin   │
+│               │                │          │              │                                   │               │ the source, allowing X-mount.owner/group/mode...            │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78410                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ libacl1       │ CVE-2026-54369 │          │              │ 2.3.2-2+b1                        │               │ acl: Symlink traversal privilege escalation via libacl      │
+│               │                │          │              │                                   │               │ functions                                                   │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-54369                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ libblkid1     │ CVE-2026-76642 │          │              │ 2.41.5-0+deb13u1                  │               │ util-linux: util-linux: failed external mount helper still  │
+│               │                │          │              │                                   │               │ runs privileged X-mount post-hooks                          │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-76642                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78408 │          │              │                                   │               │ util-linux: util-linux: nsenter --join-cgroup leaks root    │
+│               │                │          │              │                                   │               │ cgroup migration authority                                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78408                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78409 │          │              │                                   │               │ util-linux: util-linux: X-mount.subdir detached-tree        │
+│               │                │          │              │                                   │               │ resolution can escape via intermediate symlinks             │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78409                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78410 │          │              │                                   │               │ util-linux: util-linux: restricted bind mounts do not pin   │
+│               │                │          │              │                                   │               │ the source, allowing X-mount.owner/group/mode...            │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78410                  │
+├───────────────┼────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│ liblastlog2-2 │ CVE-2026-76642 │          │              │                                   │               │ util-linux: util-linux: failed external mount helper still  │
+│               │                │          │              │                                   │               │ runs privileged X-mount post-hooks                          │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-76642                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78408 │          │              │                                   │               │ util-linux: util-linux: nsenter --join-cgroup leaks root    │
+│               │                │          │              │                                   │               │ cgroup migration authority                                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78408                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78409 │          │              │                                   │               │ util-linux: util-linux: X-mount.subdir detached-tree        │
+│               │                │          │              │                                   │               │ resolution can escape via intermediate symlinks             │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78409                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78410 │          │              │                                   │               │ util-linux: util-linux: restricted bind mounts do not pin   │
+│               │                │          │              │                                   │               │ the source, allowing X-mount.owner/group/mode...            │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78410                  │
+├───────────────┼────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│ libmount1     │ CVE-2026-76642 │          │              │                                   │               │ util-linux: util-linux: failed external mount helper still  │
+│               │                │          │              │                                   │               │ runs privileged X-mount post-hooks                          │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-76642                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78408 │          │              │                                   │               │ util-linux: util-linux: nsenter --join-cgroup leaks root    │
+│               │                │          │              │                                   │               │ cgroup migration authority                                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78408                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78409 │          │              │                                   │               │ util-linux: util-linux: X-mount.subdir detached-tree        │
+│               │                │          │              │                                   │               │ resolution can escape via intermediate symlinks             │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78409                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78410 │          │              │                                   │               │ util-linux: util-linux: restricted bind mounts do not pin   │
+│               │                │          │              │                                   │               │ the source, allowing X-mount.owner/group/mode...            │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78410                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ libncursesw6  │ CVE-2025-69720 │          │              │ 6.5+20250216-2                    │               │ ncurses: ncurses: Buffer overflow vulnerability may lead to │
+│               │                │          │              │                                   │               │ arbitrary code execution.                                   │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2025-69720                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ libsmartcols1 │ CVE-2026-76642 │          │              │ 2.41.5-0+deb13u1                  │               │ util-linux: util-linux: failed external mount helper still  │
+│               │                │          │              │                                   │               │ runs privileged X-mount post-hooks                          │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-76642                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78408 │          │              │                                   │               │ util-linux: util-linux: nsenter --join-cgroup leaks root    │
+│               │                │          │              │                                   │               │ cgroup migration authority                                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78408                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78409 │          │              │                                   │               │ util-linux: util-linux: X-mount.subdir detached-tree        │
+│               │                │          │              │                                   │               │ resolution can escape via intermediate symlinks             │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78409                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78410 │          │              │                                   │               │ util-linux: util-linux: restricted bind mounts do not pin   │
+│               │                │          │              │                                   │               │ the source, allowing X-mount.owner/group/mode...            │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78410                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ libsystemd0   │ CVE-2026-16742 │          │              │ 257.13-1~deb13u1                  │               │ systemd: systemd-homed: Local privilege escalation via      │
+│               │                │          │              │                                   │               │ missing home-record signature verification                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-16742                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ libtinfo6     │ CVE-2025-69720 │          │              │ 6.5+20250216-2                    │               │ ncurses: ncurses: Buffer overflow vulnerability may lead to │
+│               │                │          │              │                                   │               │ arbitrary code execution.                                   │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2025-69720                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ libudev1      │ CVE-2026-16742 │          │              │ 257.13-1~deb13u1                  │               │ systemd: systemd-homed: Local privilege escalation via      │
+│               │                │          │              │                                   │               │ missing home-record signature verification                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-16742                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ libuuid1      │ CVE-2026-76642 │          │              │ 2.41.5-0+deb13u1                  │               │ util-linux: util-linux: failed external mount helper still  │
+│               │                │          │              │                                   │               │ runs privileged X-mount post-hooks                          │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-76642                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78408 │          │              │                                   │               │ util-linux: util-linux: nsenter --join-cgroup leaks root    │
+│               │                │          │              │                                   │               │ cgroup migration authority                                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78408                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78409 │          │              │                                   │               │ util-linux: util-linux: X-mount.subdir detached-tree        │
+│               │                │          │              │                                   │               │ resolution can escape via intermediate symlinks             │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78409                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78410 │          │              │                                   │               │ util-linux: util-linux: restricted bind mounts do not pin   │
+│               │                │          │              │                                   │               │ the source, allowing X-mount.owner/group/mode...            │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78410                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ login         │ CVE-2026-76642 │          │              │ 1:4.16.0-2+really2.41.5-0+deb13u1 │               │ util-linux: util-linux: failed external mount helper still  │
+│               │                │          │              │                                   │               │ runs privileged X-mount post-hooks                          │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-76642                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78408 │          │              │                                   │               │ util-linux: util-linux: nsenter --join-cgroup leaks root    │
+│               │                │          │              │                                   │               │ cgroup migration authority                                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78408                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78409 │          │              │                                   │               │ util-linux: util-linux: X-mount.subdir detached-tree        │
+│               │                │          │              │                                   │               │ resolution can escape via intermediate symlinks             │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78409                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78410 │          │              │                                   │               │ util-linux: util-linux: restricted bind mounts do not pin   │
+│               │                │          │              │                                   │               │ the source, allowing X-mount.owner/group/mode...            │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78410                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ mount         │ CVE-2026-76642 │          │              │ 2.41.5-0+deb13u1                  │               │ util-linux: util-linux: failed external mount helper still  │
+│               │                │          │              │                                   │               │ runs privileged X-mount post-hooks                          │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-76642                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78408 │          │              │                                   │               │ util-linux: util-linux: nsenter --join-cgroup leaks root    │
+│               │                │          │              │                                   │               │ cgroup migration authority                                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78408                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78409 │          │              │                                   │               │ util-linux: util-linux: X-mount.subdir detached-tree        │
+│               │                │          │              │                                   │               │ resolution can escape via intermediate symlinks             │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78409                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78410 │          │              │                                   │               │ util-linux: util-linux: restricted bind mounts do not pin   │
+│               │                │          │              │                                   │               │ the source, allowing X-mount.owner/group/mode...            │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78410                  │
+├───────────────┼────────────────┤          │              ├───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ ncurses-base  │ CVE-2025-69720 │          │              │ 6.5+20250216-2                    │               │ ncurses: ncurses: Buffer overflow vulnerability may lead to │
+│               │                │          │              │                                   │               │ arbitrary code execution.                                   │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2025-69720                  │
+├───────────────┤                │          │              │                                   ├───────────────┤                                                             │
+│ ncurses-bin   │                │          │              │                                   │               │                                                             │
+│               │                │          │              │                                   │               │                                                             │
+│               │                │          │              │                                   │               │                                                             │
+├───────────────┼────────────────┤          ├──────────────┼───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ perl-base     │ CVE-2026-9538  │          │ fix_deferred │ 5.40.1-6+deb13u1                  │               │ perl-Archive-Tar: perl-Archive-Tar: Denial of Service via   │
+│               │                │          │              │                                   │               │ crafted tar header with large entry...                      │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-9538                   │
+├───────────────┼────────────────┤          ├──────────────┼───────────────────────────────────┼───────────────┼─────────────────────────────────────────────────────────────┤
+│ util-linux    │ CVE-2026-76642 │          │ affected     │ 2.41.5-0+deb13u1                  │               │ util-linux: util-linux: failed external mount helper still  │
+│               │                │          │              │                                   │               │ runs privileged X-mount post-hooks                          │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-76642                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78408 │          │              │                                   │               │ util-linux: util-linux: nsenter --join-cgroup leaks root    │
+│               │                │          │              │                                   │               │ cgroup migration authority                                  │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78408                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78409 │          │              │                                   │               │ util-linux: util-linux: X-mount.subdir detached-tree        │
+│               │                │          │              │                                   │               │ resolution can escape via intermediate symlinks             │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78409                  │
+│               ├────────────────┤          │              │                                   ├───────────────┼─────────────────────────────────────────────────────────────┤
+│               │ CVE-2026-78410 │          │              │                                   │               │ util-linux: util-linux: restricted bind mounts do not pin   │
+│               │                │          │              │                                   │               │ the source, allowing X-mount.owner/group/mode...            │
+│               │                │          │              │                                   │               │ https://avd.aquasec.com/nvd/cve-2026-78410                  │
+└───────────────┴────────────────┴──────────┴──────────────┴───────────────────────────────────┴───────────────┴─────────────────────────────────────────────────────────────┘
+Python (python-pkg)
+===================
+Total: 2 (HIGH: 2, CRITICAL: 0)
+┌─────────────────────┬───────────────┬──────────┬────────┬───────────────────┬───────────────┬─────────────────────────────────────────────────────────┐
+│       Library       │ Vulnerability │ Severity │ Status │ Installed Version │ Fixed Version │                          Title                          │
+├─────────────────────┼───────────────┼──────────┼────────┼───────────────────┼───────────────┼─────────────────────────────────────────────────────────┤
+│ gunicorn (METADATA) │ CVE-2024-1135 │ HIGH     │ fixed  │ 21.2.0            │ 22.0.0        │ python-gunicorn: HTTP Request Smuggling due to improper │
+│                     │               │          │        │                   │               │ validation of Transfer-Encoding headers                 │
+│                     │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2024-1135               │
+│                     ├───────────────┤          │        │                   │               ├─────────────────────────────────────────────────────────┤
+│                     │ CVE-2024-6827 │          │        │                   │               │ gunicorn: HTTP Request Smuggling in benoitc/gunicorn    │
+│                     │               │          │        │                   │               │ https://avd.aquasec.com/nvd/cve-2024-6827               │
+└─────────────────────┴───────────────┴──────────┴────────┴───────────────────┴───────────────┴─────────────────────────────────────────────────────────┘
+
+===== [8. Security Gate] List collected reports
+^[[36;1mfind reports -type f | sort^[[0m
+reports/image/sbom.cdx.json
+reports/image/trivy-image.json
+reports/image/trivy-image.sarif
+reports/sast/bandit.json
+reports/sast/bandit.sarif
+reports/sast/semgrep.json
+reports/sast/semgrep.sarif
+reports/sast/trivy-config.json
+reports/sca/pip-audit.json
+reports/sca/trivy-fs.json
+reports/secrets/gitleaks.json
+reports/tests/coverage.xml
+reports/tests/junit.xml
+
+===== [8. Security Gate] Evaluate gate policy (blocks push + deploy on failure)
+^[[36;1mpython "$APP_DIR/security/gate.py" \^[[0m
+^[[36;1m  --policy "$APP_DIR/security/gate-policy.toml" \^[[0m
+^[[36;1m  --reports reports --summary reports/gate-summary.md^[[0m
+## Security gate: FAILED - push and deploy are blocked
+| Stage | Tool | Findings | Blocking | Result | Note |
+|---|---|---:|---:|---|---|
+| SAST | semgrep | 5 | 4 | FAIL |  |
+| SAST | bandit | 2 | 1 | FAIL |  |
+| SAST | trivy_config | 0 | 0 | PASS |  |
+| SCA | pip_audit | 4 | 4 | FAIL |  |
+| SCA | trivy_fs | 2 | 2 | FAIL | H:2 |
+| Secret scan | gitleaks | 1 | 1 | FAIL |  |
+| Image scan | trivy | 167 | 2 | FAIL | H:46 M:58 L:61 U:2; 44 HIGH/CRITICAL have no upstream fix (reported, not blocking) |
+### Blocking findings: SAST / semgrep
+- ERROR s17-subprocess-shell-true at DevOps/17-devsecops/app/main.py:115
+- ERROR subprocess-injection at DevOps/17-devsecops/app/main.py:115
+- ERROR dangerous-subprocess-use at DevOps/17-devsecops/app/main.py:115
+- ERROR subprocess-shell-true at DevOps/17-devsecops/app/main.py:115
+### Blocking findings: SAST / bandit
+- HIGH/HIGH B602 subprocess_popen_with_shell_equals_true at app/main.py:115
+### Blocking findings: SCA / pip_audit
+- PYSEC-2026-1434 gunicorn 21.2.0 -> fix 22.0.0
+- PYSEC-2026-1433 gunicorn 21.2.0 -> fix 22.0.0
+- PYSEC-2026-1434 gunicorn 21.2.0 -> fix 22.0.0
+- PYSEC-2026-1433 gunicorn 21.2.0 -> fix 22.0.0
+### Blocking findings: SCA / trivy_fs
+- HIGH CVE-2024-1135 gunicorn 21.2.0 -> fixed in 22.0.0
+- HIGH CVE-2024-6827 gunicorn 21.2.0 -> fixed in 22.0.0
+### Blocking findings: Secret scan / gitleaks
+- hw-payment-live-key in DevOps/17-devsecops/app/config.py:5 (commit 3d214ab)
+### Blocking findings: Image scan / trivy
+- HIGH CVE-2024-1135 gunicorn 21.2.0 -> fixed in 22.0.0
+- HIGH CVE-2024-6827 gunicorn 21.2.0 -> fixed in 22.0.0
