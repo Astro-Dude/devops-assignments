@@ -7,5 +7,5 @@ data:
   index.html: |
     <html><body style="font-family:sans-serif">
     <h1>Session 20 GitOps demo</h1>
-    <p>Release: v1 - deployed by Argo CD from Git</p>
+    <p>Release: v2 - scaled to 3 replicas and nginx 1.28 via a git commit</p>
     </body></html>
