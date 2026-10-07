@@ -1,0 +1,67 @@
+$ kind get clusters
+hw-legacy
+hw-s20
+hw-s21
+
+$ kubectl get nodes -o wide
+NAME                   STATUS   ROLES           AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                       KERNEL-VERSION            CONTAINER-RUNTIME
+hw-s20-control-plane   Ready    control-plane   21m   v1.37.0   172.18.0.2    <none>        Debian GNU/Linux 13 (trixie)   7.0.12-linuxkit (arm64)   containerd://2.3.4
+
+$ helm list -A
+NAME          	NAMESPACE  	REVISION	UPDATED                             	STATUS  	CHART                       	APP VERSION
+alloy         	logging    	1       	2026-10-07 18:47:39.953791 +0530 IST	deployed	alloy-1.13.0                	v1.20.0    
+argocd        	argocd     	2       	2026-10-07 18:56:14.747994 +0530 IST	deployed	argo-cd-10.9.7              	v3.5.4     
+kps           	monitoring 	1       	2026-10-07 18:39:13.318876 +0530 IST	deployed	kube-prometheus-stack-92.1.0	v0.94.1    
+loki          	logging    	1       	2026-10-07 18:46:23.551486 +0530 IST	deployed	loki-7.3.0                  	3.6.12     
+metrics-server	kube-system	1       	2026-10-07 18:37:54.051526 +0530 IST	deployed	metrics-server-3.14.0       	0.9.0      
+
+$ kubectl get pods -n monitoring
+NAME                                      READY   STATUS    RESTARTS   AGE
+alertmanager-kps-alertmanager-0           2/2     Running   0          17m
+kps-grafana-57d586b6cb-js4jk              3/3     Running   0          17m
+kps-kube-state-metrics-5fff95b88d-2vtxv   1/1     Running   0          17m
+kps-operator-749b4b6c96-6dvn6             1/1     Running   0          17m
+kps-prometheus-node-exporter-dbfgh        1/1     Running   0          17m
+prometheus-kps-prometheus-0               2/2     Running   0          17m
+
+$ kubectl get pods -n logging
+NAME                     READY   STATUS    RESTARTS   AGE
+alloy-5df8f64b54-2gptt   2/2     Running   0          9m8s
+loki-0                   2/2     Running   0          10m
+
+$ kubectl get pods -n tracing
+NAME                      READY   STATUS    RESTARTS   AGE
+jaeger-5866f7d5d5-ccr85   1/1     Running   0          11m
+
+$ kubectl get pods -n argocd
+NAME                                 READY   STATUS      RESTARTS   AGE
+argocd-application-controller-0      1/1     Running     0          28s
+argocd-redis-57f7c59db7-l9fh9        1/1     Running     0          28s
+argocd-redis-secret-init-m4nlz       0/1     Completed   0          32s
+argocd-repo-server-79688f9fb-9jhhg   1/1     Running     0          29s
+argocd-server-cd478b94f-6s6m9        1/1     Running     0          28s
+
+$ kubectl get deploy,svc,servicemonitor,prometheusrule -n demo
+NAME                             READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/cpu-burner       0/0     0            0           11m
+deployment.apps/loadgen          1/1     1            1           11m
+deployment.apps/shop-inventory   1/1     1            1           11m
+deployment.apps/shop-web         2/2     2            2           11m
+
+NAME                     TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+service/shop-inventory   ClusterIP   10.96.165.85   <none>        8000/TCP         11m
+service/shop-web         NodePort    10.96.49.106   <none>        8000:31080/TCP   11m
+
+NAME                                        AGE
+servicemonitor.monitoring.coreos.com/shop   11m
+
+NAME                                               AGE
+prometheusrule.monitoring.coreos.com/shop-alerts   11m
+
+$ kubectl get pods -n demo -o wide
+NAME                             READY   STATUS    RESTARTS   AGE     IP            NODE                   NOMINATED NODE   READINESS GATES
+loadgen-6c9ff65b8f-d85p6         1/1     Running   0          11m     10.244.0.14   hw-s20-control-plane   <none>           <none>
+shop-inventory-b86c856bf-9gl94   1/1     Running   0          2m17s   10.244.0.20   hw-s20-control-plane   <none>           <none>
+shop-web-8499cdf9b-fqnqz         1/1     Running   0          2m17s   10.244.0.21   hw-s20-control-plane   <none>           <none>
+shop-web-8499cdf9b-k66b6         1/1     Running   0          2m10s   10.244.0.22   hw-s20-control-plane   <none>           <none>
+

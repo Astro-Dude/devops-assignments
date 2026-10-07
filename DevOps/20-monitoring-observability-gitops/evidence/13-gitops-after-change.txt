@@ -1,0 +1,39 @@
+$ git show --stat --format="%h %an %ad%n    %s" a489e38
+a489e38 astro-dude Wed Oct 7 19:13:04 2026 +0530
+    gitops demo: scale gitops-web to 3 replicas, bump nginx to 1.28, release v2 page
+
+ DevOps/20-monitoring-observability-gitops/gitops/app/configmap.yaml  | 2 +-
+ DevOps/20-monitoring-observability-gitops/gitops/app/deployment.yaml | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+$ kubectl get applications -n argocd -o wide
+NAME               SYNC STATUS   HEALTH STATUS   REVISION                                   PROJECT
+session20-gitops   Synced        Healthy         a11c0e9079ddcb32a840ea5c9fca009155c3622b   default
+
+$ kubectl get deploy,rs,pods -n gitops-demo -o wide
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES              SELECTOR
+deployment.apps/gitops-web   3/3     3            3           27m   web          nginx:1.28-alpine   app=gitops-web
+
+NAME                                    DESIRED   CURRENT   READY   AGE     CONTAINERS   IMAGES              SELECTOR
+replicaset.apps/gitops-web-797fd6ff77   0         0         0       27m     web          nginx:1.27-alpine   app=gitops-web,pod-template-hash=797fd6ff77
+replicaset.apps/gitops-web-b9f65cb48    3         3         3       9m51s   web          nginx:1.28-alpine   app=gitops-web,pod-template-hash=b9f65cb48
+
+NAME                             READY   STATUS    RESTARTS   AGE     IP            NODE                   NOMINATED NODE   READINESS GATES
+pod/gitops-web-b9f65cb48-2vgh7   1/1     Running   0          9m51s   10.244.0.34   hw-s20-control-plane   <none>           <none>
+pod/gitops-web-b9f65cb48-9mq65   1/1     Running   0          9m25s   10.244.0.35   hw-s20-control-plane   <none>           <none>
+pod/gitops-web-b9f65cb48-dj4b9   1/1     Running   0          9m24s   10.244.0.36   hw-s20-control-plane   <none>           <none>
+
+$ kubectl get application session20-gitops -n argocd -o jsonpath="{range .status.history[*]}{.id}  {.revision}  {.deployedAt}{\"\n\"}{end}"
+0  ecef9703fb5437d231adeffe998e3ac4fa41bb3b  2026-10-07T13:27:00Z
+1  a489e38fd1e7193556f2c8af42a77653da8a7932  2026-10-07T13:44:23Z
+
+$ kubectl run -n gitops-demo curl-check --rm -i --restart=Never --image=curlimages/curl:8.16.0 -- -s http://gitops-web 2>/dev/null | grep -v "^If you\|^All commands\|deleted"
+<html><body style="font-family:sans-serif">
+<h1>Session 20 GitOps demo</h1>
+<p>Release: v2 - scaled to 3 replicas and nginx 1.28 via a git commit</p>
+</body></html>
+<html><body style="font-family:sans-serif">
+<h1>Session 20 GitOps demo</h1>
+<p>Release: v2 - scaled to 3 replicas and nginx 1.28 via a git commit</p>
+</body></html>
+

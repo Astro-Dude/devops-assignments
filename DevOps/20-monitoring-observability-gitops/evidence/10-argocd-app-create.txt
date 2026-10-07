@@ -1,0 +1,10 @@
+$ kubectl get ns gitops-demo
+Error from server (NotFound): namespaces "gitops-demo" not found
+
+$ kubectl apply -f DevOps/20-monitoring-observability-gitops/gitops/argocd-application.yaml
+application.argoproj.io/session20-gitops created
+
+$ kubectl get applications -n argocd
+NAME               SYNC STATUS   HEALTH STATUS
+session20-gitops                 
+

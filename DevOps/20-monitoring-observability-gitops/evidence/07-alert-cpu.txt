@@ -1,0 +1,50 @@
+# 18:58:00 start CPU load
+$ kubectl scale deploy/cpu-burner -n demo --replicas=1
+deployment.apps/cpu-burner scaled
+
+$ kubectl rollout status deploy/cpu-burner -n demo --timeout=120s
+Waiting for deployment "cpu-burner" rollout to finish: 0 of 1 updated replicas are available...
+deployment "cpu-burner" successfully rolled out
+
+$ kubectl top pods -n demo
+NAME                             CPU(cores)   MEMORY(bytes)   
+cpu-burner-7b4d65998c-blrl4      36m          7Mi             
+loadgen-6c9ff65b8f-d85p6         10m          0Mi             
+shop-inventory-b86c856bf-9gl94   4m           39Mi            
+shop-web-8499cdf9b-fqnqz         497m         37Mi            
+shop-web-8499cdf9b-k66b6         499m         38Mi            
+
+PromQL> sum by (pod) (rate(container_cpu_usage_seconds_total{namespace="demo", container="app"}[1m])) / sum by (pod) (kube_pod_container_resource_limits{namespace="demo", container="app", resource="cpu"})
+  {pod="shop-web-8499cdf9b-fqnqz"}  =>  0.987685129164944
+  {pod="shop-inventory-b86c856bf-9gl94"}  =>  0.00901043291914958
+  {pod="shop-web-8499cdf9b-k66b6"}  =>  0.9904789892632359
+
+PromQL> sum by (pod) (rate(container_cpu_cfs_throttled_periods_total{namespace="demo", container="app"}[1m])) / sum by (pod) (rate(container_cpu_cfs_periods_total{namespace="demo", container="app"}[1m]))
+  {pod="shop-web-8499cdf9b-fqnqz"}  =>  0.9782135076252724
+  {pod="shop-inventory-b86c856bf-9gl94"}  =>  0
+  {pod="shop-web-8499cdf9b-k66b6"}  =>  0.9837587006960556
+
+PromQL> ALERTS{namespace="demo"}
+  ALERTS{alertname="CPUThrottlingHigh", alertstate="pending", container="app", instance="172.18.0.2:10250", namespace="demo", pod="shop-web-8499cdf9b-k66b6", service="kps-kubelet", severity="info"}  =>  1
+  ALERTS{alertname="CPUThrottlingHigh", alertstate="pending", container="app", instance="172.18.0.2:10250", namespace="demo", pod="shop-web-8499cdf9b-fqnqz", service="kps-kubelet", severity="info"}  =>  1
+  ALERTS{alertname="InfoInhibitor", alertstate="firing", namespace="demo", severity="none"}  =>  1
+  ALERTS{alertname="ShopHighCPU", alertstate="firing", namespace="demo", pod="shop-web-8499cdf9b-fqnqz", severity="warning"}  =>  1
+  ALERTS{alertname="ShopHighCPU", alertstate="firing", namespace="demo", pod="shop-web-8499cdf9b-k66b6", severity="warning"}  =>  1
+
+# Prometheus rule state, 19:00:29
+ShopHighCPU          state=firing    health=ok
+    -> FIRING   since 2026-10-07T13:29:00Z value=0.989 labels={'pod': 'shop-web-8499cdf9b-k66b6', 'severity': 'warning'}
+    -> FIRING   since 2026-10-07T13:29:00Z value=0.990 labels={'pod': 'shop-web-8499cdf9b-fqnqz', 'severity': 'warning'}
+ShopHighMemory       state=inactive  health=ok
+ShopInventoryDown    state=inactive  health=ok
+ShopHighErrorRate    state=inactive  health=ok
+
+$ curl -s localhost:19093/api/v2/alerts?filter=namespace=\"demo\" | python3 -c "import json,sys; [print(a[\"labels\"][\"alertname\"], a[\"labels\"].get(\"pod\"), a[\"status\"][\"state\"], a[\"startsAt\"], \"|\", a[\"annotations\"][\"summary\"]) for a in json.load(sys.stdin)]"
+ShopHighCPU shop-web-8499cdf9b-fqnqz active 2026-10-07T13:30:00.517Z | shop-web-8499cdf9b-fqnqz is using 99.03% of its CPU limit
+ShopHighCPU shop-web-8499cdf9b-k66b6 active 2026-10-07T13:30:00.517Z | shop-web-8499cdf9b-k66b6 is using 98.87% of its CPU limit
+InfoInhibitor None suppressed 2026-10-07T13:29:14.872Z | Info-level alert inhibition.
+
+# 19:02:11 stop CPU load
+$ kubectl scale deploy/cpu-burner -n demo --replicas=0
+deployment.apps/cpu-burner scaled
+

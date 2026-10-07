@@ -1,0 +1,75 @@
+# commit 5ee196c (adds gitops/app/feature-flags.yaml) pushed at 19:25:45
+TIME      APP-SYNC   SYNCED-REV  configmap/feature-flags
+19:25:53  Synced     a11c0e9     absent
+19:25:56  Synced     a11c0e9     absent
+19:25:59  Synced     a11c0e9     absent
+19:26:03  Synced     a11c0e9     absent
+19:26:06  Synced     a11c0e9     absent
+19:26:09  Synced     a11c0e9     absent
+19:26:12  Synced     a11c0e9     absent
+19:26:15  Synced     a11c0e9     absent
+19:26:18  Synced     a11c0e9     absent
+19:26:21  Synced     a11c0e9     absent
+19:26:24  Synced     a11c0e9     absent
+19:26:27  Synced     a11c0e9     absent
+19:26:31  Synced     a11c0e9     absent
+19:26:34  Synced     a11c0e9     absent
+19:26:37  Synced     a11c0e9     absent
+19:26:40  Synced     a11c0e9     absent
+19:26:43  Synced     a11c0e9     absent
+19:26:46  Synced     a11c0e9     absent
+19:26:49  Synced     a11c0e9     absent
+19:26:52  Synced     a11c0e9     absent
+19:26:55  Synced     a11c0e9     absent
+19:26:59  Synced     a11c0e9     absent
+19:27:02  Synced     a11c0e9     absent
+19:27:05  Synced     a11c0e9     absent
+19:27:08  Synced     a11c0e9     absent
+19:27:11  Synced     a11c0e9     absent
+19:27:14  Synced     e0eb219     present
+
+$ kubectl get cm -n gitops-demo
+NAME                 DATA   AGE
+feature-flags        1      2s
+gitops-web-content   1      30m
+kube-root-ca.crt     1      30m
+
+# commit 611eb34 (git rm gitops/app/feature-flags.yaml) pushed at 19:27:34
+TIME      APP-SYNC   SYNCED-REV  configmap/feature-flags
+19:27:40  Synced     e0eb219     present
+19:27:43  Synced     e0eb219     present
+19:27:46  Synced     e0eb219     present
+19:27:49  Synced     e0eb219     present
+19:27:52  Synced     e0eb219     present
+19:27:55  Synced     e0eb219     present
+19:27:58  Synced     e0eb219     present
+19:28:02  Synced     e0eb219     present
+19:28:05  Synced     e0eb219     present
+19:28:08  Synced     e0eb219     present
+19:28:11  Synced     e0eb219     present
+19:28:14  Synced     e0eb219     present
+19:28:17  Synced     e0eb219     present
+19:28:20  Synced     e0eb219     present
+19:28:24  Synced     e0eb219     present
+19:28:27  Synced     e0eb219     present
+19:28:30  Synced     e0eb219     present
+19:28:33  Synced     e0eb219     present
+19:28:36  Synced     e0eb219     present
+19:28:39  Synced     e0eb219     present
+19:28:43  Synced     e0eb219     present
+19:28:46  Synced     e0eb219     present
+19:28:49  Synced     e0eb219     present
+19:28:52  Synced     e0eb219     present
+19:28:55  Synced     611eb34     absent
+
+$ kubectl get cm -n gitops-demo
+NAME                 DATA   AGE
+gitops-web-content   1      31m
+kube-root-ca.crt     1      31m
+
+$ kubectl get application session20-gitops -n argocd -o jsonpath='{range .status.operationState.syncResult.resources[*]}{.kind}/{.name}: {.status} {.message}{"\n"}{end}'
+ConfigMap/feature-flags: Pruned pruned
+Namespace/gitops-demo: Synced namespace/gitops-demo unchanged
+ConfigMap/gitops-web-content: Synced configmap/gitops-web-content unchanged
+Service/gitops-web: Synced service/gitops-web unchanged
+Deployment/gitops-web: Synced deployment.apps/gitops-web unchanged

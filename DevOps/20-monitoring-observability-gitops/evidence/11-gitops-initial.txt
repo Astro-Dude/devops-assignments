@@ -1,0 +1,39 @@
+$ kubectl get applications -n argocd -o wide
+NAME               SYNC STATUS   HEALTH STATUS   REVISION                                   PROJECT
+session20-gitops   Synced        Healthy         ecef9703fb5437d231adeffe998e3ac4fa41bb3b   default
+
+$ kubectl get application session20-gitops -n argocd -o jsonpath="{.status.sync.revision}{\"\n\"}{.spec.source.repoURL} {.spec.source.path}{\"\n\"}{.spec.syncPolicy}{\"\n\"}"
+ecef9703fb5437d231adeffe998e3ac4fa41bb3b
+https://github.com/Astro-Dude/devops-assignments.git DevOps/20-monitoring-observability-gitops/gitops/app
+{"automated":{"prune":true,"selfHeal":true},"syncOptions":["CreateNamespace=true"]}
+
+$ kubectl get all,cm -n gitops-demo
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/gitops-web-797fd6ff77-cggdf   1/1     Running   0          67s
+pod/gitops-web-797fd6ff77-kpr8f   1/1     Running   0          67s
+
+NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+service/gitops-web   ClusterIP   10.96.68.13   <none>        80/TCP    67s
+
+NAME                         READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/gitops-web   2/2     2            2           67s
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/gitops-web-797fd6ff77   2         2         2       67s
+
+NAME                           DATA   AGE
+configmap/gitops-web-content   1      67s
+configmap/kube-root-ca.crt     1      67s
+
+$ kubectl get deploy gitops-web -n gitops-demo -o jsonpath="replicas={.spec.replicas} image={.spec.template.spec.containers[0].image}{\"\n\"}"
+replicas=2 image=nginx:1.27-alpine
+
+$ kubectl run -n gitops-demo curl-check --rm -i --restart=Never --image=curlimages/curl:8.16.0 -- -s http://gitops-web
+<html><body style="font-family:sans-serif">
+<h1>Session 20 GitOps demo</h1>
+<p>Release: v1 - deployed by Argo CD from Git</p>
+</body></html>
+All commands and output from this session will be recorded in container logs, including credentials and sensitive information passed through the command prompt.
+If you don't see a command prompt, try pressing enter.
+pod "curl-check" deleted from gitops-demo namespace
+

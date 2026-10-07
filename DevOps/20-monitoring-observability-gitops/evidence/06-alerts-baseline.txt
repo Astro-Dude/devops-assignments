@@ -1,0 +1,10 @@
+$ kubectl get prometheusrule -n demo shop-alerts
+NAME          AGE
+shop-alerts   13m
+
+# Alert rules as loaded by Prometheus (GET /api/v1/rules), 18:57:57
+ShopHighCPU          state=inactive  health=ok
+ShopHighMemory       state=inactive  health=ok
+ShopInventoryDown    state=inactive  health=ok
+ShopHighErrorRate    state=inactive  health=ok
+

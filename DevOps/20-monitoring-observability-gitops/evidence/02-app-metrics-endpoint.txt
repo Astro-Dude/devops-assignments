@@ -1,0 +1,26 @@
+$ curl -s http://localhost:31080/
+{"pod":"shop-web-8499cdf9b-k66b6","service":"shop-web","version":"1.0.0"}
+
+$ curl -s http://localhost:31080/order
+{"item":"keyboard","order":"placed","stock":3}
+
+$ curl -s http://localhost:31080/metrics | grep -E "^(# (HELP|TYPE) )?(http_requests_total|shop_orders_total|app_info|http_requests_in_flight)" ; curl -s http://localhost:31080/metrics | grep -E "^http_request_duration_seconds_(bucket|count|sum)\{app=\"shop-web\",le=\"(0.1|0.25|\+Inf)\",path=\"/order\"" 
+# HELP http_requests_total HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{app="shop-web",method="GET",path="/",status="200"} 172.0
+http_requests_total{app="shop-web",method="GET",path="/order",status="200"} 171.0
+http_requests_total{app="shop-web",method="GET",path="/order",status="502"} 10.0
+# HELP shop_orders_total Orders placed
+# TYPE shop_orders_total counter
+shop_orders_total{result="ok"} 171.0
+shop_orders_total{result="failed"} 10.0
+# HELP http_requests_in_flight Requests currently being served
+# TYPE http_requests_in_flight gauge
+http_requests_in_flight{app="shop-web"} 1.0
+# HELP app_info Static build info
+# TYPE app_info gauge
+app_info{app="shop-web",version="1.0.0"} 1.0
+http_request_duration_seconds_bucket{app="shop-web",le="0.1",path="/order"} 111.0
+http_request_duration_seconds_bucket{app="shop-web",le="0.25",path="/order"} 179.0
+http_request_duration_seconds_bucket{app="shop-web",le="+Inf",path="/order"} 179.0
+

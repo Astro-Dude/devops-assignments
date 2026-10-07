@@ -1,0 +1,27 @@
+$ curl -s localhost:19686/api/v3/services
+{"services":["shop-inventory","shop-web","jaeger"]}
+GET /api/v3/traces?query.service_name=shop-web&query.operation_name=GET /order&query.search_depth=2
+trace d92c61f8795a40b7d890b6555199a70a  (4 spans)
+  shop-web        GET /order                       70.7 ms  200
+    shop-web        GET                              69.8 ms  200
+      shop-inventory  GET /check                       68.3 ms  200
+        shop-inventory  db.query                         67.5 ms  SELECT stock FROM inventory WHERE item = $1
+
+trace 4ec71c41f95a1355341ef9b56f6ac12f  (4 spans)
+  shop-web        GET /order                       51.3 ms  200
+    shop-web        GET                              50.4 ms  200
+      shop-inventory  GET /check                       48.2 ms  200
+        shop-inventory  db.query                         46.2 ms  SELECT stock FROM inventory WHERE item = $1
+
+# Log -> trace correlation: take the trace_id of an inventory ERROR log line from Loki ...
+LogQL> {namespace="demo"} |= "a7bf57d2649de813cab134b3c286bae1"
+  19:09:49 shop-web-8499cdf9b-fqnqz  {"ts": "2026-10-07T13:39:49Z", "level": "ERROR", "service": "shop-web", "method": "GET", "path": "/order", "status": 502, "duration_ms": 116.2, "trace_id": "a7bf57d2649de813cab134b3c286bae1"}
+  19:09:49 shop-web-8499cdf9b-fqnqz  {"level": "ERROR", "service": "shop-web", "msg": "inventory check failed", "item": "keyboard", "upstream_status": 500, "trace_id": "a7bf57d2649de813cab134b3c286bae1"}
+  19:09:49 shop-inventory-b86c856bf-z5fgp  {"ts": "2026-10-07T13:39:49Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 113.3, "trace_id": "a7bf57d2649de813cab134b3c286bae1"}
+
+# ... and open that exact request in Jaeger:
+GET /api/v3/traces/a7bf57d2649de813cab134b3c286bae1
+  shop-web        GET /order        116.7 ms  status=2 http=502
+  shop-web        GET               115.6 ms  status=2 http=500
+  shop-inventory  GET /check        113.7 ms  status=2 http=500
+  shop-inventory  db.query          113.1 ms  status=STATUS_CODE_UNSET http=

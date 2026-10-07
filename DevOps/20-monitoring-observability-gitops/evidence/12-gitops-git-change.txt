@@ -1,0 +1,21 @@
+# pushed commit a489e38 to origin/main at 19:13:31; polling every 5s (no kubectl apply, no argocd CLI, no manual sync)
+TIME      APP-SYNC  APP-HEALTH   SYNCED-REVISION  DEPLOY(ready/spec)  IMAGE
+19:13:39  Synced    Healthy      e457c61          2/2                 nginx:1.27-alpine
+19:13:44  Synced    Healthy      e457c61          2/2                 nginx:1.27-alpine
+19:13:49  Synced    Healthy      e457c61          2/2                 nginx:1.27-alpine
+19:13:54  Synced    Healthy      e457c61          2/2                 nginx:1.27-alpine
+19:13:59  Synced    Healthy      e457c61          2/2                 nginx:1.27-alpine
+19:14:05  Synced    Healthy      e457c61          2/2                 nginx:1.27-alpine
+19:14:10  Synced    Healthy      e457c61          2/2                 nginx:1.27-alpine
+19:14:15  Synced    Healthy      e457c61          2/2                 nginx:1.27-alpine
+19:14:20  Synced    Healthy      e457c61          2/2                 nginx:1.27-alpine
+19:14:25  Synced    Progressing  a489e38          2/3                 nginx:1.28-alpine
+19:14:30  Synced    Progressing  a489e38          2/3                 nginx:1.28-alpine
+19:14:35  Synced    Progressing  a489e38          3/3                 nginx:1.28-alpine
+19:14:40  Synced    Progressing  a489e38          3/3                 nginx:1.28-alpine
+19:14:45  Synced    Progressing  a489e38          3/3                 nginx:1.28-alpine
+19:14:51  Synced    Progressing  a489e38          3/3                 nginx:1.28-alpine
+19:14:56  Synced    Healthy      a489e38          3/3                 nginx:1.28-alpine
+19:15:01  Synced    Healthy      a489e38          3/3                 nginx:1.28-alpine
+19:15:06  Synced    Healthy      a489e38          3/3                 nginx:1.28-alpine
+# (polling continued; trimmed here. Later samples stayed Synced / Healthy / 3/3 / nginx:1.28-alpine; only the synced revision advanced (e.g. a11c0e9) as other folders of the repo received commits that do not touch this path)

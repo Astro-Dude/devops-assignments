@@ -1,0 +1,78 @@
+# 19:02:11 simulate an outage of the backend
+$ kubectl scale deploy/shop-inventory -n demo --replicas=0
+deployment.apps/shop-inventory scaled
+
+$ kubectl get pods -n demo
+NAME                             READY   STATUS        RESTARTS   AGE
+cpu-burner-7b4d65998c-blrl4      1/1     Terminating   0          4m10s
+loadgen-6c9ff65b8f-d85p6         1/1     Running       0          17m
+shop-inventory-b86c856bf-9gl94   1/1     Terminating   0          7m40s
+shop-web-8499cdf9b-fqnqz         1/1     Running       0          7m40s
+shop-web-8499cdf9b-k66b6         1/1     Running       0          7m33s
+
+$ for i in 1 2 3; do curl -s -w " HTTP %{http_code}\n" http://localhost:31080/order | tail -c 200; done
+{"item":"laptop","order":"placed","stock":14}
+ HTTP 200
+{"item":"keyboard","order":"placed","stock":40}
+ HTTP 200
+{"item":"laptop","order":"placed","stock":7}
+ HTTP 200
+
+$ for i in 1 2 3; do curl -s -w " HTTP %{http_code}\n" http://localhost:31080/order | tail -c 120; done
+unable to complete your request. Either the server is overloaded or there is an error in the application.</p>
+ HTTP 500
+unable to complete your request. Either the server is overloaded or there is an error in the application.</p>
+ HTTP 500
+unable to complete your request. Either the server is overloaded or there is an error in the application.</p>
+ HTTP 500
+
+$ kubectl logs -n demo deploy/shop-web --tail=200 | grep -m2 ERROR
+Found 2 pods, using pod/shop-web-8499cdf9b-fqnqz
+{"ts": "2026-10-07T13:34:47Z", "level": "ERROR", "service": "shop-web", "method": "GET", "path": "/order", "status": 500, "duration_ms": 3.5, "trace_id": "356170efc178b04a49943c85c5634298"}
+[2026-10-07 13:34:47,823] ERROR in app: Exception on /order [GET]
+
+PromQL> up{namespace="demo"}
+  up{container="app", endpoint="http", instance="10.244.0.21:8000", job="shop-web", namespace="demo", pod="shop-web-8499cdf9b-fqnqz", service="shop-web"}  =>  1
+  up{container="app", endpoint="http", instance="10.244.0.22:8000", job="shop-web", namespace="demo", pod="shop-web-8499cdf9b-k66b6", service="shop-web"}  =>  1
+
+PromQL> absent(up{namespace="demo", job="shop-inventory"} == 1)
+  {}  =>  1
+
+PromQL> kube_deployment_status_replicas_available{namespace="demo", deployment="shop-inventory"}
+  kube_deployment_status_replicas_available{container="kube-state-metrics", deployment="shop-inventory", endpoint="http", instance="10.244.0.7:8080", job="kube-state-metrics", namespace="demo", pod="kps-kube-state-metrics-5fff95b88d-2vtxv", service="kps-kube-state-metrics"}  =>  0
+
+PromQL> sum(rate(http_requests_total{namespace="demo", job="shop-web", path="/order", status=~"5.."}[1m])) / sum(rate(http_requests_total{namespace="demo", job="shop-web", path="/order"}[1m]))
+  {}  =>  1
+
+# Prometheus rule state, 19:04:48
+ShopHighCPU          state=inactive  health=ok
+ShopHighMemory       state=inactive  health=ok
+ShopInventoryDown    state=firing    health=ok
+    -> FIRING   since 2026-10-07T13:32:30Z value=1.000 labels={'severity': 'critical'}
+ShopHighErrorRate    state=firing    health=ok
+    -> FIRING   since 2026-10-07T13:33:15Z value=1.000 labels={'severity': 'critical'}
+
+$ curl -s "localhost:19093/api/v2/alerts?filter=alertname=~\"Shop.*\"" | python3 -c "import json,sys; [print(a[\"labels\"][\"alertname\"], a[\"labels\"].get(\"severity\"), a[\"status\"][\"state\"], a[\"startsAt\"], \"|\", a[\"annotations\"][\"summary\"]) for a in json.load(sys.stdin)]"
+ShopHighErrorRate critical active 2026-10-07T13:34:15.517Z | 100% of /order requests are failing
+ShopInventoryDown critical active 2026-10-07T13:33:00.517Z | No healthy shop-inventory instance is up
+
+# 19:08:11 restore the backend
+$ kubectl scale deploy/shop-inventory -n demo --replicas=1
+deployment.apps/shop-inventory scaled
+
+$ kubectl rollout status deploy/shop-inventory -n demo
+Waiting for deployment "shop-inventory" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "shop-inventory" rollout to finish: 0 of 1 updated replicas are available...
+deployment "shop-inventory" successfully rolled out
+
+# Prometheus rule state after recovery, 19:09:19
+ShopHighCPU          state=inactive  health=ok
+ShopHighMemory       state=inactive  health=ok
+ShopInventoryDown    state=inactive  health=ok
+ShopHighErrorRate    state=inactive  health=ok
+
+PromQL> up{namespace="demo"}
+  up{container="app", endpoint="http", instance="10.244.0.21:8000", job="shop-web", namespace="demo", pod="shop-web-8499cdf9b-fqnqz", service="shop-web"}  =>  1
+  up{container="app", endpoint="http", instance="10.244.0.22:8000", job="shop-web", namespace="demo", pod="shop-web-8499cdf9b-k66b6", service="shop-web"}  =>  1
+  up{container="app", endpoint="http", instance="10.244.0.32:8000", job="shop-inventory", namespace="demo", pod="shop-inventory-b86c856bf-z5fgp", service="shop-inventory"}  =>  1
+

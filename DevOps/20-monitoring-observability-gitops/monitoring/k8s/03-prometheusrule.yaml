@@ -37,6 +37,7 @@ spec:
           for: 30s
           labels:
             severity: critical
+            namespace: demo   # absent() returns no labels, so attach the namespace here
           annotations:
             summary: "No healthy shop-inventory instance is up"
         # Golden signal: share of /order requests answered with 5xx.
@@ -49,5 +50,6 @@ spec:
           for: 1m
           labels:
             severity: critical
+            namespace: demo
           annotations:
             summary: "{{ $value | humanizePercentage }} of /order requests are failing"

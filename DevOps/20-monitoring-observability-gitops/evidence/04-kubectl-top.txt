@@ -1,0 +1,63 @@
+$ kubectl top nodes
+NAME                   CPU(cores)   CPU(%)   MEMORY(bytes)   MEMORY(%)   
+hw-s20-control-plane   539m         3%       3833Mi          24%         
+
+$ kubectl top pods -n demo --containers
+POD                              NAME   CPU(cores)   MEMORY(bytes)   
+loadgen-6c9ff65b8f-d85p6         curl   21m          1Mi             
+shop-inventory-b86c856bf-9gl94   app    6m           39Mi            
+shop-web-8499cdf9b-fqnqz         app    7m           36Mi            
+shop-web-8499cdf9b-k66b6         app    6m           36Mi            
+
+$ kubectl top pods -A --sort-by=memory
+NAMESPACE            NAME                                           CPU(cores)   MEMORY(bytes)   
+kube-system          kube-apiserver-hw-s20-control-plane            250m         920Mi           
+monitoring           kps-grafana-57d586b6cb-js4jk                   16m          643Mi           
+monitoring           prometheus-kps-prometheus-0                    28m          292Mi           
+argocd               argocd-application-controller-0                32m          156Mi           
+logging              loki-0                                         5m           122Mi           
+kube-system          etcd-hw-s20-control-plane                      25m          120Mi           
+logging              alloy-5df8f64b54-2gptt                         9m           99Mi            
+kube-system          kube-controller-manager-hw-s20-control-plane   12m          99Mi            
+monitoring           alertmanager-kps-alertmanager-0                2m           56Mi            
+argocd               argocd-server-cd478b94f-6s6m9                  2m           49Mi            
+demo                 shop-inventory-b86c856bf-9gl94                 6m           39Mi            
+monitoring           kps-operator-749b4b6c96-6dvn6                  4m           37Mi            
+kube-system          coredns-559f6c778d-wqctl                       6m           36Mi            
+demo                 shop-web-8499cdf9b-k66b6                       6m           36Mi            
+demo                 shop-web-8499cdf9b-fqnqz                       7m           36Mi            
+argocd               argocd-repo-server-79688f9fb-9jhhg             30m          30Mi            
+monitoring           kps-kube-state-metrics-5fff95b88d-2vtxv        2m           29Mi            
+kube-system          kube-scheduler-hw-s20-control-plane            9m           29Mi            
+kube-system          metrics-server-86bcfb79d-lf5rw                 4m           28Mi            
+kube-system          kube-proxy-lwzf2                               5m           25Mi            
+tracing              jaeger-5866f7d5d5-ccr85                        2m           25Mi            
+kube-system          kindnet-fg29s                                  2m           21Mi            
+kube-system          coredns-559f6c778d-tmlxj                       5m           21Mi            
+monitoring           kps-prometheus-node-exporter-dbfgh             5m           20Mi            
+local-path-storage   local-path-provisioner-75f7fc7dc5-6glsq        1m           13Mi            
+argocd               argocd-redis-57f7c59db7-l9fh9                  2m           5Mi             
+demo                 loadgen-6c9ff65b8f-d85p6                       21m          1Mi             
+
+Name:             shop-web-8499cdf9b-fqnqz
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  192Mi
+    Requests:
+      cpu:      50m
+      memory:   64Mi
+    Liveness:   http-get http://:http/healthz delay=0s timeout=1s period=10s successThreshold=1 failureThreshold=3
+    Readiness:  http-get http://:http/readyz delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=3
+Name:             shop-web-8499cdf9b-k66b6
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  192Mi
+    Requests:
+      cpu:      50m
+      memory:   64Mi
+    Liveness:   http-get http://:http/healthz delay=0s timeout=1s period=10s successThreshold=1 failureThreshold=3
+    Readiness:  http-get http://:http/readyz delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=3

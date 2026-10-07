@@ -1,0 +1,112 @@
+# Instant queries against Prometheus (kubectl port-forward svc/kps-prometheus 19090:9090), 2026-10-07 18:57:19 IST
+
+## Application metrics
+PromQL> sum by (job, path) (rate(http_requests_total{namespace="demo"}[1m]))
+  {job="shop-web", path="/"}  =>  2.577750617887504
+  {job="shop-web", path="/order"}  =>  2.5555279018490946
+  {job="shop-inventory", path="/check"}  =>  2.4888888888888885
+
+PromQL> sum by (status) (rate(http_requests_total{namespace="demo", job="shop-web", path="/order"}[5m]))
+  {status="200"}  =>  1.1037724266628102
+  {status="502"}  =>  0.06245231342292484
+
+PromQL> sum(rate(http_requests_total{namespace="demo", job="shop-web", path="/order", status=~"5.."}[5m])) / sum(rate(http_requests_total{namespace="demo", job="shop-web", path="/order"}[5m]))
+  {}  =>  0.05355088947370837
+
+PromQL> histogram_quantile(0.95, sum by (le, job, path) (rate(http_request_duration_seconds_bucket{namespace="demo"}[5m])))
+  {job="shop-web", path="/"}  =>  0.0095
+  {job="shop-web", path="/order"}  =>  0.23125384281346537
+  {job="shop-inventory", path="/check"}  =>  0.23056521739130434
+
+PromQL> sum by (result) (increase(shop_orders_total{namespace="demo"}[10m]))
+  {result="ok"}  =>  331.5222310697007
+  {result="failed"}  =>  18.757846980209614
+
+## CPU utilisation
+PromQL> sum by (pod) (rate(container_cpu_usage_seconds_total{namespace="demo", container!=""}[2m]))
+  {pod="loadgen-6c9ff65b8f-d85p6"}  =>  0.02150337764668269
+  {pod="shop-web-8499cdf9b-fqnqz"}  =>  0.00645126620541412
+  {pod="shop-inventory-b86c856bf-9gl94"}  =>  0.005789480326579746
+  {pod="shop-web-8499cdf9b-k66b6"}  =>  0.006684946738277953
+
+PromQL> sum by (pod) (rate(container_cpu_usage_seconds_total{namespace="demo", container="app"}[2m])) / sum by (pod) (kube_pod_container_resource_limits{namespace="demo", container="app", resource="cpu"})
+  {pod="shop-web-8499cdf9b-fqnqz"}  =>  0.012902532410828239
+  {pod="shop-inventory-b86c856bf-9gl94"}  =>  0.011578960653159493
+  {pod="shop-web-8499cdf9b-k66b6"}  =>  0.013369893476555907
+
+PromQL> 1 - avg(rate(node_cpu_seconds_total{mode="idle"}[2m]))
+  {}  =>  0.11522331958716492
+
+PromQL> topk(5, sum by (namespace) (rate(container_cpu_usage_seconds_total{container!=""}[2m])))
+  {namespace="kube-system"}  =>  0.2422336354260934
+  {namespace="monitoring"}  =>  0.052588220158084634
+  {namespace="demo"}  =>  0.04042907091695451
+  {namespace="logging"}  =>  0.033366651914464335
+  {namespace="argocd"}  =>  0.02396696746631979
+
+## Memory utilisation
+PromQL> sum by (pod) (container_memory_working_set_bytes{namespace="demo", container!=""})
+  {pod="loadgen-6c9ff65b8f-d85p6"}  =>  2002944
+  {pod="shop-web-8499cdf9b-fqnqz"}  =>  37900288
+  {pod="shop-inventory-b86c856bf-9gl94"}  =>  41783296
+  {pod="shop-web-8499cdf9b-k66b6"}  =>  38563840
+
+PromQL> sum by (pod) (container_memory_working_set_bytes{namespace="demo", container="app"}) / sum by (pod) (kube_pod_container_resource_limits{namespace="demo", container="app", resource="memory"})
+  {pod="shop-web-8499cdf9b-fqnqz"}  =>  0.18825276692708334
+  {pod="shop-inventory-b86c856bf-9gl94"}  =>  0.20753987630208334
+  {pod="shop-web-8499cdf9b-k66b6"}  =>  0.19154866536458334
+
+PromQL> 1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes
+  {container="node-exporter", endpoint="http-metrics", instance="172.18.0.2:9100", job="node-exporter", namespace="monitoring", pod="kps-prometheus-node-exporter-dbfgh", service="kps-prometheus-node-exporter"}  =>  0.5549143566505836
+
+PromQL> topk(5, sum by (namespace) (container_memory_working_set_bytes{container!=""}))
+  {namespace="kube-system"}  =>  1370370048
+  {namespace="monitoring"}  =>  1135927296
+  {namespace="argocd"}  =>  252784640
+  {namespace="logging"}  =>  235024384
+  {namespace="demo"}  =>  120250368
+
+## Application health
+PromQL> up{namespace="demo"}
+  up{container="app", endpoint="http", instance="10.244.0.21:8000", job="shop-web", namespace="demo", pod="shop-web-8499cdf9b-fqnqz", service="shop-web"}  =>  1
+  up{container="app", endpoint="http", instance="10.244.0.20:8000", job="shop-inventory", namespace="demo", pod="shop-inventory-b86c856bf-9gl94", service="shop-inventory"}  =>  1
+  up{container="app", endpoint="http", instance="10.244.0.22:8000", job="shop-web", namespace="demo", pod="shop-web-8499cdf9b-k66b6", service="shop-web"}  =>  1
+
+PromQL> kube_pod_container_status_ready{namespace="demo"}
+  kube_pod_container_status_ready{container="curl", endpoint="http", instance="10.244.0.7:8080", job="kube-state-metrics", namespace="demo", pod="loadgen-6c9ff65b8f-d85p6", service="kps-kube-state-metrics", uid="65c0d9cb-8022-47e8-afd8-f5110611fb7b"}  =>  1
+  kube_pod_container_status_ready{container="app", endpoint="http", instance="10.244.0.7:8080", job="kube-state-metrics", namespace="demo", pod="shop-web-8499cdf9b-fqnqz", service="kps-kube-state-metrics", uid="18fc6630-fd7b-42bd-af43-d2e69e192126"}  =>  1
+  kube_pod_container_status_ready{container="app", endpoint="http", instance="10.244.0.7:8080", job="kube-state-metrics", namespace="demo", pod="shop-web-8499cdf9b-k66b6", service="kps-kube-state-metrics", uid="ba78919e-d29a-4e9a-9a0d-b195e4490fde"}  =>  1
+  kube_pod_container_status_ready{container="app", endpoint="http", instance="10.244.0.7:8080", job="kube-state-metrics", namespace="demo", pod="shop-inventory-b86c856bf-9gl94", service="kps-kube-state-metrics", uid="d7ddbe8f-2572-4749-a6d9-bc16b1bfdc58"}  =>  1
+
+PromQL> kube_deployment_status_replicas_available{namespace="demo"}
+  kube_deployment_status_replicas_available{container="kube-state-metrics", deployment="cpu-burner", endpoint="http", instance="10.244.0.7:8080", job="kube-state-metrics", namespace="demo", pod="kps-kube-state-metrics-5fff95b88d-2vtxv", service="kps-kube-state-metrics"}  =>  0
+  kube_deployment_status_replicas_available{container="kube-state-metrics", deployment="shop-inventory", endpoint="http", instance="10.244.0.7:8080", job="kube-state-metrics", namespace="demo", pod="kps-kube-state-metrics-5fff95b88d-2vtxv", service="kps-kube-state-metrics"}  =>  1
+  kube_deployment_status_replicas_available{container="kube-state-metrics", deployment="loadgen", endpoint="http", instance="10.244.0.7:8080", job="kube-state-metrics", namespace="demo", pod="kps-kube-state-metrics-5fff95b88d-2vtxv", service="kps-kube-state-metrics"}  =>  1
+  kube_deployment_status_replicas_available{container="kube-state-metrics", deployment="shop-web", endpoint="http", instance="10.244.0.7:8080", job="kube-state-metrics", namespace="demo", pod="kps-kube-state-metrics-5fff95b88d-2vtxv", service="kps-kube-state-metrics"}  =>  2
+
+PromQL> sum by (pod, probe_type, result) (increase(prober_probe_total{namespace="demo"}[5m]))
+  {pod="shop-inventory-6cdf57b75d-9mm78", probe_type="Liveness", result="successful"}  =>  4.5
+  {pod="shop-inventory-6cdf57b75d-9mm78", probe_type="Readiness", result="failed"}  =>  0
+  {pod="shop-inventory-6cdf57b75d-9mm78", probe_type="Readiness", result="successful"}  =>  15
+  {pod="shop-web-7484b596b5-2jmfx", probe_type="Liveness", result="successful"}  =>  4.5
+  {pod="shop-web-7484b596b5-2jmfx", probe_type="Readiness", result="failed"}  =>  0
+  {pod="shop-web-7484b596b5-2jmfx", probe_type="Readiness", result="successful"}  =>  15
+  {pod="shop-web-7484b596b5-4g94p", probe_type="Liveness", result="successful"}  =>  4.5
+  {pod="shop-web-7484b596b5-4g94p", probe_type="Readiness", result="failed"}  =>  0
+  {pod="shop-web-7484b596b5-4g94p", probe_type="Readiness", result="successful"}  =>  15
+  {pod="shop-inventory-b86c856bf-9gl94", probe_type="Liveness", result="successful"}  =>  16.289603597357317
+  {pod="shop-inventory-b86c856bf-9gl94", probe_type="Readiness", result="failed"}  =>  0
+  {pod="shop-inventory-b86c856bf-9gl94", probe_type="Readiness", result="successful"}  =>  32.579207194714634
+  {pod="shop-web-8499cdf9b-fqnqz", probe_type="Liveness", result="successful"}  =>  16.289603597357317
+  {pod="shop-web-8499cdf9b-fqnqz", probe_type="Readiness", result="failed"}  =>  0
+  {pod="shop-web-8499cdf9b-fqnqz", probe_type="Readiness", result="successful"}  =>  32.579207194714634
+  {pod="shop-web-8499cdf9b-k66b6", probe_type="Readiness", result="failed"}  =>  0
+  {pod="shop-web-8499cdf9b-k66b6", probe_type="Readiness", result="successful"}  =>  32.07920719471463
+  {pod="shop-web-8499cdf9b-k66b6", probe_type="Liveness", result="successful"}  =>  14.241840886064177
+
+PromQL> sum by (pod) (kube_pod_container_status_restarts_total{namespace="demo"})
+  {pod="loadgen-6c9ff65b8f-d85p6"}  =>  0
+  {pod="shop-web-8499cdf9b-fqnqz"}  =>  0
+  {pod="shop-web-8499cdf9b-k66b6"}  =>  0
+  {pod="shop-inventory-b86c856bf-9gl94"}  =>  0
+

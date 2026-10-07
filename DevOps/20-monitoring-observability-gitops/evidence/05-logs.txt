@@ -1,0 +1,89 @@
+$ kubectl logs -n demo deploy/shop-web --tail=6
+Found 2 pods, using pod/shop-web-8499cdf9b-fqnqz
+{"ts": "2026-10-07T13:27:34Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/", "status": 200, "duration_ms": 0.0, "trace_id": "330a8c13928a93ea97e25e85049a17ff"}
+{"ts": "2026-10-07T13:27:34Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/order", "status": 200, "duration_ms": 147.3, "trace_id": "0ae93b90e8b3a7468894e031e98044bf"}
+{"ts": "2026-10-07T13:27:34Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/", "status": 200, "duration_ms": 0.0, "trace_id": "b3c5aa67a5ae6b967618355ee5696e03"}
+{"ts": "2026-10-07T13:27:35Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/order", "status": 200, "duration_ms": 56.9, "trace_id": "427a5a62c099046fa90f4198e1cb44e6"}
+{"ts": "2026-10-07T13:27:35Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/", "status": 200, "duration_ms": 0.0, "trace_id": "f9dd8579b8255609faf0ac4d8a3c645a"}
+{"ts": "2026-10-07T13:27:35Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/order", "status": 200, "duration_ms": 125.5, "trace_id": "58bf5e962bf9f1eb1331a13847b43e39"}
+
+$ kubectl logs -n demo deploy/shop-inventory --tail=6
+{"ts": "2026-10-07T13:27:34Z", "level": "INFO", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 200, "duration_ms": 145.3, "trace_id": "0ae93b90e8b3a7468894e031e98044bf"}
+{"ts": "2026-10-07T13:27:34Z", "level": "INFO", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 200, "duration_ms": 130.4, "trace_id": "a3ff675c00368282d37d14abba77c8b8"}
+{"ts": "2026-10-07T13:27:35Z", "level": "INFO", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 200, "duration_ms": 54.7, "trace_id": "427a5a62c099046fa90f4198e1cb44e6"}
+{"ts": "2026-10-07T13:27:35Z", "level": "INFO", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 200, "duration_ms": 122.5, "trace_id": "58bf5e962bf9f1eb1331a13847b43e39"}
+{"ts": "2026-10-07T13:27:36Z", "level": "INFO", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 200, "duration_ms": 54.8, "trace_id": "73fecc3ef223e53837304397f1dbf96f"}
+{"ts": "2026-10-07T13:27:36Z", "level": "INFO", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 200, "duration_ms": 29.9, "trace_id": "c9fe229410a4ddb8d85782d76f59a56c"}
+
+$ kubectl logs -n demo -l app=shop-inventory --tail=2000 | grep "\"level\": \"ERROR\"" | tail -3
+{"ts": "2026-10-07T13:27:28Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 46.0, "trace_id": "97274247046ef78eb58a8f0d76149d91"}
+{"ts": "2026-10-07T13:27:29Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 118.2, "trace_id": "0b41d33a7b372769c30e828315d1216f"}
+{"ts": "2026-10-07T13:27:42Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 122.5, "trace_id": "985b69e7992264ece3e46c5b5f321bb8"}
+
+$ curl -s localhost:19100/loki/api/v1/labels | python3 -m json.tool
+{
+    "status": "success",
+    "data": [
+        "app",
+        "container",
+        "instance",
+        "job",
+        "level",
+        "namespace",
+        "pod",
+        "service_name"
+    ]
+}
+
+$ curl -s localhost:19100/loki/api/v1/label/namespace/values | python3 -m json.tool
+{
+    "status": "success",
+    "data": [
+        "argocd",
+        "demo",
+        "gitops-demo",
+        "kube-system",
+        "local-path-storage",
+        "logging",
+        "monitoring",
+        "tracing"
+    ]
+}
+
+LogQL> {namespace="demo", app="shop-web"}
+  18:57:37 shop-web-8499cdf9b-k66b6  {"ts": "2026-10-07T13:27:37Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/", "status": 200, "duration_ms": 0.1, "trace_id": "7c1be789f4f3b8cc35e0d11e43d07b3e"}
+  18:57:37 shop-web-8499cdf9b-fqnqz  {"ts": "2026-10-07T13:27:37Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/order", "status": 200, "duration_ms": 32.8, "trace_id": "3da17d03271191b97baf86d13ae7f2b8"}
+  18:57:36 shop-web-8499cdf9b-k66b6  {"ts": "2026-10-07T13:27:36Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/", "status": 200, "duration_ms": 0.0, "trace_id": "5ef20385e6f3f67ed995a0e6551e86c5"}
+  18:57:36 shop-web-8499cdf9b-k66b6  {"ts": "2026-10-07T13:27:36Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/order", "status": 200, "duration_ms": 37.8, "trace_id": "7c1053f2909c2220910a606205c8089b"}
+  18:57:36 shop-web-8499cdf9b-k66b6  {"ts": "2026-10-07T13:27:36Z", "level": "INFO", "service": "shop-web", "method": "GET", "path": "/", "status": 200, "duration_ms": 0.0, "trace_id": "2a405517a6ce6f086af544a4c136166a"}
+
+LogQL> {namespace="demo", level="ERROR"}
+  18:57:29 shop-web-8499cdf9b-k66b6  {"ts": "2026-10-07T13:27:29Z", "level": "ERROR", "service": "shop-web", "method": "GET", "path": "/order", "status": 502, "duration_ms": 121.1, "trace_id": "0b41d33a7b372769c30e828315d1216f"}
+  18:57:29 shop-web-8499cdf9b-k66b6  {"level": "ERROR", "service": "shop-web", "msg": "inventory check failed", "item": "keyboard", "upstream_status": 500, "trace_id": "0b41d33a7b372769c30e828315d1216f"}
+  18:57:29 shop-inventory-b86c856bf-9gl94  {"ts": "2026-10-07T13:27:29Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 118.2, "trace_id": "0b41d33a7b372769c30e828315d1216f"}
+  18:57:28 shop-web-8499cdf9b-fqnqz  {"ts": "2026-10-07T13:27:28Z", "level": "ERROR", "service": "shop-web", "method": "GET", "path": "/order", "status": 502, "duration_ms": 48.4, "trace_id": "97274247046ef78eb58a8f0d76149d91"}
+  18:57:28 shop-web-8499cdf9b-fqnqz  {"level": "ERROR", "service": "shop-web", "msg": "inventory check failed", "item": "monitor", "upstream_status": 500, "trace_id": "97274247046ef78eb58a8f0d76149d91"}
+  18:57:28 shop-inventory-b86c856bf-9gl94  {"ts": "2026-10-07T13:27:28Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 46.0, "trace_id": "97274247046ef78eb58a8f0d76149d91"}
+
+LogQL> {namespace="demo", app="shop-inventory"} | json | status >= 500
+  18:57:29 shop-inventory-b86c856bf-9gl94  {"ts": "2026-10-07T13:27:29Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 118.2, "trace_id": "0b41d33a7b372769c30e828315d1216f"}
+  18:57:28 shop-inventory-b86c856bf-9gl94  {"ts": "2026-10-07T13:27:28Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 46.0, "trace_id": "97274247046ef78eb58a8f0d76149d91"}
+  18:57:02 shop-inventory-b86c856bf-9gl94  {"ts": "2026-10-07T13:27:02Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 29.0, "trace_id": "de0fac6fa51ae10362e7316d3940bdd2"}
+  18:57:00 shop-inventory-b86c856bf-9gl94  {"ts": "2026-10-07T13:27:00Z", "level": "ERROR", "service": "shop-inventory", "method": "GET", "path": "/check", "status": 500, "duration_ms": 125.3, "trace_id": "e0b82d94cdf6aaf6d67eed9705e51a73"}
+
+LogQL> sum by (app, level) (count_over_time({namespace="demo"} | json | __error__="" [5m]))
+  {'app': 'shop-inventory', 'level': 'ERROR'}  last=23
+  {'app': 'shop-inventory', 'level': 'INFO'}  last=450
+  {'app': 'shop-web', 'level': 'ERROR'}  last=46
+  {'app': 'shop-web', 'level': 'INFO'}  last=907
+
+LogQL> sum by (namespace) (rate({namespace=~".+"}[5m]))
+  {'namespace': 'argocd'}  last=0.9066666666666666
+  {'namespace': 'demo'}  last=4.47
+  {'namespace': 'gitops-demo'}  last=0.22
+  {'namespace': 'kube-system'}  last=0.37
+  {'namespace': 'local-path-storage'}  last=0.013333333333333334
+  {'namespace': 'logging'}  last=1.6033333333333333
+  {'namespace': 'monitoring'}  last=6.756666666666667
+  {'namespace': 'tracing'}  last=0.14333333333333334
+

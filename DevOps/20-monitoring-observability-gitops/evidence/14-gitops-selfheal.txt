@@ -1,0 +1,37 @@
+# 19:25:23 state before drift:
+$ kubectl get deploy gitops-web -n gitops-demo
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+gitops-web   3/3     3            3           28m
+
+# 19:25:23 manual drift #1: scale out-of-band
+$ kubectl scale deploy gitops-web -n gitops-demo --replicas=1
+deployment.apps/gitops-web scaled
+# 19:25:23 manual drift #2: edit the live ConfigMap out-of-band
+$ kubectl patch cm gitops-web-content -n gitops-demo --type merge -p '{"data":{"index.html":"hacked by hand\n"}}'
+configmap/gitops-web-content patched
+
+TIME      SPEC-REPLICAS  READY  APP-SYNC   CONFIGMAP index.html (first line)
+19:25:23  1              1      Synced     hacked by hand
+19:25:24  1              1      Synced     hacked by hand
+19:25:25  1              1      Synced     hacked by hand
+19:25:26  1              1      Synced     hacked by hand
+19:25:28  1              1      OutOfSync  <html><body style="font-family:sans-serif">
+19:25:29  3              1      Synced     <html><body style="font-family:sans-serif">
+19:25:30  3              3      Synced     <html><body style="font-family:sans-serif">
+
+$ kubectl get application session20-gitops -n argocd -o jsonpath='{.status.operationState.operation.initiatedBy} {.status.operationState.phase} {.status.operationState.message}'
+{"automated":true} Succeeded successfully synced (all tasks run)
+$ kubectl get application session20-gitops -n argocd -o jsonpath='{range .status.operationState.syncResult.resources[*]}{.kind}/{.name}: {.status} {.message}{"\n"}{end}'
+Namespace/gitops-demo: Synced namespace/gitops-demo unchanged
+ConfigMap/gitops-web-content: Synced configmap/gitops-web-content configured
+Service/gitops-web: Synced service/gitops-web unchanged
+Deployment/gitops-web: Synced deployment.apps/gitops-web configured
+$ kubectl get events -n gitops-demo --sort-by=.lastTimestamp | tail -8
+2s          Normal    Scheduled           pod/gitops-web-b9f65cb48-gtmgz     Successfully assigned gitops-demo/gitops-web-b9f65cb48-gtmgz to hw-s20-control-plane
+2s          Normal    Started             pod/gitops-web-b9f65cb48-gtmgz     Container started
+2s          Normal    Pulled              pod/gitops-web-b9f65cb48-qmmsr     Container image "nginx:1.28-alpine" already present on machine and can be accessed by the pod
+2s          Normal    Scheduled           pod/gitops-web-b9f65cb48-qmmsr     Successfully assigned gitops-demo/gitops-web-b9f65cb48-qmmsr to hw-s20-control-plane
+2s          Warning   Unhealthy           pod/gitops-web-b9f65cb48-qmmsr     Readiness probe failed: Get "http://10.244.0.39:80/": dial tcp 10.244.0.39:80: connect: connection refused
+2s          Normal    Started             pod/gitops-web-b9f65cb48-qmmsr     Container started
+2s          Normal    Created             pod/gitops-web-b9f65cb48-qmmsr     Container created
+2s          Normal    ScalingReplicaSet   deployment/gitops-web              Scaled up replica set gitops-web-b9f65cb48 from 1 to 3
