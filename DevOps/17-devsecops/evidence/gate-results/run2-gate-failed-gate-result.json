@@ -1,0 +1,81 @@
+{
+  "passed": false,
+  "checks": [
+    {
+      "stage": "SAST",
+      "tool": "semgrep",
+      "findings": 5,
+      "blocking": [
+        "ERROR s17-subprocess-shell-true at DevOps/17-devsecops/app/main.py:115",
+        "ERROR subprocess-injection at DevOps/17-devsecops/app/main.py:115",
+        "ERROR dangerous-subprocess-use at DevOps/17-devsecops/app/main.py:115",
+        "ERROR subprocess-shell-true at DevOps/17-devsecops/app/main.py:115"
+      ],
+      "error": "",
+      "note": ""
+    },
+    {
+      "stage": "SAST",
+      "tool": "bandit",
+      "findings": 2,
+      "blocking": [
+        "HIGH/HIGH B602 subprocess_popen_with_shell_equals_true at app/main.py:115"
+      ],
+      "error": "",
+      "note": ""
+    },
+    {
+      "stage": "SAST",
+      "tool": "trivy_config",
+      "findings": 0,
+      "blocking": [],
+      "error": "",
+      "note": ""
+    },
+    {
+      "stage": "SCA",
+      "tool": "pip_audit",
+      "findings": 4,
+      "blocking": [
+        "PYSEC-2026-1434 gunicorn 21.2.0 -> fix 22.0.0",
+        "PYSEC-2026-1433 gunicorn 21.2.0 -> fix 22.0.0",
+        "PYSEC-2026-1434 gunicorn 21.2.0 -> fix 22.0.0",
+        "PYSEC-2026-1433 gunicorn 21.2.0 -> fix 22.0.0"
+      ],
+      "error": "",
+      "note": ""
+    },
+    {
+      "stage": "SCA",
+      "tool": "trivy_fs",
+      "findings": 2,
+      "blocking": [
+        "HIGH CVE-2024-1135 gunicorn 21.2.0 -> fixed in 22.0.0",
+        "HIGH CVE-2024-6827 gunicorn 21.2.0 -> fixed in 22.0.0"
+      ],
+      "error": "",
+      "note": "H:2"
+    },
+    {
+      "stage": "Secret scan",
+      "tool": "gitleaks",
+      "findings": 1,
+      "blocking": [
+        "hw-payment-live-key in DevOps/17-devsecops/app/config.py:5 (commit 3d214ab)"
+      ],
+      "error": "",
+      "note": ""
+    },
+    {
+      "stage": "Image scan",
+      "tool": "trivy",
+      "findings": 167,
+      "blocking": [
+        "HIGH CVE-2024-1135 gunicorn 21.2.0 -> fixed in 22.0.0",
+        "HIGH CVE-2024-6827 gunicorn 21.2.0 -> fixed in 22.0.0"
+      ],
+      "error": "",
+      "note": "H:46 M:58 L:61 U:2; 44 HIGH/CRITICAL have no upstream fix (reported, not blocking)"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+$ gh run view 37632031493 -R Astro-Dude/devops-assignments
+
+✓ main S17 DevSecOps pipeline · 37632031493
+Triggered via push about 18 minutes ago
+
+JOBS
+✓ 1. Build in 10s (ID 112828488381)
+✓ 2. Unit Test in 15s (ID 112828595781)
+✓ 3. SAST (Semgrep, Bandit, Trivy config) in 40s (ID 112828747079)
+✓ 4. SCA (pip-audit, Trivy fs) in 28s (ID 112829092507)
+✓ 5. Secret Scan (Gitleaks) in 8s (ID 112829343453)
+✓ 6. Docker Build in 32s (ID 112829430402)
+✓ 7. Container Image Scan (Trivy) in 26s (ID 112829712750)
+✓ 8. Security Gate in 8s (ID 112829947442)
+✓ 9. Push Image (GHCR) in 28s (ID 112830035579)
+✓ 10. Deploy to Kubernetes (kind) in 1m0s (ID 112830292263)
+
+ARTIFACTS
+reports-secrets
+Astro-Dude~devops-assignments~Y502DJ.dockerbuild
+security-gate-result
+reports-sca
+reports-sast
+reports-tests
+image-tar
+reports-image
+
+For more information about a job, try: gh run view --job=<job-id>
+View this run on GitHub: https://github.com/Astro-Dude/devops-assignments/actions/runs/37632031493

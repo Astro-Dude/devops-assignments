@@ -1,0 +1,4 @@
+$ TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:astro-dude/s17-devsecops-app:pull" | jq -r .token)   # anonymous pull token
+$ curl -s -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/astro-dude/s17-devsecops-app/tags/list
+{"name":"astro-dude/s17-devsecops-app","tags":["d17d7c34b033b8db4f6b7411eca5211bc2920f99","1.0.0","latest","1a7d2439eb1b9a83bc3db0cb005e9c27faf7891c","a11c0e9079ddcb32a840ea5c9fca009155c3622b"]}
+
