@@ -1,0 +1,82 @@
+# Lean kube-prometheus-stack for a single-node kind cluster shared with other workloads.
+# Kept: prometheus-operator, Prometheus, Alertmanager, Grafana, kube-state-metrics, node-exporter.
+# Dropped: control-plane scrapes that kind does not expose (etcd/scheduler/controller-manager/proxy).
+
+fullnameOverride: kps
+
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+defaultRules:
+  create: true
+  rules:
+    etcd: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeControllerManager: false
+    kubeProxy: false
+
+prometheusOperator:
+  admissionWebhooks:
+    enabled: false        # avoids the cert-gen jobs; fine for a lab
+  tls:
+    enabled: false
+  resources:
+    requests: {cpu: 20m, memory: 64Mi}
+
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+    retention: 1d
+    # Pick up ServiceMonitors / PrometheusRules from every namespace, not only those
+    # labelled with the Helm release name.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    resources:
+      requests: {cpu: 100m, memory: 400Mi}
+      limits: {memory: 1Gi}
+
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests: {cpu: 10m, memory: 32Mi}
+
+kube-state-metrics:
+  resources:
+    requests: {cpu: 10m, memory: 32Mi}
+
+prometheus-node-exporter:
+  resources:
+    requests: {cpu: 10m, memory: 24Mi}
+
+grafana:
+  adminUser: admin
+  adminPassword: hw-s20-admin     # lab-only credential for a throwaway kind cluster
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: ALL        # load dashboards from ConfigMaps labelled grafana_dashboard=1
+    datasources:
+      enabled: true
+  additionalDataSources:
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki.logging.svc.cluster.local:3100
+    - name: Jaeger
+      uid: jaeger
+      type: jaeger
+      access: proxy
+      url: http://jaeger.tracing.svc.cluster.local:16686

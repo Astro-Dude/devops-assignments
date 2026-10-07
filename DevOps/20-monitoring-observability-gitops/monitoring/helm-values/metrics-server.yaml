@@ -1,0 +1,7 @@
+# kind kubelets use self-signed serving certs, so metrics-server must skip TLS verification.
+args:
+  - --kubelet-insecure-tls
+resources:
+  requests:
+    cpu: 20m
+    memory: 40Mi

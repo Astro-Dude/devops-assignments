@@ -1,0 +1,14 @@
+# Tells the Prometheus Operator to scrape /metrics on every Service in "demo" labelled app=shop-*.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: shop
+  namespace: demo
+spec:
+  selector:
+    matchExpressions:
+      - {key: app, operator: In, values: [shop-web, shop-inventory]}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

@@ -1,0 +1,25 @@
+# Lean Argo CD for a single-node kind lab: no Dex (local admin only), no notifications,
+# no ApplicationSet controller. Core GitOps loop = repo-server + application-controller + server.
+dex:
+  enabled: false
+notifications:
+  enabled: false
+applicationSet:
+  replicas: 0
+configs:
+  params:
+    server.insecure: true          # TLS terminated nowhere; we only reach it via port-forward
+  cm:
+    timeout.reconciliation: 60s    # poll Git every 60s instead of the default 120s+jitter
+controller:
+  resources:
+    requests: {cpu: 50m, memory: 128Mi}
+repoServer:
+  resources:
+    requests: {cpu: 20m, memory: 64Mi}
+server:
+  resources:
+    requests: {cpu: 20m, memory: 64Mi}
+redis:
+  resources:
+    requests: {cpu: 10m, memory: 16Mi}

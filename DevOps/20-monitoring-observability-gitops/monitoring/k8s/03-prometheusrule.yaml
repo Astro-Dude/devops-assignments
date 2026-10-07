@@ -1,0 +1,53 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: shop-alerts
+  namespace: demo
+spec:
+  groups:
+    - name: shop.rules
+      rules:
+        # CPU utilisation of a shop pod relative to its CPU limit.
+        - alert: ShopHighCPU
+          expr: |
+            sum by (namespace, pod) (rate(container_cpu_usage_seconds_total{namespace="demo", container="app"}[1m]))
+              /
+            sum by (namespace, pod) (kube_pod_container_resource_limits{namespace="demo", container="app", resource="cpu"})
+              > 0.8
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.pod }} is using {{ $value | humanizePercentage }} of its CPU limit"
+        # Memory working set relative to the memory limit.
+        - alert: ShopHighMemory
+          expr: |
+            sum by (namespace, pod) (container_memory_working_set_bytes{namespace="demo", container="app"})
+              /
+            sum by (namespace, pod) (kube_pod_container_resource_limits{namespace="demo", container="app", resource="memory"})
+              > 0.9
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $labels.pod }} memory is at {{ $value | humanizePercentage }} of its limit"
+        # Application health: no healthy inventory target is being scraped.
+        - alert: ShopInventoryDown
+          expr: absent(up{namespace="demo", job="shop-inventory"} == 1)
+          for: 30s
+          labels:
+            severity: critical
+          annotations:
+            summary: "No healthy shop-inventory instance is up"
+        # Golden signal: share of /order requests answered with 5xx.
+        - alert: ShopHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{namespace="demo", job="shop-web", path="/order", status=~"5.."}[1m]))
+              /
+            sum(rate(http_requests_total{namespace="demo", job="shop-web", path="/order"}[1m]))
+              > 0.2
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $value | humanizePercentage }} of /order requests are failing"
