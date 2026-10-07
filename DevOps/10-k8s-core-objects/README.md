@@ -5,7 +5,7 @@ DaemonSet, StatefulSet), and the four deployment strategies — with the
 strategies **measured under continuous HTTP load** rather than described.
 
 Command results are **real captured output** from the three-node kind cluster
-built in [assignment 08](../08-kubernetes-fundamentals/README.md).
+built in [assignment 09](../09-kubernetes-fundamentals/README.md).
 
 ---
 
@@ -599,7 +599,7 @@ total = 916 requests, failed = 0
 The limitation this exposes: **granularity is bounded by replica count.** A 1%
 canary needs 99 stable pods. Getting finer control, or splitting on a header or
 a cookie rather than at random, requires an ingress controller or a service
-mesh — which is where [assignment 11](../11-ingress-configmaps-secrets/README.md)
+mesh — which is where [assignment 12](../12-ingress-configmaps-secrets/README.md)
 picks up.
 
 ### Choosing between them
@@ -716,7 +716,7 @@ served by web-sts-1
 ```
 
 **Same name, different IP** (`.49` → `.50`). Compare with the Deployment in
-assignment 08, where the replacement pod got a brand-new random name. The
+assignment 09, where the replacement pod got a brand-new random name. The
 StatefulSet's guarantee is the *name*, and that is precisely what a database
 replica needs: `mysql-0` is always the primary, no matter how many times it is
 rescheduled.

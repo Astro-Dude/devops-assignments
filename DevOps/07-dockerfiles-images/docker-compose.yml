@@ -5,11 +5,11 @@
 #   docker compose down       stop and remove everything
 #
 # Each service is a different language/runtime, all built from the
-# Dockerfiles in ../05-docker-fundamentals/.
+# Dockerfiles in ../06-docker-fundamentals/.
 services:
 
   nodejs:
-    build: ../05-docker-fundamentals/nodejs-app
+    build: ../06-docker-fundamentals/nodejs-app
     image: hello-nodejs:1.0
     container_name: compose-nodejs
     ports:
@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
 
   python:
-    build: ../05-docker-fundamentals/python-app
+    build: ../06-docker-fundamentals/python-app
     image: hello-python:1.0
     container_name: compose-python
     ports:
@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
 
   java:
-    build: ../05-docker-fundamentals/java-app
+    build: ../06-docker-fundamentals/java-app
     image: hello-java:1.0
     container_name: compose-java
     ports:

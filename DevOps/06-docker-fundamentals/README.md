@@ -9,7 +9,7 @@ verified in a real browser.
 ### Folder structure
 
 ```
-05-docker-fundamentals/
+06-docker-fundamentals/
 ├── nodejs-app/          Node.js HTTP server
 │   ├── app.js
 │   ├── package.json
@@ -224,7 +224,7 @@ Two `FROM` lines. Stage 1 (`eclipse-temurin:21-jdk`) compiles with `javac`;
 stage 2 (`eclipse-temurin:21-jre`) copies **only the compiled `.class` files**
 via `COPY --from=builder`. The JDK, the compiler and the `.java` source never
 reach the final image. This is the same technique explored in depth in
-[`06-dockerfiles-images`](../06-dockerfiles-images/).
+[`07-dockerfiles-images`](../07-dockerfiles-images/).
 
 ### Apache and Nginx — no `CMD` needed
 Both official base images already define a correct `CMD`

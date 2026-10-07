@@ -5,7 +5,7 @@ the four ports people confuse in interviews and the DNS behaviour behind each
 type.
 
 Command results are **real captured output** from the three-node kind cluster
-built in [assignment 08](../08-kubernetes-fundamentals/README.md).
+built in [assignment 09](../09-kubernetes-fundamentals/README.md).
 
 ---
 
@@ -291,7 +291,7 @@ A LoadBalancer Service **is** a NodePort Service, plus a request to the cloud
 provider (here MetalLB) to point something external at it. This is why a
 LoadBalancer costs money per service on a cloud provider, and why teams put one
 Ingress in front of many services instead — the subject of
-[assignment 11](../11-ingress-configmaps-secrets/README.md).
+[assignment 12](../12-ingress-configmaps-secrets/README.md).
 
 ---
 
@@ -411,7 +411,7 @@ you want when the *client* must choose the backend: a database driver that needs
 to send writes to the primary and reads to replicas, or a Kafka client that
 connects to specific brokers. It is also what StatefulSets use to give each pod a
 stable DNS name — demonstrated in
-[assignment 09](../09-k8s-core-objects/README.md).
+[assignment 10](../10-k8s-core-objects/README.md).
 
 ---
 
@@ -475,7 +475,7 @@ know where to look.
 
 ### Failure A — no endpoints (selector matches nothing)
 
-Covered in [assignment 09](../09-k8s-core-objects/README.md): the Service is
+Covered in [assignment 10](../10-k8s-core-objects/README.md): the Service is
 healthy, the pods are healthy, and `ENDPOINTS` is `<none>`. Requests time out.
 
 ### Failure B — endpoints exist, but the port is wrong

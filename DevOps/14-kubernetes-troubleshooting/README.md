@@ -4,7 +4,7 @@ Session 14. Five faults were **deliberately built**, diagnosed from evidence
 using only `kubectl`, and then fixed — with the fix verified.
 
 Command results are **real captured output** from the three-node kind cluster
-built in [assignment 08](../08-kubernetes-fundamentals/README.md).
+built in [assignment 09](../09-kubernetes-fundamentals/README.md).
 
 ---
 
@@ -75,7 +75,7 @@ broken-pending-68587d49d6-rfbm2   0/1     Pending            0          101s
 ```
 
 Useful, but note the trap demonstrated in
-[assignment 09](../09-k8s-core-objects/README.md): **this filter misses
+[assignment 10](../10-k8s-core-objects/README.md): **this filter misses
 `broken-crash` and `broken-oom`**, because a crash-looping pod's phase is
 `Running`. Filtering on phase alone hides the two worst problems here.
 
@@ -242,7 +242,7 @@ Events:
 
 That message accounts for **every node individually** — 1 rejected on a taint
 (the control plane), 2 on the selector. Compare with the `Pending` in
-[assignment 09](../09-k8s-core-objects/README.md), where the same command said
+[assignment 10](../10-k8s-core-objects/README.md), where the same command said
 `Insufficient cpu, Insufficient memory` instead. **The `FailedScheduling` text
 names the exact predicate that failed**, so there is never any guesswork:
 
@@ -331,7 +331,7 @@ Address: 10.96.127.43
 **DNS is fine.** Worth doing first anyway, because it eliminates an entire class
 of cause in one command. Note also that `curl` exited **7 (connection refused)**,
 not 28 (timeout) — as established in
-[assignment 10](../10-kubernetes-services/README.md), that already rules out a
+[assignment 11](../11-kubernetes-services/README.md), that already rules out a
 pure network black hole.
 
 ### Step 2 — are the pods healthy?
@@ -436,7 +436,7 @@ KUBERNETES_SERVICE_PORT_HTTPS=443
 
 Checking env vars *from inside* is the fastest way to catch a ConfigMap or Secret
 that was edited but never picked up — the exact trap measured in
-[assignment 11](../11-ingress-configmaps-secrets/README.md), where a changed
+[assignment 12](../12-ingress-configmaps-secrets/README.md), where a changed
 ConfigMap updated the mounted file after 56 seconds but never the environment
 variable.
 

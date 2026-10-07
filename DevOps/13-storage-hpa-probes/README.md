@@ -5,7 +5,7 @@ a real load test, and the three probe types compared side by side on a single
 timeline.
 
 Command results are **real captured output** from the three-node kind cluster
-built in [assignment 08](../08-kubernetes-fundamentals/README.md), with
+built in [assignment 09](../09-kubernetes-fundamentals/README.md), with
 `metrics-server` installed so the HPA has something to read.
 
 ---
@@ -55,7 +55,7 @@ An `emptyDir` is created when the pod is assigned to a node and deleted when the
 pod leaves it — it survives a *container* crash, never a *pod* deletion.
 
 Good for: scratch space, caches, and handing files between containers in one pod
-(the sidecar pattern in [assignment 09](../09-k8s-core-objects/README.md)).
+(the sidecar pattern in [assignment 10](../10-k8s-core-objects/README.md)).
 
 ### hostPath — a real directory on the node
 

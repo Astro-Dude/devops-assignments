@@ -50,7 +50,7 @@ Two details in that file are there for later sessions:
 - **`extraPortMappings`** punches host ports through the node container. Ingress
   lands on **8080/8443** rather than 80/443 because port 80 on this machine is
   already taken by an unrelated container — the same collision documented in
-  [assignment 07](../07-docker-network/README.md). NodePort demos use
+  [assignment 08](../08-docker-network/README.md). NodePort demos use
   **30080/30081**.
 
 ```bash
@@ -183,7 +183,7 @@ Reading that list carefully tells you most of the architecture:
 
 The ones that are **one per node** are DaemonSets — `kube-proxy` and `kindnet`
 are the textbook real-world example of why DaemonSets exist (covered properly in
-[assignment 09](../09-k8s-core-objects/README.md)).
+[assignment 10](../10-k8s-core-objects/README.md)).
 
 ### Health of the control plane
 
@@ -441,7 +441,7 @@ Events:
 That is the whole pod startup sequence in four lines, and it names who did what:
 `default-scheduler` did exactly one thing (chose a node), and `kubelet` did the
 other three. This event list is the single most useful output in Kubernetes
-troubleshooting — [assignment 13](../13-kubernetes-troubleshooting/README.md) is
+troubleshooting — [assignment 14](../14-kubernetes-troubleshooting/README.md) is
 built almost entirely on reading it.
 
 ### Reaching into the container
@@ -542,7 +542,7 @@ The **Deployment → ReplicaSet → Pod** chain, visible in one listing. Note th
 ReplicaSet's selector has an extra label the Deployment's does not:
 `pod-template-hash=699b74b567`. That hash is derived from the pod template, and
 it is the mechanism behind rolling updates — change the template, get a
-different hash, get a **new** ReplicaSet. Assignment 09 uses this directly.
+different hash, get a **new** ReplicaSet. Assignment 10 uses this directly.
 
 Also note the scheduler put all three pods on the **workers**, none on the
 control plane. That is the control-plane taint doing its job.
@@ -665,7 +665,7 @@ hello-deploy-699b74b567-zz884   1/1     Running   0          45s
 Settled at 3/3. **RESTARTS is 0 on the new pod** — this is a replacement, not a
 restart. The old pod is gone forever and a brand-new one with a new name and new
 IP took its place. That distinction is exactly why Services exist, and it is the
-whole subject of [assignment 10](../10-kubernetes-services/README.md).
+whole subject of [assignment 11](../11-kubernetes-services/README.md).
 
 ---
 

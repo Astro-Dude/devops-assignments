@@ -4,7 +4,7 @@ Session 12. Separating configuration from images, handling secrets, and putting
 a single HTTP entry point in front of many Services.
 
 Command results are **real captured output** from the three-node kind cluster
-built in [assignment 08](../08-kubernetes-fundamentals/README.md), with the
+built in [assignment 09](../09-kubernetes-fundamentals/README.md), with the
 ingress-nginx controller installed and kind mapping host ports **8080 → 80** and
 **8443 → 443**.
 
@@ -391,7 +391,7 @@ $ curl -s -H 'Host: shop.local' http://localhost:8080/admin
 **One IP, one port, three different applications** — chosen by URL path. That is
 the entire value proposition against giving each service its own LoadBalancer
 (and its own cloud bill, as measured in
-[assignment 10](../10-kubernetes-services/README.md)).
+[assignment 11](../11-kubernetes-services/README.md)).
 
 ### The rewrite annotation, and reading a 404 correctly
 

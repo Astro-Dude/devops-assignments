@@ -4,8 +4,8 @@
 
 | Field | Value |
 |---|---|
-| **Name** | Shaurya |
-| **Enrollment Number** | `__ENROLLMENT__` |
+| **Name** | Shaurya Verma |
+| **Enrollment Number** | 24BCS10151 |
 | **GitHub** | [astro-dude](https://github.com/astro-dude) |
 | **Application port** | 8080 |
 | **Required message** | Hello World from Docker multi-stage build |
@@ -245,7 +245,7 @@ WORKDIR /app                                    0B
 
 > A 32% saving is modest because the JRE is itself large. The same technique on
 > a Go binary (`FROM scratch`) or the React app in
-> [`05-docker-fundamentals/react-app`](../05-docker-fundamentals/react-app)
+> [`06-docker-fundamentals/react-app`](../06-docker-fundamentals/react-app)
 > — **68.4 MB instead of roughly 400 MB** — is far more dramatic. Bigger
 > toolchain, bigger win.
 
@@ -265,7 +265,7 @@ COPY --from=nginx:alpine /etc/nginx/nginx.conf /etc/nginx/nginx.conf
 
 The task asks for at least **3** different types. **Seven** containers across
 **five** distinct runtimes are running, built from the Dockerfiles in
-[`05-docker-fundamentals`](../05-docker-fundamentals/):
+[`06-docker-fundamentals`](../06-docker-fundamentals/):
 
 | # | Type | Image | Port | Runtime version |
 |---|---|---|---|---|

@@ -582,7 +582,7 @@ curl http://localhost:9098          # -> Hello students
 ==================== TASK 3: BIND MOUNT ====================
 -------- STEP 1: the folder and file on the LOCAL machine --------
 $ pwd
-/Users/shaurya/sst/07-docker-network
+/Users/shaurya/sst/08-docker-network
 
 $ ls -la bind-mount-demo/
 total 8
@@ -610,7 +610,7 @@ nginx-bind   Up 3 seconds   0.0.0.0:9098->80/tcp, [::]:9098->80/tcp
 -------- STEP 3: confirm the mount exists --------
 $ docker inspect nginx-bind --format '{{range .Mounts}}Type:   {{.Type}}{{println}}Source: {{.Source}}{{println}}Target: {{.Destination}}{{println}}ReadOnly: {{.RW}}{{end}}'
 Type:   bind
-Source: /Users/shaurya/sst/07-docker-network/bind-mount-demo
+Source: /Users/shaurya/sst/08-docker-network/bind-mount-demo
 Target: /usr/share/nginx/html
 ReadOnly: false
 
@@ -730,7 +730,7 @@ Hello students
 ### What that proves
 
 1. **The container served the host's file**, confirmed by `docker inspect`
-   showing `Type: bind`, `Source: /Users/shaurya/sst/07-docker-network/bind-mount-demo`,
+   showing `Type: bind`, `Source: /Users/shaurya/sst/08-docker-network/bind-mount-demo`,
    `Target: /usr/share/nginx/html`, and by `curl` returning **Hello students**.
 
 2. **Edits appeared with no restart — this is the key requirement.** The file

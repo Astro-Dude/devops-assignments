@@ -6,7 +6,7 @@ install, upgrade, rollback, and what happens when an upgrade fails.
 The chart in [`notes-chart/`](notes-chart/) was **written by hand**, not scaffolded,
 so every template in it is deliberate. Command results are **real captured
 output** from the three-node kind cluster built in
-[assignment 08](../08-kubernetes-fundamentals/README.md).
+[assignment 09](../09-kubernetes-fundamentals/README.md).
 
 ```bash
 $ helm version
@@ -17,7 +17,7 @@ version.BuildInfo{Version:"v4.3.0", GitCommit:"bec5b06ed841fe5269972d864d5177944
 
 ## Task 1 — What Helm actually solves
 
-By assignment 13 this repository had accumulated dozens of near-identical YAML
+By assignment 14 this repository had accumulated dozens of near-identical YAML
 files. The problems that causes are all the same problem:
 
 1. **Environments differ only slightly.** dev wants 1 replica, prod wants 3 and
@@ -217,7 +217,7 @@ annotations:
 
 Without this, changing only a ConfigMap value updates the ConfigMap and **leaves
 the running pods untouched** — exactly the trap measured in
-[assignment 11](../11-ingress-configmaps-secrets/README.md), where env vars never
+[assignment 12](../12-ingress-configmaps-secrets/README.md), where env vars never
 refreshed. Hashing the rendered ConfigMap into a pod annotation changes the pod
 template, which forces a rollout automatically.
 
@@ -454,7 +454,7 @@ REVISION	UPDATED                 	STATUS    	CHART          	APP VERSION	DESCRIP
 
 **Rolling back creates revision 4, described as "Rollback to 1".** History is
 append-only — exactly the same semantics as `kubectl rollout undo` in
-[assignment 09](../09-k8s-core-objects/README.md), but here it restores *values,
+[assignment 10](../10-k8s-core-objects/README.md), but here it restores *values,
 templates and the full object set*, not just a pod template.
 
 ---
@@ -743,7 +743,7 @@ possible unless `--keep-history` was passed.
   the HPA that revision 3 had created.
 - **The checksum-annotation trick is essential**, not clever. Without it a
   config-only upgrade updates the ConfigMap and leaves the pods running the old
-  values — the exact failure measured in assignment 11.
+  values — the exact failure measured in assignment 12.
 - **Never put a version in a Deployment's selector** — selectors are immutable,
   and a chart bump would break every future upgrade.
 - **Omit `replicas` when an HPA is enabled**, or Helm and the autoscaler fight on
