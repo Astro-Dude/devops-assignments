@@ -106,8 +106,12 @@ def trivy_vulns(data, cfg, c: Check):
 
 
 def pip_audit(data, cfg, c: Check):
+    seen = set()  # pip-audit can list the same advisory twice for one package
     for dep in data.get("dependencies", []):
         for v in dep.get("vulns", []):
+            if (dep["name"], dep["version"], v["id"]) in seen:
+                continue
+            seen.add((dep["name"], dep["version"], v["id"]))
             c.total += 1
             if v.get("fix_versions") or not cfg.get("block_if_fix_available", True):
                 fixes = ",".join(v.get("fix_versions", [])) or "n/a"
