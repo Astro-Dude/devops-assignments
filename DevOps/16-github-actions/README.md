@@ -649,9 +649,13 @@ To show the gates working, the pipeline was run three times on purpose:
 2. `73fe8c5` — `add()` deliberately broken (`return a + b + 1`, the failure
    scenario from the reference README) → **red**.
 3. `aad6094` — `add()` restored → **green**, deployed again.
+4. `c809c04` — this README + evidence (a change under the folder, so the `paths:`
+   filter triggered it) → **green**, deployed again
+   ([`evidence/gh-run-view-37628519499.txt`](evidence/gh-run-view-37628519499.txt)).
 
 ```bash
 $ gh run list -R Astro-Dude/devops-assignments --workflow s16-ci-cd.yml
+completed	success	s16: add README, run evidence and screenshots of the CI/CD pipeline	S16 CI/CD - Calculator	main	push	37628519499	2m44s	2026-10-07T13:26:39Z
 completed	success	s16: fix add() so the pipeline goes green again	S16 CI/CD - Calculator	main	push	37627185543	3m11s	2026-10-07T13:16:19Z
 completed	failure	s16: change add() (intentionally broken to demonstrate a failing pipe…	S16 CI/CD - Calculator	main	push	37626976777	38s	2026-10-07T13:14:44Z
 completed	success	Add session 16 CI/CD demo: calculator API, Dockerfile, GitHub Actions…	S16 CI/CD - Calculator	main	push	37626090074	2m46s	2026-10-07T13:07:44Z
@@ -767,6 +771,7 @@ Push to `main` → 5 parallel test runners → security check and report → bui
 | [`evidence/gh-run-view-37626090074.txt`](evidence/gh-run-view-37626090074.txt) | run #1 (green) |
 | [`evidence/gh-run-view-37626976777.txt`](evidence/gh-run-view-37626976777.txt) | run #2 (intentional failure) |
 | [`evidence/gh-run-view-37627185543.txt`](evidence/gh-run-view-37627185543.txt) | run #3 (fixed, green) |
+| [`evidence/gh-run-view-37628519499.txt`](evidence/gh-run-view-37628519499.txt) | run #4 (README commit, green) |
 | [`evidence/run-37627185543-full.log`](evidence/run-37627185543-full.log) | complete logs of every job in run #3 (`gh run view --log`) |
 | [`evidence/run-37626976777-failed-test-log.txt`](evidence/run-37626976777-failed-test-log.txt) | the failing pytest step from run #2 |
 | [`evidence/artifacts-download.txt`](evidence/artifacts-download.txt) | `gh run download` of two artifacts |

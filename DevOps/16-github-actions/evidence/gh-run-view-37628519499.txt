@@ -1,0 +1,57 @@
+$ gh run view 37628519499 -R Astro-Dude/devops-assignments
+
+✓ main S16 CI/CD - Calculator · 37628519499
+Triggered via push about 3 minutes ago
+
+JOBS
+✓ CI: Test (ubuntu-latest, py3.14) in 18s (ID 112816429429)
+✓ CI: Test (ubuntu-latest, py3.12) in 17s (ID 112816429579)
+✓ CI: Test (ubuntu-latest, py3.13) in 13s (ID 112816429625)
+✓ CI: Test (macos-latest, py3.13) in 16s (ID 112816429834)
+✓ CI: Test (windows-latest, py3.13) in 26s (ID 112816429966)
+✓ CI: Security check + secrets demo in 5s (ID 112816652366)
+✓ CI: Test report (download artifacts) in 4s (ID 112816652418)
+✓ CI: Build bundle + Docker image in 32s (ID 112816711051)
+✓ CD: Publish image to GHCR in 26s (ID 112816975699)
+✓ CD: Deploy to kind + smoke test in 58s (ID 112817201147)
+
+ANNOTATIONS
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Test (ubuntu-latest, py3.14): .github#1
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Test (ubuntu-latest, py3.12): .github#1
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Test (ubuntu-latest, py3.13): .github#1
+
+- Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.
+CI: Test (macos-latest, py3.13): .github#1
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Security check + secrets demo: .github#1
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Test report (download artifacts): .github#1
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Build bundle + Docker image: .github#1
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CD: Publish image to GHCR: .github#1
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CD: Deploy to kind + smoke test: .github#1
+
+
+ARTIFACTS
+test-report-ubuntu-latest-py3.14
+test-report-windows-latest-py3.13
+test-report-macos-latest-py3.13
+docker-image
+calculator-build
+test-report-ubuntu-latest-py3.12
+test-report-ubuntu-latest-py3.13
+
+For more information about a job, try: gh run view --job=<job-id>
+View this run on GitHub: https://github.com/Astro-Dude/devops-assignments/actions/runs/37628519499
