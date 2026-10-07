@@ -822,6 +822,266 @@ $ whois github.com | head -n 25
 
 ---
 
+## 11. Course material — IP addressing and subnetting (devops-heros session 4)
+
+Task 1 says to practise the commands **and the repo shared in the devops-heros
+GitHub repo**. The session 4 folder there
+([`session4-networking/ip.md`](https://github.com/Nency-Ravaliya/devops-heros/blob/main/session4-networking/ip.md))
+is about IP addressing rather than tools: the address classes and their default
+masks, CIDR prefixes `/8 /16 /24 /32`, network bits vs host bits, and how to
+find the network address for a given host. Each example from those notes was
+worked through with `ipcalc` (and `sipcalc` to cross-check), installed in a
+fresh `ubuntu:22.04` container. All output below is real.
+
+```console
+########## THE SAME ADDRESS WITH THREE DIFFERENT PREFIXES (ip.md) ##########
+$ ipcalc -n -b 127.0.0.1/24
+Address:   127.0.0.1
+Netmask:   255.255.255.0 = 24
+Wildcard:  0.0.0.255
+=>
+Network:   127.0.0.0/24
+HostMin:   127.0.0.1
+HostMax:   127.0.0.254
+Broadcast: 127.0.0.255
+Hosts/Net: 254                   Class A, Loopback
+
+$ ipcalc -n -b 127.0.0.1/16
+Address:   127.0.0.1
+Netmask:   255.255.0.0 = 16
+Wildcard:  0.0.255.255
+=>
+Network:   127.0.0.0/16
+HostMin:   127.0.0.1
+HostMax:   127.0.255.254
+Broadcast: 127.0.255.255
+Hosts/Net: 65534                 Class A, Loopback
+
+$ ipcalc -n -b 127.0.0.1/32
+Address:   127.0.0.1
+Netmask:   255.255.255.255 = 32
+Wildcard:  0.0.0.0
+=>
+Hostroute: 127.0.0.1
+Hosts/Net: 1                     Class A, Loopback
+
+########## NO PREFIX GIVEN: ipcalc defaults to /24, but still reports the class ##########
+$ ipcalc -n 126.34.0.1
+Address:   126.34.0.1           01111110.00100010.00000000. 00000001
+Netmask:   255.255.255.0 = 24   11111111.11111111.11111111. 00000000
+Wildcard:  0.0.0.255            00000000.00000000.00000000. 11111111
+=>
+Network:   126.34.0.0/24        01111110.00100010.00000000. 00000000
+HostMin:   126.34.0.1           01111110.00100010.00000000. 00000001
+HostMax:   126.34.0.254         01111110.00100010.00000000. 11111110
+Broadcast: 126.34.0.255         01111110.00100010.00000000. 11111111
+Hosts/Net: 254                   Class A
+
+########## THE SAME ADDRESSES WITH THEIR CLASSFUL DEFAULT MASKS ##########
+$ ipcalc -n 126.34.0.1/8
+Address:   126.34.0.1           01111110. 00100010.00000000.00000001
+Netmask:   255.0.0.0 = 8        11111111. 00000000.00000000.00000000
+Wildcard:  0.255.255.255        00000000. 11111111.11111111.11111111
+=>
+Network:   126.0.0.0/8          01111110. 00000000.00000000.00000000
+HostMin:   126.0.0.1            01111110. 00000000.00000000.00000001
+HostMax:   126.255.255.254      01111110. 11111111.11111111.11111110
+Broadcast: 126.255.255.255      01111110. 11111111.11111111.11111111
+Hosts/Net: 16777214              Class A
+
+$ ipcalc -n 172.16.5.4/16
+Address:   172.16.5.4           10101100.00010000. 00000101.00000100
+Netmask:   255.255.0.0 = 16     11111111.11111111. 00000000.00000000
+Wildcard:  0.0.255.255          00000000.00000000. 11111111.11111111
+=>
+Network:   172.16.0.0/16        10101100.00010000. 00000000.00000000
+HostMin:   172.16.0.1           10101100.00010000. 00000000.00000001
+HostMax:   172.16.255.254       10101100.00010000. 11111111.11111110
+Broadcast: 172.16.255.255       10101100.00010000. 11111111.11111111
+Hosts/Net: 65534                 Class B, Private Internet
+
+$ ipcalc -n 194.23.56.10/24
+Address:   194.23.56.10         11000010.00010111.00111000. 00001010
+Netmask:   255.255.255.0 = 24   11111111.11111111.11111111. 00000000
+Wildcard:  0.0.0.255            00000000.00000000.00000000. 11111111
+=>
+Network:   194.23.56.0/24       11000010.00010111.00111000. 00000000
+HostMin:   194.23.56.1          11000010.00010111.00111000. 00000001
+HostMax:   194.23.56.254        11000010.00010111.00111000. 11111110
+Broadcast: 194.23.56.255        11000010.00010111.00111000. 11111111
+Hosts/Net: 254                   Class C
+
+########## 120.27.1.0/8 - 8 NETWORK BITS, 24 HOST BITS ##########
+$ ipcalc -n 120.27.1.0/8
+Address:   120.27.1.0           01111000. 00011011.00000001.00000000
+Netmask:   255.0.0.0 = 8        11111111. 00000000.00000000.00000000
+Wildcard:  0.255.255.255        00000000. 11111111.11111111.11111111
+=>
+Network:   120.0.0.0/8          01111000. 00000000.00000000.00000000
+HostMin:   120.0.0.1            01111000. 00000000.00000000.00000001
+HostMax:   120.255.255.254      01111000. 11111111.11111111.11111110
+Broadcast: 120.255.255.255      01111000. 11111111.11111111.11111111
+Hosts/Net: 16777214              Class A
+
+########## FINDING THE HOST PART vs THE NETWORK PART (197.23.45.10) ##########
+$ ipcalc -n 197.23.45.10/24
+Address:   197.23.45.10         11000101.00010111.00101101. 00001010
+Netmask:   255.255.255.0 = 24   11111111.11111111.11111111. 00000000
+Wildcard:  0.0.0.255            00000000.00000000.00000000. 11111111
+=>
+Network:   197.23.45.0/24       11000101.00010111.00101101. 00000000
+HostMin:   197.23.45.1          11000101.00010111.00101101. 00000001
+HostMax:   197.23.45.254        11000101.00010111.00101101. 11111110
+Broadcast: 197.23.45.255        11000101.00010111.00101101. 11111111
+Hosts/Net: 254                   Class C
+
+########## SUBNETTING: SPLIT ONE /24 INTO FOUR /26 ##########
+$ ipcalc -n 192.168.10.0/24 /26
+Address:   192.168.10.0         11000000.10101000.00001010. 00000000
+Netmask:   255.255.255.0 = 24   11111111.11111111.11111111. 00000000
+Wildcard:  0.0.0.255            00000000.00000000.00000000. 11111111
+=>
+Network:   192.168.10.0/24      11000000.10101000.00001010. 00000000
+HostMin:   192.168.10.1         11000000.10101000.00001010. 00000001
+HostMax:   192.168.10.254       11000000.10101000.00001010. 11111110
+Broadcast: 192.168.10.255       11000000.10101000.00001010. 11111111
+Hosts/Net: 254                   Class C, Private Internet
+
+Subnets after transition from /24 to /26
+
+Netmask:   255.255.255.192 = 26 11111111.11111111.11111111.11 000000
+Wildcard:  0.0.0.63             00000000.00000000.00000000.00 111111
+
+ 1.
+Network:   192.168.10.0/26      11000000.10101000.00001010.00 000000
+HostMin:   192.168.10.1         11000000.10101000.00001010.00 000001
+HostMax:   192.168.10.62        11000000.10101000.00001010.00 111110
+Broadcast: 192.168.10.63        11000000.10101000.00001010.00 111111
+Hosts/Net: 62                    Class C, Private Internet
+
+ 2.
+Network:   192.168.10.64/26     11000000.10101000.00001010.01 000000
+HostMin:   192.168.10.65        11000000.10101000.00001010.01 000001
+HostMax:   192.168.10.126       11000000.10101000.00001010.01 111110
+Broadcast: 192.168.10.127       11000000.10101000.00001010.01 111111
+Hosts/Net: 62                    Class C, Private Internet
+
+ 3.
+Network:   192.168.10.128/26    11000000.10101000.00001010.10 000000
+HostMin:   192.168.10.129       11000000.10101000.00001010.10 000001
+HostMax:   192.168.10.190       11000000.10101000.00001010.10 111110
+Broadcast: 192.168.10.191       11000000.10101000.00001010.10 111111
+Hosts/Net: 62                    Class C, Private Internet
+
+ 4.
+Network:   192.168.10.192/26    11000000.10101000.00001010.11 000000
+HostMin:   192.168.10.193       11000000.10101000.00001010.11 000001
+HostMax:   192.168.10.254       11000000.10101000.00001010.11 111110
+Broadcast: 192.168.10.255       11000000.10101000.00001010.11 111111
+Hosts/Net: 62                    Class C, Private Internet
+
+Subnets:   4
+Hosts:     248
+
+########## THE SAME RESULT FROM sipcalc ##########
+$ sipcalc 192.168.10.0/24 -s 26
+-[ipv4 : 192.168.10.0/24] - 0
+
+[Split network]
+Network			- 192.168.10.0    - 192.168.10.63
+Network			- 192.168.10.64   - 192.168.10.127
+Network			- 192.168.10.128  - 192.168.10.191
+Network			- 192.168.10.192  - 192.168.10.255
+
+-
+
+$ sipcalc 192.168.10.70/26
+-[ipv4 : 192.168.10.70/26] - 0
+
+[CIDR]
+Host address		- 192.168.10.70
+Host address (decimal)	- 3232238150
+Host address (hex)	- C0A80A46
+Network address		- 192.168.10.64
+Network mask		- 255.255.255.192
+Network mask (bits)	- 26
+Network mask (hex)	- FFFFFFC0
+Broadcast address	- 192.168.10.127
+Cisco wildcard		- 0.0.0.63
+Addresses in network	- 64
+Network range		- 192.168.10.64 - 192.168.10.127
+Usable range		- 192.168.10.65 - 192.168.10.126
+
+-
+```
+
+### Reading the binary columns
+
+`ipcalc` prints each address in binary, with a **space at the prefix boundary**.
+Everything to the left of the space is the network part, and everything to the
+right is the host part:
+
+```
+120.27.1.0/8      01111000. 00011011.00000001.00000000
+                  └ 8 network bits ┘└──── 24 host bits ────┘
+mask 255.0.0.0    11111111. 00000000.00000000.00000000
+network           01111000. 00000000.00000000.00000000   = 120.0.0.0
+```
+
+The network address is the IP with every host bit set to 0 (a bitwise AND with
+the mask), and the broadcast address is the IP with every host bit set to 1.
+Usable hosts = 2^(host bits) − 2, because those two addresses are reserved:
+2^24 − 2 = **16,777,214**, which matches the `Hosts/Net` line.
+
+### What I understood — IP addressing and subnetting
+
+- **The prefix decides everything, not the address.** `127.0.0.1` is the same
+  address in all three of the first runs. With `/24` it sits in a 254-host network,
+  with `/16` in a 65,534-host network, and with `/32` it is a single host route
+  with no network around it at all (`Hostroute`, `Hosts/Net: 1`).
+- **Classes are historical defaults.** Class A (first octet 1–126) defaults to
+  `255.0.0.0` (/8), class B (128–191) to `255.255.0.0` (/16), and class C (192–223)
+  to `255.255.255.0` (/24). `ipcalc` still labels the class, but when no prefix is
+  given it assumes `/24` even for the class A address `126.34.0.1`. Modern
+  networks are classless (CIDR), so the class is only a label and the prefix is
+  what counts.
+- **A correction to the session notes:** `ip.md` lists `255.255.255.255` as
+  "Class D". That is not a class mask. It is the `/32` all-ones mask (a single
+  host), and `255.255.255.255` as an *address* is the limited broadcast. Class D
+  is the address range 224.0.0.0–239.255.255.255, used for multicast, and it has
+  no default mask.
+- **Finding the network for a host** (the "finding host" exercise in the notes):
+  for `197.23.45.10/24` the first 24 bits (`197.23.45`) are the network, so the
+  network is `197.23.45.0`, the host part is `.10`, and the usable hosts run
+  from `.1` to `.254`.
+- **Subnetting is borrowing host bits.** Going from `/24` to `/26` borrows 2 host
+  bits (the `.00 / .01 / .10 / .11` visible after the 24th bit), which gives
+  2² = **4 subnets** of 2⁶ − 2 = **62 hosts** each. You lose 6 usable addresses
+  overall (254 → 248), because each subnet needs its own network and broadcast
+  address. `sipcalc` gives the same four ranges, and confirms that
+  `192.168.10.70` belongs to the second one (`192.168.10.64/26`).
+- **Why this matters in DevOps:** VPC/subnet CIDRs in Terraform, Docker's
+  `172.17.0.0/16` bridge (section 1 above), Kubernetes pod CIDRs, and security
+  group rules like `10.0.0.0/8` all use this same arithmetic.
+
+### References from the course repo
+
+From [`session4-networking/resources.md`](https://github.com/Nency-Ravaliya/devops-heros/blob/main/session4-networking/resources.md):
+
+- https://github.com/Nency-Ravaliya/Subnetting
+- https://github.com/Nency-Ravaliya/IP-quest
+- https://github.com/Nency-Ravaliya/Network-Troubleshooting
+- https://github.com/Nency-Ravaliya/OSI-Network-devices
+- https://github.com/Nency-Ravaliya/Networking
+- https://github.com/Nency-Ravaliya/IPFIX-NETFLOW-NTP
+- https://github.com/Nency-Ravaliya/How-DHCP-Works
+
+The troubleshooting tools covered in those repos (`ping`, `traceroute`, `dig`,
+`nslookup`, `netstat`/`ss`, `curl`, `tcpdump`) are the ones practised in
+sections 1–10 above.
+
+---
+
 ## Summary
 
 | # | Area | Commands practised | Status |
@@ -836,6 +1096,7 @@ $ whois github.com | head -n 25
 | 8 | HTTP | `curl -I`, `curl -w`, `curl -D -`, `wget -O -`, `wget --spider` | Done |
 | 9 | Packet capture | `tcpdump -i eth0 -c 5 -n icmp` | Done |
 | 10 | Ownership | `whois` | Done |
+| 11 | IP addressing & subnetting (course `ip.md`) | `ipcalc` for every `ip.md` example, `ipcalc 192.168.10.0/24 /26`, `sipcalc -s 26` | Done |
 
 ### The three things I'll actually remember
 
