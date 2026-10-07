@@ -12,9 +12,14 @@ alertmanager:
 
 grafana:
   adminPassword: ""        # chart generates a random one into the kps-grafana Secret
+  # 256Mi was not enough: Grafana sat at the limit, the Go GC spun ~10 cores and the pod was
+  # OOM-killed in a loop. Cap the Go runtime and give it headroom instead.
+  env:
+    GOMAXPROCS: "2"
+    GOMEMLIMIT: "400MiB"
   resources:
-    requests: {cpu: 20m, memory: 128Mi}
-    limits: {memory: 256Mi}
+    requests: {cpu: 50m, memory: 256Mi}
+    limits: {cpu: "1", memory: 512Mi}
   sidecar:
     dashboards:
       enabled: true

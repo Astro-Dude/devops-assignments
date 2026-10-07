@@ -1,0 +1,9 @@
+$ helm upgrade kps prometheus-community/kube-prometheus-stack -n monitoring -f monitoring/kube-prometheus-stack-values.yaml --kube-context kind-hw-s21 --wait   # Grafana resource fix
+Release "kps" has been upgraded. Happy Helming!
+NAME: kps
+LAST DEPLOYED: Wed Oct  7 19:44:01 2026
+NAMESPACE: monitoring
+STATUS: deployed
+REVISION: 2
+DESCRIPTION: Upgrade complete
+NOTES:
