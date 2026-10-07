@@ -1,0 +1,304 @@
+################ ISSUE A: ErrImagePull (registry does not exist) ################
+$ kubectl -n s14-gap apply -f manifests/more-issues/01-errimagepull-registry.yaml
+pod/registry-typo created
+
+[+4s] registry-typo   0/1   ErrImagePull   0     4s
+[+8s] registry-typo   0/1   ErrImagePull   0     8s
+[+12s] registry-typo   0/1   ImagePullBackOff   0     12s
+[+16s] registry-typo   0/1   ImagePullBackOff   0     16s
+[+20s] registry-typo   0/1   ImagePullBackOff   0     20s
+[+24s] registry-typo   0/1   ImagePullBackOff   0     24s
+
+$ kubectl -n s14-gap describe pod registry-typo | sed -n '/^Events:/,$p'
+Events:
+  Type     Reason     Age                From               Message
+  ----     ------     ----               ----               -------
+  Normal   Scheduled  25s                default-scheduler  Successfully assigned s14-gap/registry-typo to hw-legacy-control-plane
+  Normal   BackOff    24s                kubelet            spec.containers{app}: Back-off pulling image "registry.example.invalid/team/web:1.0"
+  Warning  Failed     24s                kubelet            spec.containers{app}: Error: ImagePullBackOff
+  Normal   Pulling    13s (x2 over 24s)  kubelet            spec.containers{app}: Pulling image "registry.example.invalid/team/web:1.0"
+  Warning  Failed     13s (x2 over 24s)  kubelet            spec.containers{app}: Failed to pull image "registry.example.invalid/team/web:1.0": failed to pull and unpack image "registry.example.invalid/team/web:1.0": failed to resolve reference "registry.example.invalid/team/web:1.0": failed to do request: Head "https://registry.example.invalid/v2/team/web/manifests/1.0": dial tcp: lookup registry.example.invalid on 192.168.65.254:53: no such host
+  Warning  Failed     13s (x2 over 24s)  kubelet            spec.containers{app}: Error: ErrImagePull
+
+$ kubectl events -n s14-gap --for pod/registry-typo --types=Warning
+LAST SEEN           TYPE      REASON   OBJECT              MESSAGE
+24s                 Warning   Failed   Pod/registry-typo   Error: ImagePullBackOff
+13s (x2 over 24s)   Warning   Failed   Pod/registry-typo   Failed to pull image "registry.example.invalid/team/web:1.0": failed to pull and unpack image "registry.example.invalid/team/web:1.0": failed to resolve reference "registry.example.invalid/team/web:1.0": failed to do request: Head "https://registry.example.invalid/v2/team/web/manifests/1.0": dial tcp: lookup registry.example.invalid on 192.168.65.254:53: no such host
+13s (x2 over 24s)   Warning   Failed   Pod/registry-typo   Error: ErrImagePull
+
+$ kubectl -n s14-gap delete pod registry-typo --wait=true
+pod "registry-typo" deleted from s14-gap namespace
+
+$ kubectl -n s14-gap apply -f manifests/more-issues/01-FIXED.yaml
+pod/registry-typo created
+
+$ kubectl -n s14-gap wait --for=condition=Ready pod/registry-typo --timeout=60s
+pod/registry-typo condition met
+
+$ kubectl -n s14-gap get pod registry-typo
+NAME            READY   STATUS    RESTARTS   AGE
+registry-typo   1/1     Running   0          0s
+
+################ ISSUE B: stuck in ContainerCreating ################
+$ kubectl -n s14-gap apply -f manifests/more-issues/02-containercreating.yaml
+pod/web-with-config created
+
+$ kubectl -n s14-gap get pod web-with-config -o wide
+NAME              READY   STATUS              RESTARTS   AGE   IP       NODE                      NOMINATED NODE   READINESS GATES
+web-with-config   0/1     ContainerCreating   0          20s   <none>   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n s14-gap describe pod web-with-config | sed -n '/^Status:/p;/^Conditions:/,/^Volumes:/p;/^Events:/,$p'
+Status:           Pending
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   False 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+Events:
+  Type     Reason       Age               From               Message
+  ----     ------       ----              ----               -------
+  Normal   Scheduled    20s               default-scheduler  Successfully assigned s14-gap/web-with-config to hw-legacy-control-plane
+  Warning  FailedMount  4s (x6 over 20s)  kubelet            MountVolume.SetUp failed for volume "site-config" : configmap "web-site-config" not found
+
+$ kubectl -n s14-gap logs web-with-config
+Error from server (BadRequest): container "web" in pod "web-with-config" is waiting to start: ContainerCreating
+
+$ kubectl -n s14-gap get configmap web-site-config
+Error from server (NotFound): configmaps "web-site-config" not found
+
+$ kubectl -n s14-gap apply -f manifests/more-issues/02-FIXED-configmap.yaml
+configmap/web-site-config created
+
+$ kubectl -n s14-gap wait --for=condition=Ready pod/web-with-config --timeout=120s
+pod/web-with-config condition met
+
+$ kubectl -n s14-gap get pod web-with-config
+NAME              READY   STATUS    RESTARTS   AGE
+web-with-config   1/1     Running   0          33s
+
+$ kubectl -n s14-gap exec client -- wget -q -O- http://$(command kubectl --context kind-hw-legacy -n s14-gap get pod web-with-config -o jsonpath='{.status.podIP}')
+config mounted OK
+
+$ kubectl events -n s14-gap --for pod/web-with-config
+LAST SEEN           TYPE      REASON        OBJECT                MESSAGE
+33s                 Normal    Scheduled     Pod/web-with-config   Successfully assigned s14-gap/web-with-config to hw-legacy-control-plane
+17s (x6 over 33s)   Warning   FailedMount   Pod/web-with-config   MountVolume.SetUp failed for volume "site-config" : configmap "web-site-config" not found
+0s                  Normal    Pulled        Pod/web-with-config   Container image "nginx:1.27" already present on machine and can be accessed by the pod
+0s                  Normal    Created       Pod/web-with-config   Container created
+0s                  Normal    Started       Pod/web-with-config   Container started
+
+################ ISSUE C: configuration error (CreateContainerConfigError) ################
+$ kubectl -n s14-gap apply -f manifests/more-issues/03-secret-wrong-key.yaml -f manifests/more-issues/03-config-error.yaml
+secret/api-db created
+pod/api-config created
+
+$ kubectl -n s14-gap get pod api-config
+NAME         READY   STATUS                       RESTARTS   AGE
+api-config   0/1     CreateContainerConfigError   0          10s
+
+$ kubectl -n s14-gap describe pod api-config | sed -n '/State:/,/Ready:/p;/Environment:/,/Mounts:/p;/^Events:/,$p'
+    State:          Waiting
+      Reason:       CreateContainerConfigError
+    Ready:          False
+    Environment:
+      DB_HOST:      postgres.s14-gap.svc.cluster.local
+      DB_PASSWORD:  <set to the key 'password' in secret 'api-db'>  Optional: false
+    Mounts:
+Events:
+  Type     Reason     Age               From               Message
+  ----     ------     ----              ----               -------
+  Normal   Scheduled  10s               default-scheduler  Successfully assigned s14-gap/api-config to hw-legacy-control-plane
+  Normal   Pulled     9s (x2 over 10s)  kubelet            spec.containers{api}: Container image "busybox:1.36" already present on machine and can be accessed by the pod
+  Warning  Failed     9s (x2 over 10s)  kubelet            spec.containers{api}: Error: couldn't find key password in Secret s14-gap/api-db
+
+$ kubectl -n s14-gap get secret api-db -o jsonpath='{.data}'
+{"passwd":"bGFiLW9ubHktZGVtbw=="}
+$ kubectl -n s14-gap apply -f manifests/more-issues/03-FIXED-secret.yaml
+secret/api-db configured
+
+$ kubectl -n s14-gap wait --for=condition=Ready pod/api-config --timeout=120s
+pod/api-config condition met
+
+$ kubectl -n s14-gap get pod api-config
+NAME         READY   STATUS    RESTARTS   AGE
+api-config   1/1     Running   0          14s
+
+$ kubectl -n s14-gap logs api-config
+DB_HOST=postgres.s14-gap.svc.cluster.local
+password length=13
+
+################ ISSUE D: DNS - short name across namespaces ################
+$ kubectl apply -f manifests/more-issues/04-dns-backend.yaml
+deployment.apps/backend created
+service/backend created
+
+$ kubectl -n s14-gap-b rollout status deploy/backend --timeout=60s
+Waiting for deployment "backend" rollout to finish: 0 of 1 updated replicas are available...
+deployment "backend" successfully rolled out
+
+$ kubectl -n s14-gap exec client -- wget -T 3 -q -O- http://backend
+wget: bad address 'backend'
+command terminated with exit code 1
+
+$ kubectl -n s14-gap exec client -- nslookup backend
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+** server can't find backend.cluster.local: NXDOMAIN
+
+** server can't find backend.s14-gap.svc.cluster.local: NXDOMAIN
+
+** server can't find backend.cluster.local: NXDOMAIN
+
+** server can't find backend.svc.cluster.local: NXDOMAIN
+
+** server can't find backend.s14-gap.svc.cluster.local: NXDOMAIN
+
+** server can't find backend.svc.cluster.local: NXDOMAIN
+
+command terminated with exit code 1
+
+$ kubectl -n s14-gap exec client -- cat /etc/resolv.conf
+search s14-gap.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
+
+$ kubectl get svc -A -l !component --field-selector metadata.name=backend
+NAMESPACE   NAME      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+s14-gap-b   backend   ClusterIP   10.96.112.195   <none>        80/TCP    1s
+
+$ kubectl -n s14-gap exec client -- nslookup backend.s14-gap-b
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+Non-authoritative answer:
+
+** server can't find backend.s14-gap-b: NXDOMAIN
+
+command terminated with exit code 1
+
+$ kubectl -n s14-gap exec client -- wget -T 3 -q -O- http://backend.s14-gap-b | grep title
+<title>Welcome to nginx!</title>
+
+$ kubectl -n s14-gap exec client -- wget -T 3 -q -O- http://backend.s14-gap-b.svc.cluster.local | grep title
+<title>Welcome to nginx!</title>
+
+################ ISSUE E: pod networking - a NetworkPolicy drops traffic ################
+$ kubectl -n s14-gap apply -f manifests/more-issues/05-netpol-app.yaml
+pod/orders created
+networkpolicy.networking.k8s.io/default-deny-ingress created
+
+$ kubectl -n s14-gap wait --for=condition=Ready pod/orders --timeout=60s
+pod/orders condition met
+
+$ kubectl -n s14-gap get pods -o wide
+NAME              READY   STATUS    RESTARTS   AGE    IP            NODE                      NOMINATED NODE   READINESS GATES
+api-config        1/1     Running   0          28s    10.244.0.72   hw-legacy-control-plane   <none>           <none>
+client            1/1     Running   0          107s   10.244.0.65   hw-legacy-control-plane   <none>           <none>
+orders            1/1     Running   0          11s    10.244.0.74   hw-legacy-control-plane   <none>           <none>
+registry-typo     1/1     Running   0          61s    10.244.0.70   hw-legacy-control-plane   <none>           <none>
+web-with-config   1/1     Running   0          61s    10.244.0.71   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl -n s14-gap exec client -- wget -T 3 -q -O- http://10.244.0.74; echo exit=$?
+wget: download timed out
+command terminated with exit code 1
+exit=1
+
+$ kubectl -n s14-gap exec orders -- curl -s -o /dev/null -w 'from inside the pod: HTTP %{http_code}\n' http://localhost
+from inside the pod: HTTP 200
+
+$ kubectl -n s14-gap exec client -- ping -c 2 -W 2 10.244.0.74
+PING 10.244.0.74 (10.244.0.74): 56 data bytes
+
+--- 10.244.0.74 ping statistics ---
+2 packets transmitted, 0 packets received, 100% packet loss
+command terminated with exit code 1
+
+$ kubectl -n s14-gap get networkpolicy
+NAME                   POD-SELECTOR   AGE
+default-deny-ingress   <none>         17s
+
+$ kubectl -n s14-gap describe networkpolicy default-deny-ingress
+Name:         default-deny-ingress
+Namespace:    s14-gap
+Created on:   2026-10-07 19:05:15 +0530 IST
+Labels:       <none>
+Annotations:  <none>
+Spec:
+  PodSelector:     <none> (Allowing the specific traffic to all pods in this namespace)
+  Allowing ingress traffic:
+    <none> (Selected pods are isolated for ingress connectivity)
+  Not affecting egress traffic
+  Policy Types: Ingress
+
+$ kubectl -n s14-gap apply -f manifests/more-issues/05-FIXED-allow.yaml
+networkpolicy.networking.k8s.io/allow-client-to-orders created
+
+$ kubectl -n s14-gap get networkpolicy
+NAME                     POD-SELECTOR   AGE
+allow-client-to-orders   app=orders     10s
+default-deny-ingress     <none>         27s
+
+$ kubectl -n s14-gap exec client -- wget -T 3 -q -O- http://10.244.0.74 | grep title
+<title>Welcome to nginx!</title>
+
+$ kubectl -n s14-gap run intruder --image=busybox:1.36 --restart=Never --rm -i --quiet -- wget -T 3 -q -O- http://10.244.0.74; echo exit=$?
+wget: download timed out
+pod s14-gap/intruder terminated (Error)
+exit=1
+
+################ kubectl events for the whole namespace ################
+$ kubectl events -n s14-gap --types=Warning
+LAST SEEN            TYPE      REASON        OBJECT                MESSAGE
+107s                 Warning   Failed        Pod/registry-typo     Error: ImagePullBackOff
+96s (x2 over 107s)   Warning   Failed        Pod/registry-typo     Failed to pull image "registry.example.invalid/team/web:1.0": failed to pull and unpack image "registry.example.invalid/team/web:1.0": failed to resolve reference "registry.example.invalid/team/web:1.0": failed to do request: Head "https://registry.example.invalid/v2/team/web/manifests/1.0": dial tcp: lookup registry.example.invalid on 192.168.65.254:53: no such host
+96s (x2 over 107s)   Warning   Failed        Pod/registry-typo     Error: ErrImagePull
+66s (x6 over 82s)    Warning   FailedMount   Pod/web-with-config   MountVolume.SetUp failed for volume "site-config" : configmap "web-site-config" not found
+48s (x2 over 49s)    Warning   Failed        Pod/api-config        Error: couldn't find key password in Secret s14-gap/api-db
+
+$ kubectl events -n s14-gap | tail -15
+49s                  Normal    Created       Pod/web-with-config   Container created
+49s                  Normal    Pulled        Pod/web-with-config   Container image "nginx:1.27" already present on machine and can be accessed by the pod
+49s                  Normal    Scheduled     Pod/api-config        Successfully assigned s14-gap/api-config to hw-legacy-control-plane
+48s (x2 over 49s)    Warning   Failed        Pod/api-config        Error: couldn't find key password in Secret s14-gap/api-db
+35s (x3 over 49s)    Normal    Pulled        Pod/api-config        Container image "busybox:1.36" already present on machine and can be accessed by the pod
+35s                  Normal    Created       Pod/api-config        Container created
+35s                  Normal    Started       Pod/api-config        Container started
+32s                  Normal    Started       Pod/orders            Container started
+32s                  Normal    Created       Pod/orders            Container created
+32s                  Normal    Pulled        Pod/orders            Container image "nginx:1.27" already present on machine and can be accessed by the pod
+32s                  Normal    Scheduled     Pod/orders            Successfully assigned s14-gap/orders to hw-legacy-control-plane
+5s                   Normal    Scheduled     Pod/intruder          Successfully assigned s14-gap/intruder to hw-legacy-control-plane
+4s                   Normal    Created       Pod/intruder          Container created
+4s                   Normal    Pulled        Pod/intruder          Container image "busybox:1.36" already present on machine and can be accessed by the pod
+4s                   Normal    Started       Pod/intruder          Container started
+
+$ kubectl -n s14-gap get pods -o wide
+NAME              READY   STATUS    RESTARTS   AGE    IP            NODE                      NOMINATED NODE   READINESS GATES
+api-config        1/1     Running   0          49s    10.244.0.72   hw-legacy-control-plane   <none>           <none>
+client            1/1     Running   0          2m8s   10.244.0.65   hw-legacy-control-plane   <none>           <none>
+orders            1/1     Running   0          32s    10.244.0.74   hw-legacy-control-plane   <none>           <none>
+registry-typo     1/1     Running   0          82s    10.244.0.70   hw-legacy-control-plane   <none>           <none>
+web-with-config   1/1     Running   0          82s    10.244.0.71   hw-legacy-control-plane   <none>           <none>
+
+################ ISSUE D (addendum): busybox nslookup vs the full name ################
+$ kubectl -n s14-gap exec client -- nslookup backend.s14-gap-b.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+Name:	backend.s14-gap-b.svc.cluster.local
+Address: 10.96.112.195
+
+
+
+$ kubectl -n s14-gap exec client -- nslookup -type=A backend.s14-gap-b.svc.cluster.local.
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+Name:	backend.s14-gap-b.svc.cluster.local
+Address: 10.96.112.195
+
+

@@ -1,0 +1,16 @@
+# Allow pods labelled role=client to reach the orders pod on port 80.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-client-to-orders
+spec:
+  podSelector:
+    matchLabels: {app: orders}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels: {role: client}
+      ports:
+        - port: 80
+          protocol: TCP

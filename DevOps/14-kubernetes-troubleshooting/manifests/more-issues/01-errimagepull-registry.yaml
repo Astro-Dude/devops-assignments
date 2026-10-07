@@ -1,0 +1,10 @@
+# ErrImagePull with a DIFFERENT root cause from the earlier "tag not found":
+# the registry host itself does not exist, so the pull fails at DNS resolution.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: registry-typo
+spec:
+  containers:
+    - name: app
+      image: registry.example.invalid/team/web:1.0

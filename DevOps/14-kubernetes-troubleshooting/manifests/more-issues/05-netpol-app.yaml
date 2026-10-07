@@ -1,0 +1,21 @@
+# Pod networking: an app pod plus a default-deny ingress NetworkPolicy that
+# someone applied to the namespace.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: orders
+  labels: {app: orders}
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27
+      resources:
+        requests: {cpu: 5m, memory: 8Mi}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}          # every pod in the namespace
+  policyTypes: [Ingress]   # no ingress rules -> all inbound traffic denied

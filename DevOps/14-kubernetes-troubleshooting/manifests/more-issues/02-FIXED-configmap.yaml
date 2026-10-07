@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-site-config
+data:
+  default.conf: |
+    server {
+      listen 80;
+      location / { return 200 "config mounted OK\n"; }
+    }

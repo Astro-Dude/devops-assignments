@@ -1,0 +1,29 @@
+# A backend Service living in a DIFFERENT namespace (s14-gap-b) from the client.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: s14-gap-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: backend}
+  template:
+    metadata:
+      labels: {app: backend}
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27
+          resources:
+            requests: {cpu: 5m, memory: 8Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: s14-gap-b
+spec:
+  selector: {app: backend}
+  ports:
+    - port: 80

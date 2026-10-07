@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: registry-typo
+spec:
+  containers:
+    - name: app
+      image: nginx:1.27          # image from a registry that exists
+      resources:
+        requests: {cpu: 5m, memory: 8Mi}

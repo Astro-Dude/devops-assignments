@@ -1,0 +1,21 @@
+# Configuration issue: the env var references a Secret key that does not exist.
+# Status becomes CreateContainerConfigError.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-config
+spec:
+  containers:
+    - name: api
+      image: busybox:1.36
+      command: ["sh", "-c", "echo DB_HOST=$DB_HOST; echo password length=${#DB_PASSWORD}; sleep 3600"]
+      resources:
+        requests: {cpu: 5m, memory: 8Mi}
+      env:
+        - name: DB_HOST
+          value: postgres.s14-gap.svc.cluster.local
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: api-db
+              key: password            # the Secret only has the key "passwd"

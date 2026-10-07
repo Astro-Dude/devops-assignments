@@ -1,0 +1,20 @@
+# Stuck in ContainerCreating: the pod mounts a ConfigMap that does not exist.
+# The scheduler places it fine; the kubelet cannot build the volume, so the
+# container is never created.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-with-config
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27
+      resources:
+        requests: {cpu: 5m, memory: 8Mi}
+      volumeMounts:
+        - name: site-config
+          mountPath: /etc/nginx/conf.d
+  volumes:
+    - name: site-config
+      configMap:
+        name: web-site-config          # <-- not created yet
