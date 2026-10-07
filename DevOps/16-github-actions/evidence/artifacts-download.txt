@@ -1,0 +1,20 @@
+$ gh run download 37627185543 -R Astro-Dude/devops-assignments -n calculator-build -n test-report-windows-latest-py3.13
+$ find . -maxdepth 2 | sort
+.
+./calculator-build
+./calculator-build/build-info.txt
+./calculator-build/s16-calculator-1.0.0.tar.gz
+./calculator-build/SHA256SUMS
+./test-report-windows-latest-py3.13
+./test-report-windows-latest-py3.13/coverage.xml
+./test-report-windows-latest-py3.13/htmlcov
+./test-report-windows-latest-py3.13/junit.xml
+$ cat calculator-build/build-info.txt
+Application : s16-calculator
+Version     : 1.0.0
+Git SHA     : aad6094c7b9df37c04216f70746f4700b94e49bd
+Built at    : 2026-10-07T13:17:48Z
+Built on    : GitHub Actions 1000001558 (Linux)
+Workflow run: 37627185543
+$ head -c 400 test-report-windows-latest-py3.13/junit.xml
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="16" time="0.527" timestamp="2026-10-07T13:16:52.623556+00:00" hostname="runnervmfi6oq"><testcase classname="tests.test_api" name="test_health" time="0.016" /><testcase classname="tests.test_api" name="test_index_lists_operations" time="0.005" /><testcase classna

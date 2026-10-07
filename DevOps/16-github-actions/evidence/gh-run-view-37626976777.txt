@@ -1,0 +1,108 @@
+$ gh run view 37626976777 -R Astro-Dude/devops-assignments
+
+X main S16 CI/CD - Calculator · 37626976777
+Triggered via push about 8 minutes ago
+
+JOBS
+X CI: Test (ubuntu-latest, py3.13) in 13s (ID 112811147513)
+  ✓ Set up job
+  ✓ Checkout source code
+  ✓ Show runner details
+  ✓ Setup Python 3.13
+  ✓ Install dependencies
+  X Run unit tests with coverage
+  ✓ Upload test report + coverage artifact
+  - Post Setup Python 3.13
+  ✓ Post Checkout source code
+  ✓ Complete job
+X CI: Test (macos-latest, py3.13) in 17s (ID 112811147906)
+  ✓ Set up job
+  ✓ Checkout source code
+  ✓ Show runner details
+  ✓ Setup Python 3.13
+  ✓ Install dependencies
+  X Run unit tests with coverage
+  ✓ Upload test report + coverage artifact
+  - Post Setup Python 3.13
+  ✓ Post Checkout source code
+  ✓ Complete job
+X CI: Test (windows-latest, py3.13) in 25s (ID 112811147975)
+  ✓ Set up job
+  ✓ Checkout source code
+  ✓ Show runner details
+  ✓ Setup Python 3.13
+  ✓ Install dependencies
+  X Run unit tests with coverage
+  ✓ Upload test report + coverage artifact
+  - Post Setup Python 3.13
+  ✓ Post Checkout source code
+  ✓ Complete job
+X CI: Test (ubuntu-latest, py3.14) in 16s (ID 112811148066)
+  ✓ Set up job
+  ✓ Checkout source code
+  ✓ Show runner details
+  ✓ Setup Python 3.14
+  ✓ Install dependencies
+  X Run unit tests with coverage
+  ✓ Upload test report + coverage artifact
+  - Post Setup Python 3.14
+  ✓ Post Checkout source code
+  ✓ Complete job
+X CI: Test (ubuntu-latest, py3.12) in 17s (ID 112811148554)
+  ✓ Set up job
+  ✓ Checkout source code
+  ✓ Show runner details
+  ✓ Setup Python 3.12
+  ✓ Install dependencies
+  X Run unit tests with coverage
+  ✓ Upload test report + coverage artifact
+  - Post Setup Python 3.12
+  ✓ Post Checkout source code
+  ✓ Complete job
+✓ CI: Test report (download artifacts) in 6s (ID 112811360775)
+- CI: Security check + secrets demo (ID 112811363536)
+- CD: Publish image to GHCR (ID 112811363737)
+- CD: Deploy to kind + smoke test in 0s (ID 112811363813)
+- CI: Build bundle + Docker image (ID 112811364273)
+
+ANNOTATIONS
+X Process completed with exit code 1.
+CI: Test (ubuntu-latest, py3.13): .github#100
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Test (ubuntu-latest, py3.13): .github#1
+
+X Process completed with exit code 1.
+CI: Test (macos-latest, py3.13): .github#99
+
+- Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.
+CI: Test (macos-latest, py3.13): .github#1
+
+X Process completed with exit code 1.
+CI: Test (windows-latest, py3.13): .github#99
+
+X Process completed with exit code 1.
+CI: Test (ubuntu-latest, py3.14): .github#100
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Test (ubuntu-latest, py3.14): .github#1
+
+X Process completed with exit code 1.
+CI: Test (ubuntu-latest, py3.12): .github#100
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Test (ubuntu-latest, py3.12): .github#1
+
+- "The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748"
+CI: Test report (download artifacts): .github#1
+
+
+ARTIFACTS
+test-report-macos-latest-py3.13
+test-report-ubuntu-latest-py3.12
+test-report-ubuntu-latest-py3.14
+test-report-ubuntu-latest-py3.13
+test-report-windows-latest-py3.13
+
+To see what failed, try: gh run view 37626976777 --log-failed
+View this run on GitHub: https://github.com/Astro-Dude/devops-assignments/actions/runs/37626976777

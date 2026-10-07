@@ -1,0 +1,4 @@
+$ curl -s "https://ghcr.io/token?scope=repository:astro-dude/devops-assignments/s16-calculator:pull"   # anonymous token, no login
+$ curl -s -H "Authorization: Bearer $TOKEN" https://ghcr.io/v2/astro-dude/devops-assignments/s16-calculator/tags/list
+{"name":"astro-dude/devops-assignments/s16-calculator","tags":["7288c2967a256134b6388a072303eaa67e976a5d","latest","aad6094c7b9df37c04216f70746f4700b94e49bd"]}
+

@@ -259,7 +259,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: read # pull the private-by-default GHCR image
+      packages: read # lets GITHUB_TOKEN pull the image (needed if the package is private)
     environment:
       name: s16-kind-ephemeral
     steps:

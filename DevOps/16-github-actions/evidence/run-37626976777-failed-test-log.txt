@@ -1,0 +1,100 @@
+ Run unit tests with coverage | ##[group]Run mkdir -p reports
+ Run unit tests with coverage | mkdir -p reports
+ Run unit tests with coverage | pytest -v \
+ Run unit tests with coverage |   --junitxml=reports/junit.xml \
+ Run unit tests with coverage |   --cov --cov-report=term \
+ Run unit tests with coverage |   --cov-report=xml:reports/coverage.xml \
+ Run unit tests with coverage |   --cov-report=html:reports/htmlcov \
+ Run unit tests with coverage |   --cov-fail-under=90
+ Run unit tests with coverage | shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+ Run unit tests with coverage | env:
+ Run unit tests with coverage |   APP_DIR: DevOps/16-github-actions
+ Run unit tests with coverage |   IMAGE_NAME: ghcr.io/astro-dude/devops-assignments/s16-calculator
+ Run unit tests with coverage |   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+ Run unit tests with coverage |   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+ Run unit tests with coverage |   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+ Run unit tests with coverage |   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+ Run unit tests with coverage |   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+ Run unit tests with coverage |   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+ Run unit tests with coverage | ##[endgroup]
+ Run unit tests with coverage | ============================= test session starts ==============================
+ Run unit tests with coverage | platform linux -- Python 3.13.16, pytest-9.1.1, pluggy-1.6.0 -- /opt/hostedtoolcache/Python/3.13.16/x64/bin/python
+ Run unit tests with coverage | cachedir: .pytest_cache
+ Run unit tests with coverage | rootdir: /home/runner/work/devops-assignments/devops-assignments/DevOps/16-github-actions
+ Run unit tests with coverage | configfile: pytest.ini
+ Run unit tests with coverage | testpaths: tests
+ Run unit tests with coverage | plugins: cov-7.1.0
+ Run unit tests with coverage | collecting ... collected 16 items
+ Run unit tests with coverage | 
+ Run unit tests with coverage | tests/test_api.py::test_health PASSED                                    [  6%]
+ Run unit tests with coverage | tests/test_api.py::test_index_lists_operations PASSED                    [ 12%]
+ Run unit tests with coverage | tests/test_api.py::test_operations[add-2-3-5] FAILED                     [ 18%]
+ Run unit tests with coverage | tests/test_api.py::test_operations[subtract-9-4-5] PASSED                [ 25%]
+ Run unit tests with coverage | tests/test_api.py::test_operations[multiply-6-7-42] PASSED               [ 31%]
+ Run unit tests with coverage | tests/test_api.py::test_operations[divide-9-2-4.5] PASSED                [ 37%]
+ Run unit tests with coverage | tests/test_api.py::test_divide_by_zero_returns_400 PASSED                [ 43%]
+ Run unit tests with coverage | tests/test_api.py::test_unknown_operation_returns_404 PASSED             [ 50%]
+ Run unit tests with coverage | tests/test_api.py::test_missing_parameter_returns_400 PASSED             [ 56%]
+ Run unit tests with coverage | tests/test_api.py::test_non_numeric_parameter_returns_400 PASSED         [ 62%]
+ Run unit tests with coverage | tests/test_calculator.py::test_add FAILED                                [ 68%]
+ Run unit tests with coverage | tests/test_calculator.py::test_add_negative FAILED                       [ 75%]
+ Run unit tests with coverage | tests/test_calculator.py::test_subtract PASSED                           [ 81%]
+ Run unit tests with coverage | tests/test_calculator.py::test_multiply PASSED                           [ 87%]
+ Run unit tests with coverage | tests/test_calculator.py::test_divide PASSED                             [ 93%]
+ Run unit tests with coverage | tests/test_calculator.py::test_divide_by_zero PASSED                     [100%]
+ Run unit tests with coverage | 
+ Run unit tests with coverage | =================================== FAILURES ===================================
+ Run unit tests with coverage | __________________________ test_operations[add-2-3-5] __________________________
+ Run unit tests with coverage | 
+ Run unit tests with coverage | client = <FlaskClient <Flask 'app.main'>>, operation = 'add', a = 2, b = 3
+ Run unit tests with coverage | expected = 5
+ Run unit tests with coverage | 
+ Run unit tests with coverage |     @pytest.mark.parametrize(
+ Run unit tests with coverage |         "operation,a,b,expected",
+ Run unit tests with coverage |         [("add", 2, 3, 5), ("subtract", 9, 4, 5), ("multiply", 6, 7, 42), ("divide", 9, 2, 4.5)],
+ Run unit tests with coverage |     )
+ Run unit tests with coverage |     def test_operations(client, operation, a, b, expected):
+ Run unit tests with coverage |         resp = client.get(f"/api/{operation}?a={a}&b={b}")
+ Run unit tests with coverage |         assert resp.status_code == 200
+ Run unit tests with coverage | >       assert resp.get_json()["result"] == expected
+ Run unit tests with coverage | E       assert 6.0 == 5
+ Run unit tests with coverage | 
+ Run unit tests with coverage | tests/test_api.py:32: AssertionError
+ Run unit tests with coverage | ___________________________________ test_add ___________________________________
+ Run unit tests with coverage | 
+ Run unit tests with coverage |     def test_add():
+ Run unit tests with coverage | >       assert add(10, 5) == 15
+ Run unit tests with coverage | E       assert 16 == 15
+ Run unit tests with coverage | E        +  where 16 = add(10, 5)
+ Run unit tests with coverage | 
+ Run unit tests with coverage | tests/test_calculator.py:7: AssertionError
+ Run unit tests with coverage | ______________________________ test_add_negative _______________________________
+ Run unit tests with coverage | 
+ Run unit tests with coverage |     def test_add_negative():
+ Run unit tests with coverage | >       assert add(-2, -3) == -5
+ Run unit tests with coverage | E       assert -4 == -5
+ Run unit tests with coverage | E        +  where -4 = add(-2, -3)
+ Run unit tests with coverage | 
+ Run unit tests with coverage | tests/test_calculator.py:11: AssertionError
+ Run unit tests with coverage | - generated xml file: /home/runner/work/devops-assignments/devops-assignments/DevOps/16-github-actions/reports/junit.xml -
+ Run unit tests with coverage | ================================ tests coverage ================================
+ Run unit tests with coverage | _______________ coverage: platform linux, python 3.13.16-final-0 _______________
+ Run unit tests with coverage | 
+ Run unit tests with coverage | Name                Stmts   Miss  Cover
+ Run unit tests with coverage | ---------------------------------------
+ Run unit tests with coverage | app/__init__.py         1      0   100%
+ Run unit tests with coverage | app/calculator.py      11      0   100%
+ Run unit tests with coverage | app/main.py            32      0   100%
+ Run unit tests with coverage | ---------------------------------------
+ Run unit tests with coverage | TOTAL                  44      0   100%
+ Run unit tests with coverage | Coverage HTML written to dir reports/htmlcov
+ Run unit tests with coverage | Coverage XML written to file reports/coverage.xml
+ Run unit tests with coverage | Required test coverage of 90% reached. Total coverage: 100.00%
+ Run unit tests with coverage | =========================== short test summary info ============================
+ Run unit tests with coverage | FAILED tests/test_api.py::test_operations[add-2-3-5] - assert 6.0 == 5
+ Run unit tests with coverage | FAILED tests/test_calculator.py::test_add - assert 16 == 15
+ Run unit tests with coverage |  +  where 16 = add(10, 5)
+ Run unit tests with coverage | FAILED tests/test_calculator.py::test_add_negative - assert -4 == -5
+ Run unit tests with coverage |  +  where -4 = add(-2, -3)
+ Run unit tests with coverage | ========================= 3 failed, 13 passed in 0.35s =========================
+ Run unit tests with coverage | ##[error]Process completed with exit code 1.
