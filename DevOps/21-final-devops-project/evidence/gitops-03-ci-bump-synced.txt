@@ -1,0 +1,51 @@
+# CI run 37636382434 (commit 0b9665e) finished green; its gitops-bump job pushed:
+$ git log --oneline -3 -- DevOps/21-final-devops-project/gitops
+4e92794 s21 gitops: deploy tickethub 0b9665e to kind [skip ci]
+c5e5eef s21 gitops: deploy tickethub 25d4225 to kind [skip ci]
+0557342 Add Session 21 capstone: TicketHub app, Docker, Helm, raw manifests, Terraform, CI/CD + DevSecOps pipeline
+
+$ git show 4e92794 --stat --format="%h %an %s"
+4e92794 github-actions[bot] s21 gitops: deploy tickethub 0b9665e to kind [skip ci]
+
+diff --git a/DevOps/21-final-devops-project/gitops/environments/kind/values.yaml b/DevOps/21-final-devops-project/gitops/environments/kind/values.yaml
+index 6f1a48c..9752a3a 100644
+--- a/DevOps/21-final-devops-project/gitops/environments/kind/values.yaml
++++ b/DevOps/21-final-devops-project/gitops/environments/kind/values.yaml
+@@ -2,9 +2,9 @@
+ # image.*.tag is written by the CI pipeline (job "gitops-bump") after a green build — do not edit by hand.
+ image:
+   backend:
+-    tag: "25d422506213bc43a6177ea19bdd3efd2c504156"
++    tag: "0b9665e38a2db926e487fe72e9283d84e672c0d5"
+   frontend:
+-    tag: "25d422506213bc43a6177ea19bdd3efd2c504156"
++    tag: "0b9665e38a2db926e487fe72e9283d84e672c0d5"
+ config:
+   appEnv: kind-gitops
+   logLevel: INFO
+
+# Argo CD polls Git every 60s (timeout.reconciliation), sees the new revision and syncs:
+$ kubectl -n argocd get application tickethub -o jsonpath='{range .status.history[*]}{.id} {.deployedAt} {.revisions[1]}{"\n"}{end}'
+0 2026-10-07T14:26:34Z c5e5eef4020f5d373c94fe46e0fccf2071d79e5e
+1 2026-10-07T14:31:11Z 2964e8f4429490fc2cda395a991221470d6bba84
+
+$ kubectl -n argocd get application tickethub -o wide
+NAME        SYNC STATUS   HEALTH STATUS   REVISION   PROJECT
+tickethub   Synced        Healthy                    default
+
+$ kubectl -n tickethub get deploy -o custom-columns='NAME:.metadata.name,IMAGE:.spec.template.spec.containers[0].image'
+NAME                 IMAGE
+tickethub-backend    ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5
+tickethub-frontend   ghcr.io/astro-dude/s21-tickethub-frontend:0b9665e38a2db926e487fe72e9283d84e672c0d5
+tickethub-postgres   postgres:17-alpine
+
+$ kubectl -n tickethub get rs -l app.kubernetes.io/name=tickethub-backend
+NAME                          DESIRED   CURRENT   READY   AGE
+tickethub-backend-658bbbfc4   2         2         2       42s
+tickethub-backend-d7dccf8fb   0         0         0       5m20s
+
+$ curl -s http://tickethub.localtest.me:28080/api/info
+{"service":"TicketHub API","version":"0b9665e","environment":"kind-gitops","pod":"tickethub-backend-658bbbfc4-db66v","default_team":"L1 Support"}
+# data survived the rollout (PostgreSQL on the PVC):
+$ curl -s http://tickethub.localtest.me:28080/api/stats
+{"total":34,"open":32,"in_progress":1,"resolved":1,"closed":0,"urgent_open":4}
