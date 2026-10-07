@@ -16,7 +16,10 @@ LABEL org.opencontainers.image.source="https://github.com/Astro-Dude/devops-assi
       org.opencontainers.image.title="tickethub-frontend" \
       org.opencontainers.image.description="TicketHub React UI served by nginx (Session 21 capstone)"
 USER root
-RUN apk upgrade --no-cache
+# worker_processes auto = one worker per *host* CPU (15 on the lab VM), which blew the 64Mi limit
+# (OOMKilled). Two workers are plenty for static files.
+RUN apk upgrade --no-cache \
+    && sed -i 's/^worker_processes.*/worker_processes  2;/' /etc/nginx/nginx.conf
 USER 101
 # BACKEND_URL is substituted into the template by the nginx image entrypoint (envsubst).
 ENV BACKEND_URL=http://backend:8000

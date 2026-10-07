@@ -1,0 +1,24 @@
+# Gitleaks with the original config (what CI run 37633166811 ran) — the security gate closed on this:
+$ gitleaks dir DevOps/21-final-devops-project --config security/gitleaks.toml --redact --verbose --exit-code 1
+
+
+Finding:     remote_access_security_group_id = "REDACTED"
+Secret:      REDACTED
+RuleID:      generic-api-key
+Entropy:     3.721928
+File:        /repo/DevOps/21-final-devops-project/evidence/terraform-07-destroy.txt
+Line:        291
+Fingerprint: /repo/DevOps/21-final-devops-project/evidence/terraform-07-destroy.txt:generic-api-key:291
+
+2:13PM INF scanned ~316809 bytes (316.81 KB) in 155ms
+2:13PM WRN leaks found: 1
+exit code: 1
+
+# Triage: evidence/terraform-07-destroy.txt line 291 is `remote_access_security_group_id = "sg-yrzglhnyi9rkjkjql"`,
+# a fake security-group id invented by the AWS emulator. Not a secret -> narrow allowlist regex ^sg-[a-z0-9]{17}$ added.
+$ gitleaks dir DevOps/21-final-devops-project --config security/gitleaks.toml --redact --exit-code 1
+
+
+2:13PM INF scanned ~317580 bytes (317.58 KB) in 132ms
+2:13PM INF no leaks found
+exit code: 0

@@ -32,15 +32,16 @@ backend:
   replicaCount: 2
   port: 8000
   resources:
-    requests: {cpu: 50m, memory: 96Mi}
+    # 96Mi was too low: the API idles at ~85Mi, so the 85% memory HPA target fired at rest
+    requests: {cpu: 50m, memory: 128Mi}
     limits: {cpu: 500m, memory: 256Mi}
 
 frontend:
   replicaCount: 2
   port: 8080
   resources:
-    requests: {cpu: 10m, memory: 16Mi}
-    limits: {cpu: 200m, memory: 64Mi}
+    requests: {cpu: 10m, memory: 32Mi}
+    limits: {cpu: 200m, memory: 96Mi}
 
 postgres:
   image: postgres:17-alpine

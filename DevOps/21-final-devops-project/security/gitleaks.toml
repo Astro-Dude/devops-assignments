@@ -13,4 +13,5 @@ paths = [
 regexes = [
   '''CHANGE_ME''',                     # placeholder in kubernetes/02-secret.yaml.example
   '''local-dev-only''',                # docker compose default for a throw-away local DB
+  '''^sg-[a-z0-9]{17}$''',             # fake security-group ids printed by the AWS emulator (run 37633166811 false positive)
 ]
