@@ -1,0 +1,97 @@
+$ kubectl -n tickethub get hpa tickethub-backend
+NAME                REFERENCE                      TARGETS                         MINPODS   MAXPODS   REPLICAS   AGE
+tickethub-backend   Deployment/tickethub-backend   cpu: 31%/70%, memory: 70%/85%   2         4         2          17m
+
+$ kubectl -n tickethub run loadgen --image=busybox:1.37 --restart=Never --overrides='{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":65534,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"loadgen","image":"busybox:1.37","command":["sh","-c","for i in 1 2 3 4 5 6; do (while true; do wget -q -O /dev/null http://tickethub-backend:8000/api/tickets; done) & done; sleep 240"],"resources":{"requests":{"cpu":"50m","memory":"16Mi"},"limits":{"cpu":"500m","memory":"64Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]}}'
+pod/loadgen created
+
+# watching the HPA every 20s while 6 parallel wget loops hit GET /api/tickets
+--- t+20s
+tickethub-backend   Deployment/tickethub-backend   cpu: 31%/70%, memory: 70%/85%   2     4     2     17m
+--- t+40s
+tickethub-backend   Deployment/tickethub-backend   cpu: 28%/70%, memory: 70%/85%   2     4     2     17m
+--- t+60s
+tickethub-backend   Deployment/tickethub-backend   cpu: 852%/70%, memory: 73%/85%   2     4     4     18m
+--- t+80s
+tickethub-backend   Deployment/tickethub-backend   cpu: 887%/70%, memory: 72%/85%   2     4     4     18m
+--- t+100s
+tickethub-backend   Deployment/tickethub-backend   cpu: 681%/70%, memory: 72%/85%   2     4     4     18m
+--- t+120s
+tickethub-backend   Deployment/tickethub-backend   cpu: 711%/70%, memory: 73%/85%   2     4     4     19m
+--- t+140s
+tickethub-backend   Deployment/tickethub-backend   cpu: 721%/70%, memory: 73%/85%   2     4     4     19m
+--- t+160s
+tickethub-backend   Deployment/tickethub-backend   cpu: 685%/70%, memory: 73%/85%   2     4     4     19m
+--- t+180s
+tickethub-backend   Deployment/tickethub-backend   cpu: 721%/70%, memory: 73%/85%   2     4     4     20m
+--- t+200s
+tickethub-backend   Deployment/tickethub-backend   cpu: 708%/70%, memory: 73%/85%   2     4     4     20m
+--- t+220s
+tickethub-backend   Deployment/tickethub-backend   cpu: 739%/70%, memory: 73%/85%   2     4     4     20m
+--- t+240s
+tickethub-backend   Deployment/tickethub-backend   cpu: 680%/70%, memory: 73%/85%   2     4     4     21m
+$ kubectl -n tickethub get pods -l app.kubernetes.io/name=tickethub-backend
+NAME                                 READY   STATUS     RESTARTS   AGE
+tickethub-backend-548f8849fd-h5rcq   0/1     Init:0/1   0          4s
+tickethub-backend-658bbbfc4-db66v    1/1     Running    0          17m
+tickethub-backend-658bbbfc4-ggkm5    1/1     Running    0          3m38s
+tickethub-backend-658bbbfc4-mzptz    1/1     Running    0          16m
+tickethub-backend-658bbbfc4-trkp5    1/1     Running    0          3m38s
+
+$ kubectl -n tickethub describe hpa tickethub-backend | sed -n '/^Events:/,$p' | cut -c1-200
+Events:
+  Type     Reason                        Age                From                       Message
+  ----     ------                        ----               ----                       -------
+  Normal   SuccessfulRescale             21m                horizontal-pod-autoscaler  New size: 2; reason: Current number of replicas below Spec.MinReplicas
+  Warning  FailedGetResourceMetric       21m (x2 over 21m)  horizontal-pod-autoscaler  failed to get cpu utilization: unable to get metrics for resource cpu: no metrics returned from resource metrics 
+  Warning  FailedGetResourceMetric       21m (x2 over 21m)  horizontal-pod-autoscaler  failed to get memory utilization: unable to get metrics for resource memory: no metrics returned from resource me
+  Warning  FailedComputeMetricsReplicas  21m (x2 over 21m)  horizontal-pod-autoscaler  invalid metrics (2 invalid out of 2), first error is: failed to get cpu resource metric value: failed to get cpu 
+  Warning  FailedGetResourceMetric       16m                horizontal-pod-autoscaler  failed to get memory utilization: did not receive metrics for targeted pods (pods might be unready)
+  Warning  FailedComputeMetricsReplicas  16m                horizontal-pod-autoscaler  invalid metrics (2 invalid out of 2), first error is: failed to get cpu resource metric value: failed to get cpu 
+  Warning  FailedGetResourceMetric       16m (x2 over 16m)  horizontal-pod-autoscaler  failed to get cpu utilization: did not receive metrics for targeted pods (pods might be unready)
+  Normal   SuccessfulRescale             3m38s              horizontal-pod-autoscaler  New size: 4; reason: cpu resource utilization (percentage of request) above target
+
+$ kubectl -n tickethub delete pod loadgen --wait=false
+pod "loadgen" deleted from tickethub namespace
+
+
+
+# ~40 minutes after the load generator stopped the HPA is STILL at 4 replicas:
+$ kubectl -n tickethub get hpa tickethub-backend
+NAME                REFERENCE                      TARGETS                         MINPODS   MAXPODS   REPLICAS   AGE
+tickethub-backend   Deployment/tickethub-backend   cpu: 16%/70%, memory: 68%/85%   2         4         4          62m
+
+$ kubectl top pod -n tickethub -l app.kubernetes.io/name=tickethub-backend
+NAME                                 CPU(cores)   MEMORY(bytes)   
+tickethub-backend-58cb867ccd-gsjbg   7m           88Mi            
+tickethub-backend-58cb867ccd-kgg9v   9m           87Mi            
+tickethub-backend-58cb867ccd-pv9bl   8m           86Mi            
+tickethub-backend-58cb867ccd-rbkzn   6m           87Mi            
+
+$ kubectl -n tickethub describe hpa tickethub-backend | sed -n "/^Metrics:/,/^Conditions:/p"
+Metrics:                                                  ( current / target )
+  resource cpu on pods  (as a percentage of request):     16% (8m) / 70%
+  resource memory on pods  (as a percentage of request):  68% (89637Ki) / 85%
+Min replicas:                                             2
+Max replicas:                                             4
+Behavior:
+  Scale Up:
+    Stabilization Window: 0 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Pods     Value: 4    Period: 15 seconds
+      - Type: Percent  Value: 100  Period: 15 seconds
+  Scale Down:
+    Stabilization Window: 60 seconds
+    Select Policy: Max
+    Policies:
+      - Type: Percent  Value: 100  Period: 15 seconds
+Deployment pods:       4 current / 4 desired
+Conditions:
+
+# Why: the HPA takes the MAX of the per-metric recommendations.
+#   cpu:    ceil(4 * 16/70) = 1  -> clamped to minReplicas 2
+#   memory: ceil(4 * 68/85) = ceil(3.2) = 4
+# A Python process does not give memory back when traffic drops (~87Mi idle on a 128Mi request), so the
+# memory metric pins the deployment at its scale-out size. Memory is a poor scale-DOWN signal for this app;
+# CPU (or request rate) is the right one. See README 'Lessons learned'.
