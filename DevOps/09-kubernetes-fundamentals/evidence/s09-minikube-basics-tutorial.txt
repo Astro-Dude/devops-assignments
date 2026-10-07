@@ -1,0 +1,510 @@
+$ brew install minikube
+(installed via Homebrew)
+$ minikube version
+minikube version: v1.39.0
+commit: 7a9f6a841470a207de8cf4bafcccee0969d8ba10
+
+$ minikube start -p hw-legacy-minikube --driver=docker --cpus=2 --memory=2200
+* [hw-legacy-minikube] minikube v1.39.0 on Darwin 27.0 (arm64)
+* Using the docker driver based on user configuration
+* Using Docker Desktop driver with root privileges
+* Starting "hw-legacy-minikube" primary control-plane node in "hw-legacy-minikube" cluster
+* Pulling base image v0.0.51 ...
+* Configuring CNI (Container Networking Interface) ...
+* Verifying Kubernetes components...
+  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
+* Enabled addons: storage-provisioner, default-storageclass
+* Done! kubectl is now configured to use "hw-legacy-minikube" cluster and "default" namespace by default
+########## MODULE 1 - CREATE A CLUSTER (minikube) ##########
+$ minikube status
+hw-legacy-minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+
+
+$ kubectl cluster-info
+Kubernetes control plane is running at https://127.0.0.1:60437
+CoreDNS is running at https://127.0.0.1:60437/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+
+$ kubectl get nodes -o wide
+NAME                 STATUS   ROLES           AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION            CONTAINER-RUNTIME
+hw-legacy-minikube   Ready    control-plane   4m18s   v1.37.0   192.168.49.2   <none>        Debian GNU/Linux 12 (bookworm)   7.0.12-linuxkit (arm64)   containerd://2.3.4
+
+$ kubectl version
+Client Version: v1.37.1
+Kustomize Version: v5.8.1
+Server Version: v1.37.0
+
+$ minikube addons list | head -20
+┌─────────────────────────────┬────────────────────┬────────────┬────────────────────────────────────────┐
+│         ADDON NAME          │      PROFILE       │   STATUS   │               MAINTAINER               │
+├─────────────────────────────┼────────────────────┼────────────┼────────────────────────────────────────┤
+│ ambassador                  │ hw-legacy-minikube │ disabled   │ 3rd party (Ambassador)                 │
+│ amd-gpu-device-plugin       │ hw-legacy-minikube │ disabled   │ 3rd party (AMD)                        │
+│ auto-pause                  │ hw-legacy-minikube │ disabled   │ minikube                               │
+│ cloud-spanner               │ hw-legacy-minikube │ disabled   │ Google                                 │
+│ csi-hostpath-driver         │ hw-legacy-minikube │ disabled   │ Kubernetes                             │
+│ dashboard                   │ hw-legacy-minikube │ disabled   │ Kubernetes                             │
+│ default-storageclass        │ hw-legacy-minikube │ enabled ✅ │ Kubernetes                             │
+│ efk                         │ hw-legacy-minikube │ disabled   │ 3rd party (Elastic)                    │
+│ freshpod                    │ hw-legacy-minikube │ disabled   │ Google                                 │
+│ gcp-auth                    │ hw-legacy-minikube │ disabled   │ Google                                 │
+│ gvisor                      │ hw-legacy-minikube │ disabled   │ minikube                               │
+│ headlamp                    │ hw-legacy-minikube │ disabled   │ 3rd party (kinvolk.io)                 │
+│ inaccel                     │ hw-legacy-minikube │ disabled   │ 3rd party (InAccel [info@inaccel.com]) │
+│ ingress                     │ hw-legacy-minikube │ disabled   │ Kubernetes                             │
+│ ingress-dns                 │ hw-legacy-minikube │ disabled   │ minikube                               │
+│ inspektor-gadget            │ hw-legacy-minikube │ disabled   │ 3rd party (inspektor-gadget.io)        │
+│ istio                       │ hw-legacy-minikube │ disabled   │ 3rd party (Istio)                      │
+
+$ kubectl get pods -n kube-system
+NAME                                         READY   STATUS    RESTARTS   AGE
+coredns-559f6c778d-cfz5t                     1/1     Running   0          4m9s
+etcd-hw-legacy-minikube                      1/1     Running   0          4m17s
+kindnet-ktwnf                                1/1     Running   0          4m9s
+kube-apiserver-hw-legacy-minikube            1/1     Running   0          4m16s
+kube-controller-manager-hw-legacy-minikube   1/1     Running   0          4m16s
+kube-proxy-6smmt                             1/1     Running   0          4m9s
+kube-scheduler-hw-legacy-minikube            1/1     Running   0          4m16s
+storage-provisioner                          1/1     Running   0          4m14s
+
+########## MODULE 2 - DEPLOY AN APP ##########
+$ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
+deployment.apps/kubernetes-bootcamp created
+
+$ kubectl rollout status deployment/kubernetes-bootcamp --timeout=180s
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 0 of 1 updated replicas are available...
+deployment "kubernetes-bootcamp" successfully rolled out
+
+$ kubectl get deployments
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   1/1     1            1           23s
+
+# the tutorial uses 'kubectl proxy' + curl localhost:8001; the same API paths through kubectl's own connection:
+$ kubectl get --raw /version
+{
+  "major": "1",
+  "minor": "37",
+  "emulationMajor": "1",
+  "emulationMinor": "37",
+  "minCompatibilityMajor": "1",
+  "minCompatibilityMinor": "36",
+  "gitVersion": "v1.37.0",
+  "gitCommit": "f54c212e3a2f75d674b717a9b29052b20b60aefc",
+  "gitTreeState": "clean",
+  "buildDate": "2026-08-26T10:44:25Z",
+  "goVersion": "go1.26.6",
+  "compiler": "gc",
+  "platform": "linux/arm64"
+}
+########## MODULE 3 - EXPLORE YOUR APP ##########
+$ kubectl get pods
+NAME                                   READY   STATUS    RESTARTS   AGE
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Running   0          2m15s
+
+$ export POD_NAME=$(kubectl get pods -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+$ echo Name of the Pod: $POD_NAME
+Name of the Pod: kubernetes-bootcamp-5cc66bcc9b-fx2n7
+
+$ kubectl describe pods | sed -n '1,/^Conditions:/p'
+Name:             kubernetes-bootcamp-5cc66bcc9b-fx2n7
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             hw-legacy-minikube/192.168.49.2
+Start Time:       Wed, 07 Oct 2026 18:55:24 +0530
+Labels:           app=kubernetes-bootcamp
+                  pod-template-hash=5cc66bcc9b
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.3
+IPs:
+  IP:           10.244.0.3
+Controlled By:  ReplicaSet/kubernetes-bootcamp-5cc66bcc9b
+Containers:
+  kubernetes-bootcamp:
+    Container ID:   containerd://5a0cbb64b2d80543125a59313cc876278ed3689bb7c833034a79a757b354bfd7
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+    Image ID:       gcr.io/google-samples/kubernetes-bootcamp@sha256:0d6b8ee63bb57c5f5b6156f446b3bc3b3c143d233037f3a2f00e279c8fcc64af
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Wed, 07 Oct 2026 18:55:47 +0530
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-hqvd7 (ro)
+Conditions:
+
+# tutorial: curl http://localhost:8001/api/v1/namespaces/default/pods/$POD_NAME:8080/proxy/  (same API path, through kubectl)
+$ kubectl get --raw /api/v1/namespaces/default/pods/kubernetes-bootcamp-5cc66bcc9b-fx2n7:8080/proxy/
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+
+$ kubectl logs kubernetes-bootcamp-5cc66bcc9b-fx2n7
+Kubernetes Bootcamp App Started At: 2026-10-07T13:25:47.635Z | Running On:  kubernetes-bootcamp-5cc66bcc9b-fx2n7 
+
+Running On: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | Total Requests: 1 | App Uptime: 112.502 seconds | Log Time: 2026-10-07T13:27:40.138Z
+
+$ kubectl exec kubernetes-bootcamp-5cc66bcc9b-fx2n7 -- env
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOSTNAME=kubernetes-bootcamp-5cc66bcc9b-fx2n7
+NPM_CONFIG_LOGLEVEL=info
+NODE_VERSION=6.3.1
+KUBERNETES_PORT=tcp://10.96.0.1:443
+KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443
+KUBERNETES_PORT_443_TCP_PROTO=tcp
+KUBERNETES_PORT_443_TCP_PORT=443
+KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1
+KUBERNETES_SERVICE_HOST=10.96.0.1
+KUBERNETES_SERVICE_PORT=443
+KUBERNETES_SERVICE_PORT_HTTPS=443
+HOME=/root
+
+$ kubectl exec kubernetes-bootcamp-5cc66bcc9b-fx2n7 -- cat server.js | head -20
+var http = require('http');
+var requests=0;
+var podname= process.env.HOSTNAME;
+var startTime;
+var host;
+var handleRequest = function(request, response) {
+  response.setHeader('Content-Type', 'text/plain');
+  response.writeHead(200);
+  response.write("Hello Kubernetes bootcamp! | Running on: ");
+  response.write(host);
+  response.end(" | v=1\n");
+  console.log("Running On:" ,host, "| Total Requests:", ++requests,"| App Uptime:", (new Date() - startTime)/1000 , "seconds", "| Log Time:",new Date());
+}
+var www = http.createServer(handleRequest);
+www.listen(8080,function () {
+    startTime = new Date();;
+    host = process.env.HOSTNAME;
+    console.log ("Kubernetes Bootcamp App Started At:",startTime, "| Running On: " ,host, "\n" );
+});
+
+$ kubectl exec kubernetes-bootcamp-5cc66bcc9b-fx2n7 -- curl -s http://localhost:8080
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+
+########## MODULE 4 - EXPOSE YOUR APP PUBLICLY ##########
+$ kubectl get services
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   6m33s
+
+$ kubectl expose deployment/kubernetes-bootcamp --type=NodePort --port 8080
+service/kubernetes-bootcamp exposed
+
+$ kubectl get services
+NAME                  TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+kubernetes            ClusterIP   10.96.0.1       <none>        443/TCP          6m33s
+kubernetes-bootcamp   NodePort    10.108.80.110   <none>        8080:32297/TCP   0s
+
+$ kubectl describe services/kubernetes-bootcamp
+Name:                     kubernetes-bootcamp
+Namespace:                default
+Labels:                   app=kubernetes-bootcamp
+Annotations:              <none>
+Selector:                 app=kubernetes-bootcamp
+Type:                     NodePort
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.108.80.110
+IPs:                      10.108.80.110
+Port:                     <unset>  8080/TCP
+TargetPort:               8080/TCP
+NodePort:                 <unset>  32297/TCP
+Endpoints:                10.244.0.3:8080
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Internal Traffic Policy:  Cluster
+Events:                   <none>
+
+$ export NODE_PORT=$(kubectl get services/kubernetes-bootcamp -o go-template='{{(index .spec.ports 0).nodePort}}')
+NODE_PORT=32297
+
+$ minikube ip
+192.168.49.2
+
+# docker-driver minikube on macOS: the node IP is inside Docker's VM, so the NodePort is tested from the node itself
+$ minikube ssh -- curl -s http://$(minikube ip):32297
+ssh: Process exited with status 7
+
+--- labels ---
+Labels:                 app=kubernetes-bootcamp
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=kubernetes-bootcamp
+Replicas:               1 desired | 1 updated | 1 total | 1 available | 0 unavailable
+StrategyType:           RollingUpdate
+$ kubectl get pods -l app=kubernetes-bootcamp
+NAME                                   READY   STATUS    RESTARTS   AGE
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Running   0          2m17s
+
+$ kubectl get services -l app=kubernetes-bootcamp
+NAME                  TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+kubernetes-bootcamp   NodePort   10.108.80.110   <none>        8080:32297/TCP   1s
+
+$ kubectl label pods kubernetes-bootcamp-5cc66bcc9b-fx2n7 version=v1
+pod/kubernetes-bootcamp-5cc66bcc9b-fx2n7 labeled
+
+$ kubectl describe pods kubernetes-bootcamp-5cc66bcc9b-fx2n7 | sed -n '/^Labels:/,/^Annotations:/p'
+Labels:           app=kubernetes-bootcamp
+                  pod-template-hash=5cc66bcc9b
+                  version=v1
+Annotations:      <none>
+
+$ kubectl get pods -l version=v1
+NAME                                   READY   STATUS    RESTARTS   AGE
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Running   0          2m17s
+
+$ kubectl delete service -l app=kubernetes-bootcamp
+service "kubernetes-bootcamp" deleted from default namespace
+
+$ kubectl get services
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   6m34s
+
+$ minikube ssh -- curl -s -m 3 http://$(minikube ip):32297; echo exit=$?
+ssh: Process exited with status 7
+exit=1
+
+$ kubectl exec -ti kubernetes-bootcamp-5cc66bcc9b-fx2n7 -- curl -s http://localhost:8080
+Unable to use a TTY - input is not a terminal or the right kind of file
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+
+########## MODULE 4 (re-run of the NodePort test - the first curl ran 0s after 'expose', before kube-proxy had programmed the port) ##########
+$ kubectl expose deployment/kubernetes-bootcamp --type=NodePort --port 8080
+service/kubernetes-bootcamp exposed
+
+NODE_PORT=32733
+
+$ kubectl get services -l app=kubernetes-bootcamp
+NAME                  TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+kubernetes-bootcamp   NodePort   10.96.147.73   <none>        8080:32733/TCP   5s
+
+$ minikube ssh -- curl -s http://192.168.49.2:32733
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+
+$ kubectl delete service -l app=kubernetes-bootcamp
+service "kubernetes-bootcamp" deleted from default namespace
+
+$ minikube ssh -- curl -s -m 3 http://192.168.49.2:32733; echo exit=$?
+ssh: Process exited with status 7
+exit=1
+
+# the Service is gone but the app itself is still running:
+$ kubectl exec kubernetes-bootcamp-5cc66bcc9b-fx2n7 -- curl -s http://localhost:8080
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+
+########## MODULE 5 - SCALE YOUR APP ##########
+$ kubectl expose deployment/kubernetes-bootcamp --type=NodePort --port 8080
+service/kubernetes-bootcamp exposed
+
+$ kubectl get deployments
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   1/1     1            1           2m48s
+
+$ kubectl get rs
+NAME                             DESIRED   CURRENT   READY   AGE
+kubernetes-bootcamp-5cc66bcc9b   1         1         1       2m48s
+
+$ kubectl scale deployments/kubernetes-bootcamp --replicas=4
+deployment.apps/kubernetes-bootcamp scaled
+
+$ kubectl rollout status deployment/kubernetes-bootcamp --timeout=120s
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 of 4 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 2 of 4 updated replicas are available...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 3 of 4 updated replicas are available...
+deployment "kubernetes-bootcamp" successfully rolled out
+
+$ kubectl get deployments
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   4/4     4            4           2m49s
+
+$ kubectl get pods -o wide
+NAME                                   READY   STATUS    RESTARTS   AGE     IP           NODE                 NOMINATED NODE   READINESS GATES
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Running   0          2m49s   10.244.0.3   hw-legacy-minikube   <none>           <none>
+kubernetes-bootcamp-5cc66bcc9b-jk2bq   1/1     Running   0          1s      10.244.0.6   hw-legacy-minikube   <none>           <none>
+kubernetes-bootcamp-5cc66bcc9b-nscdp   1/1     Running   0          1s      10.244.0.5   hw-legacy-minikube   <none>           <none>
+kubernetes-bootcamp-5cc66bcc9b-vxhl4   1/1     Running   0          1s      10.244.0.4   hw-legacy-minikube   <none>           <none>
+
+$ kubectl describe deployments/kubernetes-bootcamp | sed -n '/^Replicas:/p;/^Events:/,$p'
+Replicas:               4 desired | 4 updated | 4 total | 4 available | 0 unavailable
+Events:
+  Type    Reason             Age    From                   Message
+  ----    ------             ----   ----                   -------
+  Normal  ScalingReplicaSet  2m49s  deployment-controller  Scaled up replica set kubernetes-bootcamp-5cc66bcc9b from 0 to 1
+  Normal  ScalingReplicaSet  1s     deployment-controller  Scaled up replica set kubernetes-bootcamp-5cc66bcc9b from 1 to 4
+
+$ kubectl describe services/kubernetes-bootcamp | grep -E 'NodePort|Endpoints'
+Type:                     NodePort
+NodePort:                 <unset>  31284/TCP
+Endpoints:                10.244.0.3:8080,10.244.0.6:8080,10.244.0.5:8080 + 1 more...
+
+$ for i in $(seq 1 10); do minikube ssh -- curl -s http://192.168.49.2:31284; done
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-jk2bq | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-nscdp | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-vxhl4 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-jk2bq | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-vxhl4 | v=1
+
+$ kubectl scale deployments/kubernetes-bootcamp --replicas=2
+deployment.apps/kubernetes-bootcamp scaled
+
+$ kubectl get deployments
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   2/2     2            2           2m56s
+
+$ kubectl get pods -o wide
+NAME                                   READY   STATUS        RESTARTS   AGE     IP           NODE                 NOMINATED NODE   READINESS GATES
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Running       0          2m56s   10.244.0.3   hw-legacy-minikube   <none>           <none>
+kubernetes-bootcamp-5cc66bcc9b-jk2bq   1/1     Running       0          8s      10.244.0.6   hw-legacy-minikube   <none>           <none>
+kubernetes-bootcamp-5cc66bcc9b-nscdp   1/1     Terminating   0          8s      10.244.0.5   hw-legacy-minikube   <none>           <none>
+kubernetes-bootcamp-5cc66bcc9b-vxhl4   1/1     Terminating   0          8s      10.244.0.4   hw-legacy-minikube   <none>           <none>
+
+########## MODULE 6 - UPDATE YOUR APP ##########
+$ kubectl describe pods | grep -E '^Name:|Image:'
+Name:             kubernetes-bootcamp-5cc66bcc9b-fx2n7
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+Name:             kubernetes-bootcamp-5cc66bcc9b-jk2bq
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+Name:                      kubernetes-bootcamp-5cc66bcc9b-nscdp
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+Name:                      kubernetes-bootcamp-5cc66bcc9b-vxhl4
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+
+$ kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=docker.io/jocatalin/kubernetes-bootcamp:v2
+deployment.apps/kubernetes-bootcamp image updated
+
+$ kubectl rollout status deployments/kubernetes-bootcamp --timeout=180s
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+deployment "kubernetes-bootcamp" successfully rolled out
+
+$ kubectl get pods
+NAME                                   READY   STATUS        RESTARTS   AGE
+kubernetes-bootcamp-5b97597885-7hq86   1/1     Running       0          0s
+kubernetes-bootcamp-5b97597885-vz5v7   1/1     Running       0          9s
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Terminating   0          3m5s
+kubernetes-bootcamp-5cc66bcc9b-jk2bq   1/1     Terminating   0          17s
+kubernetes-bootcamp-5cc66bcc9b-nscdp   1/1     Terminating   0          17s
+kubernetes-bootcamp-5cc66bcc9b-vxhl4   1/1     Terminating   0          17s
+
+$ kubectl describe pods | grep -E '^Name:|Image:'
+Name:             kubernetes-bootcamp-5b97597885-7hq86
+    Image:          docker.io/jocatalin/kubernetes-bootcamp:v2
+Name:             kubernetes-bootcamp-5b97597885-vz5v7
+    Image:          docker.io/jocatalin/kubernetes-bootcamp:v2
+Name:                      kubernetes-bootcamp-5cc66bcc9b-fx2n7
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+Name:                      kubernetes-bootcamp-5cc66bcc9b-jk2bq
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+Name:                      kubernetes-bootcamp-5cc66bcc9b-nscdp
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+Name:                      kubernetes-bootcamp-5cc66bcc9b-vxhl4
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+
+$ for i in 1 2 3 4; do minikube ssh -- curl -s http://192.168.49.2:31284; done
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5b97597885-7hq86 | v=2
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5b97597885-7hq86 | v=2
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5b97597885-vz5v7 | v=2
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5b97597885-7hq86 | v=2
+
+--- roll out a broken version ---
+$ kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=gcr.io/google-samples/kubernetes-bootcamp:v10
+deployment.apps/kubernetes-bootcamp image updated
+
+$ kubectl get deployments
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   2/2     1            2           3m35s
+
+$ kubectl get pods
+NAME                                   READY   STATUS             RESTARTS   AGE
+kubernetes-bootcamp-556487b4d4-mmlgv   0/1     ImagePullBackOff   0          26s
+kubernetes-bootcamp-5b97597885-7hq86   1/1     Running            0          30s
+kubernetes-bootcamp-5b97597885-vz5v7   1/1     Running            0          39s
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Terminating        0          3m35s
+kubernetes-bootcamp-5cc66bcc9b-jk2bq   1/1     Terminating        0          47s
+
+$ kubectl describe pods | grep -E '^Name:|Image:|Reason:|Failed to pull' | head -20
+Name:             kubernetes-bootcamp-556487b4d4-mmlgv
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v10
+      Reason:       ImagePullBackOff
+Name:             kubernetes-bootcamp-5b97597885-7hq86
+    Image:          docker.io/jocatalin/kubernetes-bootcamp:v2
+Name:             kubernetes-bootcamp-5b97597885-vz5v7
+    Image:          docker.io/jocatalin/kubernetes-bootcamp:v2
+Name:                      kubernetes-bootcamp-5cc66bcc9b-fx2n7
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+Name:                      kubernetes-bootcamp-5cc66bcc9b-jk2bq
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+
+$ kubectl rollout history deployment/kubernetes-bootcamp
+deployment.apps/kubernetes-bootcamp 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+3         <none>
+
+
+$ kubectl rollout undo deployments/kubernetes-bootcamp
+deployment.apps/kubernetes-bootcamp rolled back
+
+$ kubectl rollout status deployments/kubernetes-bootcamp --timeout=120s
+deployment "kubernetes-bootcamp" successfully rolled out
+
+$ kubectl get pods
+NAME                                   READY   STATUS        RESTARTS   AGE
+kubernetes-bootcamp-556487b4d4-mmlgv   0/1     Terminating   0          26s
+kubernetes-bootcamp-5b97597885-7hq86   1/1     Running       0          30s
+kubernetes-bootcamp-5b97597885-vz5v7   1/1     Running       0          39s
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Terminating   0          3m35s
+kubernetes-bootcamp-5cc66bcc9b-jk2bq   1/1     Terminating   0          47s
+
+$ kubectl describe pods | grep -E '^Name:|Image:'
+Name:                      kubernetes-bootcamp-556487b4d4-mmlgv
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v10
+Name:             kubernetes-bootcamp-5b97597885-7hq86
+    Image:          docker.io/jocatalin/kubernetes-bootcamp:v2
+Name:             kubernetes-bootcamp-5b97597885-vz5v7
+    Image:          docker.io/jocatalin/kubernetes-bootcamp:v2
+Name:                      kubernetes-bootcamp-5cc66bcc9b-fx2n7
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+Name:                      kubernetes-bootcamp-5cc66bcc9b-jk2bq
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+
+$ kubectl rollout history deployment/kubernetes-bootcamp
+deployment.apps/kubernetes-bootcamp 
+REVISION  CHANGE-CAUSE
+1         <none>
+3         <none>
+4         <none>
+
+
+--- clean up (tutorial's last step) ---
+$ kubectl delete deployments/kubernetes-bootcamp services/kubernetes-bootcamp
+deployment.apps "kubernetes-bootcamp" deleted from default namespace
+service "kubernetes-bootcamp" deleted from default namespace
+
+########## FINISHED - STOP AND DELETE THE MINIKUBE CLUSTER ##########
+$ minikube stop -p hw-legacy-minikube
+* Stopping node "hw-legacy-minikube"  ...
+* Powering off "hw-legacy-minikube" via SSH ...
+* 1 node stopped.
+
+$ minikube delete -p hw-legacy-minikube
+* Deleting "hw-legacy-minikube" in docker ...
+* Deleting container "hw-legacy-minikube" ...
+* Removing /Users/shauryaverma/.minikube/machines/hw-legacy-minikube ...
+* Removed all traces of the "hw-legacy-minikube" cluster.

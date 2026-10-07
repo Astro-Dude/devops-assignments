@@ -2,7 +2,9 @@
 
 Session 9. Cluster architecture, the control plane, and the first workloads.
 Command results below are **real captured output** from a live three-node
-Kubernetes v1.37 cluster.
+Kubernetes v1.37 cluster. The spec asks for **Minikube**, so Minikube was also
+installed and the official Kubernetes Basics tutorial was done on it from start
+to finish. That is in [Task 6](#task-6--minikube-and-the-official-kubernetes-basics-tutorial).
 
 ---
 
@@ -50,7 +52,7 @@ Two details in that file are there for later sessions:
 - **`extraPortMappings`** punches host ports through the node container. Ingress
   lands on **8080/8443** rather than 80/443 because port 80 on this machine is
   already taken by an unrelated container — the same collision documented in
-  [assignment 08](../08-docker-network/README.md). NodePort demos use
+  [session 08](../08-docker-network/README.md). NodePort demos use
   **30080/30081**.
 
 ```bash
@@ -183,7 +185,7 @@ Reading that list carefully tells you most of the architecture:
 
 The ones that are **one per node** are DaemonSets — `kube-proxy` and `kindnet`
 are the textbook real-world example of why DaemonSets exist (covered properly in
-[assignment 10](../10-k8s-core-objects/README.md)).
+[session 10](../10-k8s-core-objects/README.md)).
 
 ### Health of the control plane
 
@@ -441,7 +443,7 @@ Events:
 That is the whole pod startup sequence in four lines, and it names who did what:
 `default-scheduler` did exactly one thing (chose a node), and `kubelet` did the
 other three. This event list is the single most useful output in Kubernetes
-troubleshooting — [assignment 14](../14-kubernetes-troubleshooting/README.md) is
+troubleshooting — [session 14](../14-kubernetes-troubleshooting/README.md) is
 built almost entirely on reading it.
 
 ### Reaching into the container
@@ -542,7 +544,7 @@ The **Deployment → ReplicaSet → Pod** chain, visible in one listing. Note th
 ReplicaSet's selector has an extra label the Deployment's does not:
 `pod-template-hash=699b74b567`. That hash is derived from the pod template, and
 it is the mechanism behind rolling updates — change the template, get a
-different hash, get a **new** ReplicaSet. Assignment 10 uses this directly.
+different hash, get a **new** ReplicaSet. Session 10 uses this directly.
 
 Also note the scheduler put all three pods on the **workers**, none on the
 control plane. That is the control-plane taint doing its job.
@@ -665,7 +667,7 @@ hello-deploy-699b74b567-zz884   1/1     Running   0          45s
 Settled at 3/3. **RESTARTS is 0 on the new pod** — this is a replacement, not a
 restart. The old pod is gone forever and a brand-new one with a new name and new
 IP took its place. That distinction is exactly why Services exist, and it is the
-whole subject of [assignment 11](../11-kubernetes-services/README.md).
+whole subject of [session 11](../11-kubernetes-services/README.md).
 
 ---
 
@@ -718,6 +720,291 @@ namespace "demo-ns" deleted
 
 ---
 
+## Task 6 — Minikube, and the official Kubernetes Basics tutorial
+
+The task list starts with *"Install and configure Minikube"* and ends with
+*"Perform the Kubernetes Basics tutorial hands-on"*. Everything above runs on
+kind, which I kept for sessions 9–15 because it can run several nodes and map
+host ports. Here Minikube was installed and the six
+[Kubernetes Basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/)
+modules were done on it with the tutorial's own commands and images. Then the
+cluster was deleted. Full transcript:
+[`evidence/s09-minikube-basics-tutorial.txt`](evidence/s09-minikube-basics-tutorial.txt).
+
+Two adaptations, both forced by running on macOS:
+
+- The tutorial uses `kubectl proxy` and then `curl localhost:8001/...`.
+  `kubectl get --raw <same path>` goes through the same API server proxy
+  without opening a local port, so I used that.
+- With the Docker driver on macOS, the Minikube node IP (`192.168.49.2`) sits
+  inside Docker's VM and cannot be reached from the Mac. NodePort requests
+  were therefore sent from the node itself with `minikube ssh -- curl`.
+
+### Module 1 — Create a cluster: install, start, verify
+
+```console
+$ brew install minikube
+$ minikube version
+minikube version: v1.39.0
+commit: 7a9f6a841470a207de8cf4bafcccee0969d8ba10
+
+$ minikube start -p hw-legacy-minikube --driver=docker --cpus=2 --memory=2200
+* [hw-legacy-minikube] minikube v1.39.0 on Darwin 27.0 (arm64)
+* Using the docker driver based on user configuration
+* Using Docker Desktop driver with root privileges
+* Starting "hw-legacy-minikube" primary control-plane node in "hw-legacy-minikube" cluster
+* Pulling base image v0.0.51 ...
+* Configuring CNI (Container Networking Interface) ...
+* Verifying Kubernetes components...
+  - Using image gcr.io/k8s-minikube/storage-provisioner:v5
+* Enabled addons: storage-provisioner, default-storageclass
+* Done! kubectl is now configured to use "hw-legacy-minikube" cluster and "default" namespace by default
+
+$ minikube status
+hw-legacy-minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+
+$ kubectl cluster-info
+Kubernetes control plane is running at https://127.0.0.1:60437
+CoreDNS is running at https://127.0.0.1:60437/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+$ kubectl get nodes -o wide
+NAME                 STATUS   ROLES           AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION            CONTAINER-RUNTIME
+hw-legacy-minikube   Ready    control-plane   4m18s   v1.37.0   192.168.49.2   <none>        Debian GNU/Linux 12 (bookworm)   7.0.12-linuxkit (arm64)   containerd://2.3.4
+
+$ kubectl get pods -n kube-system
+NAME                                         READY   STATUS    RESTARTS   AGE
+coredns-559f6c778d-cfz5t                     1/1     Running   0          4m9s
+etcd-hw-legacy-minikube                      1/1     Running   0          4m17s
+kindnet-ktwnf                                1/1     Running   0          4m9s
+kube-apiserver-hw-legacy-minikube            1/1     Running   0          4m16s
+kube-controller-manager-hw-legacy-minikube   1/1     Running   0          4m16s
+kube-proxy-6smmt                             1/1     Running   0          4m9s
+kube-scheduler-hw-legacy-minikube            1/1     Running   0          4m16s
+storage-provisioner                          1/1     Running   0          4m14s
+```
+
+`minikube status` checks each layer in turn: the host (a Docker container
+here), the kubelet inside it, the API server, and whether kubeconfig points at
+it. The `kube-system` pods are the same control-plane components identified on
+kind in Task 1. Minikube adds its own `storage-provisioner`, and `minikube addons
+list` (in the transcript) shows the optional extras it can turn on: dashboard,
+ingress, metrics-server and others. Only `default-storageclass` and
+`storage-provisioner` are on by default.
+
+### Module 2 — Deploy an app
+
+```console
+$ kubectl create deployment kubernetes-bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
+deployment.apps/kubernetes-bootcamp created
+
+$ kubectl get deployments
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   1/1     1            1           23s
+
+$ kubectl get --raw /version          # tutorial: kubectl proxy + curl localhost:8001/version
+{
+  "major": "1",
+  "minor": "37",
+  "gitVersion": "v1.37.0",
+  "platform": "linux/arm64"
+  ...
+}
+```
+
+### Module 3 — Explore: pods, logs, exec
+
+```console
+$ kubectl get pods
+NAME                                   READY   STATUS    RESTARTS   AGE
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Running   0          2m15s
+
+$ kubectl describe pods
+Name:             kubernetes-bootcamp-5cc66bcc9b-fx2n7
+Node:             hw-legacy-minikube/192.168.49.2
+Labels:           app=kubernetes-bootcamp
+                  pod-template-hash=5cc66bcc9b
+Status:           Running
+IP:               10.244.0.3
+Controlled By:  ReplicaSet/kubernetes-bootcamp-5cc66bcc9b
+    Image:          gcr.io/google-samples/kubernetes-bootcamp:v1
+...
+
+$ kubectl get --raw /api/v1/namespaces/default/pods/$POD_NAME:8080/proxy/
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+
+$ kubectl logs $POD_NAME
+Kubernetes Bootcamp App Started At: 2026-10-07T13:25:47.635Z | Running On:  kubernetes-bootcamp-5cc66bcc9b-fx2n7 
+Running On: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | Total Requests: 1 | App Uptime: 112.502 seconds | Log Time: 2026-10-07T13:27:40.138Z
+
+$ kubectl exec $POD_NAME -- env          (excerpt)
+HOSTNAME=kubernetes-bootcamp-5cc66bcc9b-fx2n7
+NODE_VERSION=6.3.1
+KUBERNETES_SERVICE_HOST=10.96.0.1
+KUBERNETES_SERVICE_PORT=443
+
+$ kubectl exec $POD_NAME -- cat server.js | head -20
+var http = require('http');
+var requests=0;
+var podname= process.env.HOSTNAME;
+...
+
+$ kubectl exec $POD_NAME -- curl -s http://localhost:8080
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+```
+
+The request sent through the API proxy appears in the pod's own log
+(`Total Requests: 1`). That shows the `--raw` call really reached the
+container.
+
+### Module 4 — Expose with a Service, and use labels
+
+```console
+$ kubectl expose deployment/kubernetes-bootcamp --type=NodePort --port 8080
+service/kubernetes-bootcamp exposed
+
+$ kubectl get services -l app=kubernetes-bootcamp
+NAME                  TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+kubernetes-bootcamp   NodePort   10.96.147.73   <none>        8080:32733/TCP   5s
+
+$ minikube ssh -- curl -s http://192.168.49.2:32733
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+
+$ kubectl label pods $POD_NAME version=v1
+pod/kubernetes-bootcamp-5cc66bcc9b-fx2n7 labeled
+
+$ kubectl get pods -l version=v1
+NAME                                   READY   STATUS    RESTARTS   AGE
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Running   0          2m17s
+
+$ kubectl delete service -l app=kubernetes-bootcamp
+service "kubernetes-bootcamp" deleted from default namespace
+
+$ minikube ssh -- curl -s -m 3 http://192.168.49.2:32733; echo exit=$?
+ssh: Process exited with status 7
+exit=1
+
+$ kubectl exec $POD_NAME -- curl -s http://localhost:8080
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+```
+
+After the Service is deleted, the NodePort refuses connections (curl exit 7),
+but the app inside the pod still answers. The Service was only the way in.
+Labels select everything here: `get -l`, `delete -l` and the Service's own
+selector. The first NodePort curl in the transcript, sent 0 s after `expose`,
+also got exit 7 because kube-proxy had not set up the port yet. Retrying 5 s
+later worked.
+
+### Module 5 — Scale
+
+```console
+$ kubectl scale deployments/kubernetes-bootcamp --replicas=4
+deployment.apps/kubernetes-bootcamp scaled
+
+$ kubectl get pods -o wide
+NAME                                   READY   STATUS    RESTARTS   AGE     IP           NODE
+kubernetes-bootcamp-5cc66bcc9b-fx2n7   1/1     Running   0          2m49s   10.244.0.3   hw-legacy-minikube
+kubernetes-bootcamp-5cc66bcc9b-jk2bq   1/1     Running   0          1s      10.244.0.6   hw-legacy-minikube
+kubernetes-bootcamp-5cc66bcc9b-nscdp   1/1     Running   0          1s      10.244.0.5   hw-legacy-minikube
+kubernetes-bootcamp-5cc66bcc9b-vxhl4   1/1     Running   0          1s      10.244.0.4   hw-legacy-minikube
+
+$ kubectl describe services/kubernetes-bootcamp | grep -E 'NodePort|Endpoints'
+NodePort:                 <unset>  31284/TCP
+Endpoints:                10.244.0.3:8080,10.244.0.6:8080,10.244.0.5:8080 + 1 more...
+
+$ for i in $(seq 1 10); do minikube ssh -- curl -s http://192.168.49.2:31284; done
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-jk2bq | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-nscdp | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-vxhl4 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-jk2bq | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-fx2n7 | v=1
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5cc66bcc9b-vxhl4 | v=1
+
+$ kubectl scale deployments/kubernetes-bootcamp --replicas=2
+deployment.apps/kubernetes-bootcamp scaled
+```
+
+All four pods served requests through one NodePort. The Service's endpoint
+list grew to four as soon as the new pods were Ready, with nothing reconfigured.
+
+### Module 6 — Rolling update, a broken update, and rollback
+
+```console
+$ kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=docker.io/jocatalin/kubernetes-bootcamp:v2
+deployment.apps/kubernetes-bootcamp image updated
+
+$ kubectl rollout status deployments/kubernetes-bootcamp --timeout=180s
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "kubernetes-bootcamp" rollout to finish: 1 old replicas are pending termination...
+deployment "kubernetes-bootcamp" successfully rolled out
+
+$ for i in 1 2 3 4; do minikube ssh -- curl -s http://192.168.49.2:31284; done
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5b97597885-7hq86 | v=2
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5b97597885-7hq86 | v=2
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5b97597885-vz5v7 | v=2
+Hello Kubernetes bootcamp! | Running on: kubernetes-bootcamp-5b97597885-7hq86 | v=2
+
+$ kubectl set image deployments/kubernetes-bootcamp kubernetes-bootcamp=gcr.io/google-samples/kubernetes-bootcamp:v10
+deployment.apps/kubernetes-bootcamp image updated
+
+$ kubectl get deployments
+NAME                  READY   UP-TO-DATE   AVAILABLE   AGE
+kubernetes-bootcamp   2/2     1            2           3m35s
+
+$ kubectl get pods          (two old v1 pods still Terminating omitted)
+NAME                                   READY   STATUS             RESTARTS   AGE
+kubernetes-bootcamp-556487b4d4-mmlgv   0/1     ImagePullBackOff   0          26s
+kubernetes-bootcamp-5b97597885-7hq86   1/1     Running            0          30s
+kubernetes-bootcamp-5b97597885-vz5v7   1/1     Running            0          39s
+
+$ kubectl rollout undo deployments/kubernetes-bootcamp
+deployment.apps/kubernetes-bootcamp rolled back
+
+$ kubectl describe pods | grep -E '^Name:|Image:'      (pods still Terminating omitted)
+Name:             kubernetes-bootcamp-5b97597885-7hq86
+    Image:          docker.io/jocatalin/kubernetes-bootcamp:v2
+Name:             kubernetes-bootcamp-5b97597885-vz5v7
+    Image:          docker.io/jocatalin/kubernetes-bootcamp:v2
+
+$ kubectl rollout history deployment/kubernetes-bootcamp
+REVISION  CHANGE-CAUSE
+1         <none>
+3         <none>
+4         <none>
+
+$ kubectl delete deployments/kubernetes-bootcamp services/kubernetes-bootcamp
+$ minikube stop -p hw-legacy-minikube
+* 1 node stopped.
+$ minikube delete -p hw-legacy-minikube
+* Removed all traces of the "hw-legacy-minikube" cluster.
+```
+
+During the broken `v10` rollout the Deployment showed **`2/2` READY,
+`1` UP-TO-DATE**. The rolling update created one new pod, saw it stuck in
+`ImagePullBackOff`, and never removed the two healthy `v2` pods. Users saw no
+outage. `rollout undo` went back to the `v2` ReplicaSet (`5b97597885`). Revision
+2 disappears from the history and comes back as revision 4, because an undo is
+recorded as a new revision. Session 10 looks at that numbering in detail.
+
+### Minikube vs kind, as used here
+
+| | Minikube (this task) | kind (sessions 9–15) |
+|---|---|---|
+| Node | 1 Docker container (`hw-legacy-minikube`) | 1–3 Docker containers |
+| Extras | `minikube addons` (dashboard, ingress, metrics-server, …) | install manifests yourself |
+| Reaching NodePorts from macOS | `minikube service --url` tunnel, or `minikube ssh` | `extraPortMappings` in the config file |
+| Multi-node | possible (`--nodes`) but less common | the main reason it was chosen |
+
+---
+
 ## What I took away
 
 - **The API server is the only thing anything talks to.** Not the scheduler, not
@@ -753,6 +1040,8 @@ namespace "demo-ns" deleted
 | 4 | Scale the Deployment | Done — 3 → 5 → 3, proven not to restart existing pods |
 | 4 | Demonstrate self-healing | Done — replacement pod caught at age 0s, RESTARTS 0 |
 | 5 | Work with namespaces | Done — created, scoped a pod, showed the default-namespace trap, deleted |
+| 6 | Install and configure **Minikube** | Done — Minikube v1.39.0, Docker driver, `minikube status` all Running, node Ready |
+| 6 | Perform the Kubernetes Basics tutorial hands-on | Done — all 6 modules (create, deploy, explore, expose + labels, scale, update + rollback) with the tutorial's images |
 
 ## Raw evidence
 
