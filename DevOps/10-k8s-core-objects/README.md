@@ -5,7 +5,7 @@ DaemonSet, StatefulSet), and the four deployment strategies — with the
 strategies **measured under continuous HTTP load** rather than described.
 
 Command results are **real captured output** from the three-node kind cluster
-built in [assignment 09](../09-kubernetes-fundamentals/README.md).
+built in [session 09](../09-kubernetes-fundamentals/README.md).
 
 ---
 
@@ -224,6 +224,201 @@ volume that the web container is serving from, live — the two containers share
 filesystem and a network namespace, which is the entire reason a Pod is a group
 of containers rather than a single one. `-c` is mandatory once a pod has more
 than one container.
+
+### The rest of the course lifecycle lab: Running, readiness, liveness, startup, graceful termination
+
+The spec says *"for each YAML file"*. The course lab
+(`devops-heros/session10-k8s-core-objects/pod-lifecycle/`) has twelve files and
+the seven above cover seven of them. The other five are copied unchanged as
+[`08-running.yaml`](manifests/lifecycle/08-running.yaml),
+[`09-readiness.yaml`](manifests/lifecycle/09-readiness.yaml),
+[`10-liveness.yaml`](manifests/lifecycle/10-liveness.yaml),
+[`11-startup.yaml`](manifests/lifecycle/11-startup.yaml) and
+[`12-termination.yaml`](manifests/lifecycle/12-termination.yaml). Each one was
+applied, its status and details checked, and the output captured on a
+single-node kind cluster (`hw-legacy`, images pre-pulled so the timings show
+the probes and not the image downloads). Full transcript:
+[`evidence/s10-lifecycle-course-labs.txt`](evidence/s10-lifecycle-course-labs.txt).
+Watch timestamps are local time (IST); event timestamps are UTC (5h30m behind).
+
+#### 08 — Running (the normal case)
+
+```console
+$ kubectl apply -f manifests/lifecycle/08-running.yaml
+pod/lifecycle-running created
+
+$ kubectl get pod lifecycle-running -o wide
+NAME                READY   STATUS    RESTARTS   AGE   IP            NODE                      NOMINATED NODE   READINESS GATES
+lifecycle-running   1/1     Running   0          1s    10.244.0.10   hw-legacy-control-plane   <none>           <none>
+
+$ kubectl get pod lifecycle-running -o jsonpath='{.status.phase}{"  "}{.status.containerStatuses[0].state}{"\n"}'
+Running  {"running":{"startedAt":"2026-10-07T13:19:41Z"}}
+
+$ kubectl describe pod lifecycle-running | sed -n '/^Conditions:/,/^Volumes:/p;/^Events:/,$p'
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Events:
+  Normal  Scheduled  1s    default-scheduler  Successfully assigned s10-lifecycle/lifecycle-running to hw-legacy-control-plane
+  Normal  Pulled     1s    kubelet            spec.containers{nginx}: Container image "nginx:1.27" already present on machine ...
+  Normal  Created    1s    kubelet            spec.containers{nginx}: Container created
+  Normal  Started    0s    kubelet            spec.containers{nginx}: Container started
+```
+
+**Observed:** phase `Running`, container state `running`, and all five pod
+conditions `True`. The conditions are checked in order (`PodScheduled`, then
+`Initialized`, then `ContainersReady`, then `Ready`), and the four events show
+who did each step: the scheduler picked the node, then the kubelet did the rest.
+
+#### 09 — Readiness probe: Running is not the same as Ready
+
+```console
+$ kubectl apply -f manifests/lifecycle/09-readiness.yaml
+pod/lifecycle-readiness created
+
+[18:49:41]  lifecycle-readiness   0/1     ContainerCreating   0          0s
+[18:49:44]  lifecycle-readiness   0/1     Running             0          3s
+[18:49:47]  lifecycle-readiness   1/1     Running             0          6s
+
+$ kubectl get pod lifecycle-readiness -o jsonpath='{range .status.conditions[*]}{.type}{"="}{.status}{"  at "}{.lastTransitionTime}{"\n"}{end}'
+PodReadyToStartContainers=True  at 2026-10-07T13:19:41Z
+Initialized=True  at 2026-10-07T13:19:41Z
+Ready=True  at 2026-10-07T13:19:47Z
+ContainersReady=True  at 2026-10-07T13:19:47Z
+PodScheduled=True  at 2026-10-07T13:19:41Z
+
+$ kubectl describe pod lifecycle-readiness | grep Readiness:
+    Readiness:      http-get http://:80/ delay=5s timeout=1s period=5s successThreshold=1 failureThreshold=3
+```
+
+**Observed:** for about 6 seconds the pod was `Running` but `0/1`. The container
+was up, but `initialDelaySeconds: 5` meant the first `GET /` had not happened
+yet. `Ready` flipped at 13:19:47, six seconds after the other conditions. A
+Service only sends traffic to pods that are `Ready`, so this probe decides when
+traffic arrives. It never restarts anything.
+
+#### 10 — Liveness probe: the kubelet restarts the container
+
+The container creates `/tmp/healthy`, deletes it after 20 s, then keeps
+running. The probe checks for the file every 5 s with `failureThreshold: 2`.
+
+```console
+$ kubectl get pod lifecycle-liveness -w
+[18:52:07] lifecycle-liveness   0/1     ContainerCreating   0          0s
+[18:52:08] lifecycle-liveness   1/1     Running             0          1s
+[18:53:08] lifecycle-liveness   1/1     Running             1 (1s ago)   61s
+
+$ kubectl get events --field-selector involvedObject.name=lifecycle-liveness ...   (second run)
+FIRST                  LAST                   COUNT   REASON      MESSAGE
+2026-10-07T13:22:08Z   2026-10-07T13:23:08Z   2       Started     Container started
+2026-10-07T13:22:32Z   2026-10-07T13:23:37Z   4       Unhealthy   Liveness probe failed: 
+2026-10-07T13:22:37Z   2026-10-07T13:23:37Z   2       Killing     Container app failed liveness probe, will be restarted
+
+$ kubectl describe pod lifecycle-liveness      (from the first run)
+    Last State:     Terminated
+      Reason:       Error
+      Exit Code:    137
+      Started:      Wed, 07 Oct 2026 18:50:04 +0530
+      Finished:     Wed, 07 Oct 2026 18:51:04 +0530
+    Restart Count:  1
+    Liveness:       exec [sh -c test -f /tmp/healthy] delay=5s timeout=1s period=5s successThreshold=1 failureThreshold=2
+
+$ kubectl logs lifecycle-liveness --previous
+App started
+Health file removed
+```
+
+**Observed:** first failure at +24 s (the file was gone at +20 s), second at
++29 s, and `Killing … will be restarted` at that point. The restart only
+appears at **+60 s**. I did not expect that gap. The container's PID 1 is
+`sh`, which ignores SIGTERM, so the kubelet waited out the default 30 s grace
+period and then sent SIGKILL. That is why the exit code is **137** (128 + 9) and
+not a clean 0. `--previous` shows the logs of the container that was killed. A
+liveness restart keeps the same pod (same name, same IP) and only increments
+`RESTARTS`.
+
+#### 11 — Startup probe: protecting a slow starter
+
+The app sleeps 30 s before creating `/tmp/started`. The startup probe allows
+`10 × 5 s = 50 s`.
+
+```console
+$ kubectl get pod lifecycle-startup -w
+[18:52:07] lifecycle-startup   0/1     ContainerCreating   0          0s
+[18:52:08] lifecycle-startup   0/1     Running             0          1s
+[18:52:42] lifecycle-startup   1/1     Running             0          35s
+
+$ kubectl get events --field-selector involvedObject.name=lifecycle-startup ...   (second run)
+2026-10-07T13:22:08Z   2026-10-07T13:22:08Z   1       Started     Container started
+2026-10-07T13:22:12Z   2026-10-07T13:22:37Z   6       Unhealthy   Startup probe failed: 
+
+$ kubectl get pod lifecycle-startup -o jsonpath='started={...started} ready={...ready} restarts={...restartCount}'
+started=true ready=true restarts=0
+
+$ kubectl logs lifecycle-startup
+Application starting...
+Application started
+```
+
+**Observed:** six startup-probe failures in a row, logged as `Warning
+Unhealthy`, and **zero restarts**. Startup-probe failures only count against
+the `failureThreshold` budget. They do not kill anything until that budget runs
+out. The probe passed at +35 s and the pod became `1/1`. With a 10 s budget
+instead of 50 s, this container would have been killed before it finished
+starting. Session 13 runs that experiment.
+
+#### 12 — Graceful termination: SIGTERM, cleanup, then exit
+
+The script traps `TERM`, spends 10 s "cleaning up", then exits 0.
+`terminationGracePeriodSeconds: 20`.
+
+```console
+$ kubectl get pod lifecycle-termination -o jsonpath='terminationGracePeriodSeconds={.spec.terminationGracePeriodSeconds}'
+terminationGracePeriodSeconds=20
+
+[18:53:55] $ time kubectl delete pod lifecycle-termination
+pod "lifecycle-termination" deleted from s10-lifecycle namespace
+[18:54:05] delete returned after 10 seconds
+
+$ kubectl logs -f lifecycle-termination      (second terminal)
+[18:53:53] Application running
+[18:53:55] SIGTERM received; cleaning up...
+[18:54:05] Cleanup complete
+
+$ kubectl get pod lifecycle-termination -w   (third terminal)
+[18:53:53] lifecycle-termination   1/1     Running       0          1s
+[18:53:55] lifecycle-termination   1/1     Terminating   0          3s
+[18:54:05] lifecycle-termination   0/1     Completed     0          13s
+```
+
+**Observed:** the delete sent SIGTERM straight away. The pod went
+`Terminating` and the app logged the trap. Exactly 10 s later the cleanup
+finished, the process exited 0 (`Completed`, not `Error`) and the delete
+returned. That was well within the 20 s grace period, so no SIGKILL was needed.
+Compare this with the liveness pod above: there PID 1 ignored SIGTERM, used the
+full 30 s and was killed with exit 137. Handling SIGTERM is what makes rolling
+updates drain cleanly instead of cutting off requests.
+
+#### All twelve lifecycle files
+
+| File | Status seen | Phase | What it demonstrates |
+|---|---|---|---|
+| 01-succeeded | `Completed` | Succeeded | exit 0, `restartPolicy: Never` |
+| 02-failed | `Error` | Failed | exit 7, `restartPolicy: Never` |
+| 03-pending | `Pending` | Pending | unsatisfiable resource request |
+| 04-crashloop | `Error` ↔ `CrashLoopBackOff` | Running | repeated exit 1 with back-off |
+| 05-imagepull | `ErrImagePull` → `ImagePullBackOff` | Pending | image tag does not exist |
+| 06-init-container | `1/1 Running`, init container `Completed` | Running | init runs to completion first |
+| 07-multi-container | `2/2 Running` | Running | sidecar sharing an `emptyDir` |
+| 08-running | `1/1 Running` | Running | all conditions True |
+| 09-readiness | `0/1 Running` → `1/1` | Running | Ready lags Running by the probe delay |
+| 10-liveness | `RESTARTS 1` | Running | failed probe → kill (137) → restart |
+| 11-startup | `0/1` for 35 s, 0 restarts | Running | slow start protected |
+| 12-termination | `Terminating` → `Completed`, then removed | (deleted) | SIGTERM trap, 10 s cleanup within 20 s grace |
 
 ---
 
@@ -599,7 +794,7 @@ total = 916 requests, failed = 0
 The limitation this exposes: **granularity is bounded by replica count.** A 1%
 canary needs 99 stable pods. Getting finer control, or splitting on a header or
 a cookie rather than at random, requires an ingress controller or a service
-mesh — which is where [assignment 12](../12-ingress-configmaps-secrets/README.md)
+mesh — which is where [session 12](../12-ingress-configmaps-secrets/README.md)
 picks up.
 
 ### Choosing between them
@@ -716,7 +911,7 @@ served by web-sts-1
 ```
 
 **Same name, different IP** (`.49` → `.50`). Compare with the Deployment in
-assignment 09, where the replacement pod got a brand-new random name. The
+session 09, where the replacement pod got a brand-new random name. The
 StatefulSet's guarantee is the *name*, and that is precisely what a database
 replica needs: `mysql-0` is always the primary, no matter how many times it is
 rescheduled.
@@ -869,6 +1064,7 @@ run whenever a Service does not respond** — it separates "my app is broken" fr
 | 1 | Pending / CrashLoopBackOff / ImagePullBackOff | Done — incl. the live `Error` → `CrashLoopBackOff` flip |
 | 1 | Init containers | Done — ordering and completion proven via shared volume |
 | 1 | Multi-container pods | Done — sidecar updating a live volume, #26 → #27 |
+| 1 | Every course lifecycle YAML (Running, readiness, liveness, startup, termination) | Done — 5 remaining files applied, status/details/output captured, explained |
 | 2 | ReplicaSet | Done — incl. adoption experiment; controller deleted a foreign pod |
 | 3 | Deployment | Done — Deployment → ReplicaSet → Pod chain shown |
 | 3 | Rollout history and rollback | Done — incl. the stale-annotation warning and revision renumbering |
