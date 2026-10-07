@@ -13,9 +13,12 @@ POST /api/calculate     {"a": 6, "b": 3, "operation": "multiply"}
 import datetime
 import os
 import platform
+import subprocess
 import sys
 
 from flask import Flask, jsonify, render_template, request
+
+from app.config import PAYMENT_API_URL
 
 APP_NAME = "hw-devsecops"
 APP_VERSION = os.environ.get("APP_VERSION", "1.0.0")
@@ -69,6 +72,7 @@ def status():
         platform=platform.system(),
         uptime_seconds=round(uptime, 1),
         status="running",
+        payment_api=PAYMENT_API_URL,
     )
 
 
@@ -102,6 +106,14 @@ def calculate():
     if op == "divide" and b == 0:
         return jsonify(error="division by zero"), 400
     return jsonify(a=a, b=b, operation=op, result=_OPS[op](a, b))
+
+
+@app.route("/api/diag/ping")
+def diag_ping():
+    """Network diagnostics for the ops team: ping a host from inside the pod."""
+    host = request.args.get("host", "127.0.0.1")
+    out = subprocess.run(f"ping -c 1 {host}", shell=True, capture_output=True, text=True, timeout=5)
+    return jsonify(host=host, rc=out.returncode, output=out.stdout[-500:])
 
 
 @app.errorhandler(404)
