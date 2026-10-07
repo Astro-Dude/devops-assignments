@@ -1,0 +1,671 @@
+# Excerpt of `gh run view 37636382434 --log` (key steps only, timestamps and docker pull noise stripped)
+
+===== [Secret scan (Gitleaks)] Gitleaks — working tree of this project =====
+^[[36;1mdocker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" dir "/repo/$APP_DIR" \^[[0m
+^[[36;1m  --config "/repo/$APP_DIR/security/gitleaks.toml" --redact --verbose --exit-code 1^[[0m
+Unable to find image 'ghcr.io/gitleaks/gitleaks:v8.30.1' locally
+v8.30.1: Pulling from gitleaks/gitleaks
+Digest: sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+Status: Downloaded newer image for ghcr.io/gitleaks/gitleaks:v8.30.1
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1mscanned ~344518 bytes (344.52 KB) in 182ms^[[0m
+^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1mno leaks found^[[0m
+
+===== [Secret scan (Gitleaks)] Gitleaks — git history touching this project =====
+^[[36;1mdocker run --rm -v "$PWD:/repo" "$GITLEAKS_IMAGE" git /repo \^[[0m
+^[[36;1m  --log-opts="--all -- $APP_DIR" \^[[0m
+^[[36;1m  --config "/repo/$APP_DIR/security/gitleaks.toml" --redact --verbose --exit-code 1^[[0m
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1m7 commits scanned.^[[0m
+^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1mscanned ~375275 bytes (375.27 KB) in 225ms^[[0m
+^[[90m2:26PM^[[0m ^[[32mINF^[[0m ^[[1mno leaks found^[[0m
+
+===== [SCA (pip-audit + npm audit + Trivy fs)] pip-audit (PyPI advisories for pinned requirements) =====
+^[[36;1mpip install pip-audit^[[0m
+^[[36;1mpip-audit -r "$APP_DIR/application/backend/requirements.txt" --strict^[[0m
+  pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Collecting pip-audit
+  Downloading pip_audit-2.10.1-py3-none-any.whl.metadata (28 kB)
+Collecting CacheControl>=0.13.0 (from CacheControl[filecache]>=0.13.0->pip-audit)
+  Downloading cachecontrol-0.14.4-py3-none-any.whl.metadata (3.1 kB)
+Collecting cyclonedx-python-lib<12,>=5 (from pip-audit)
+  Downloading cyclonedx_python_lib-11.12.0-py3-none-any.whl.metadata (6.9 kB)
+Collecting packaging>=23.0.0 (from pip-audit)
+  Downloading packaging-26.3-py3-none-any.whl.metadata (3.5 kB)
+Collecting pip-api>=0.0.28 (from pip-audit)
+  Downloading pip_api-0.0.35-py3-none-any.whl.metadata (17 kB)
+Collecting pip-requirements-parser>=32.0.0 (from pip-audit)
+  Downloading pip_requirements_parser-32.0.1-py3-none-any.whl.metadata (9.3 kB)
+Collecting requests>=2.31.0 (from pip-audit)
+  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting rich>=12.4 (from pip-audit)
+  Downloading rich-15.0.0-py3-none-any.whl.metadata (18 kB)
+Collecting tomli>=2.2.1 (from pip-audit)
+  Downloading tomli-2.5.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (10 kB)
+Collecting tomli-w>=1.2.0 (from pip-audit)
+  Downloading tomli_w-1.2.0-py3-none-any.whl.metadata (5.7 kB)
+Collecting platformdirs>=4.2.0 (from pip-audit)
+  Downloading platformdirs-4.12.3-py3-none-any.whl.metadata (5.5 kB)
+Collecting license-expression<31,>=30 (from cyclonedx-python-lib<12,>=5->pip-audit)
+  Downloading license_expression-30.4.4-py3-none-any.whl.metadata (11 kB)
+Collecting packageurl-python<2,>=0.11 (from cyclonedx-python-lib<12,>=5->pip-audit)
+  Downloading packageurl_python-0.17.6-py3-none-any.whl.metadata (5.1 kB)
+Collecting py-serializable<3.0.0,>=2.1.0 (from cyclonedx-python-lib<12,>=5->pip-audit)
+  Downloading py_serializable-2.1.0-py3-none-any.whl.metadata (4.3 kB)
+Collecting sortedcontainers<3.0.0,>=2.4.0 (from cyclonedx-python-lib<12,>=5->pip-audit)
+  Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl.metadata (10 kB)
+Collecting boolean.py>=4.0 (from license-expression<31,>=30->cyclonedx-python-lib<12,>=5->pip-audit)
+  Downloading boolean_py-5.0-py3-none-any.whl.metadata (2.3 kB)
+Collecting defusedxml<0.8.0,>=0.7.1 (from py-serializable<3.0.0,>=2.1.0->cyclonedx-python-lib<12,>=5->pip-audit)
+  Downloading defusedxml-0.7.1-py2.py3-none-any.whl.metadata (32 kB)
+Collecting msgpack<2.0.0,>=0.5.2 (from CacheControl>=0.13.0->CacheControl[filecache]>=0.13.0->pip-audit)
+  Downloading msgpack-1.2.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+Collecting filelock>=3.8.0 (from CacheControl[filecache]>=0.13.0->pip-audit)
+  Downloading filelock-4.0.12-py3-none-any.whl.metadata (2.0 kB)
+Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.13.15/x64/lib/python3.13/site-packages (from pip-api>=0.0.28->pip-audit) (26.2.1)
+Collecting pyparsing (from pip-requirements-parser>=32.0.0->pip-audit)
+  Downloading pyparsing-3.3.3-py3-none-any.whl.metadata (5.9 kB)
+Collecting charset_normalizer<4,>=2 (from requests>=2.31.0->pip-audit)
+  Downloading charset_normalizer-3.5.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (46 kB)
+Collecting idna<4,>=2.5 (from requests>=2.31.0->pip-audit)
+  Downloading idna-3.20-py3-none-any.whl.metadata (7.2 kB)
+Collecting urllib3<3,>=1.26 (from requests>=2.31.0->pip-audit)
+  Downloading urllib3-2.8.0-py3-none-any.whl.metadata (7.4 kB)
+Collecting certifi>=2023.5.7 (from requests>=2.31.0->pip-audit)
+  Downloading certifi-2026.7.22-py3-none-any.whl.metadata (2.5 kB)
+Collecting markdown-it-py>=2.2.0 (from rich>=12.4->pip-audit)
+  Downloading markdown_it_py-4.2.0-py3-none-any.whl.metadata (7.4 kB)
+Collecting pygments<3.0.0,>=2.13.0 (from rich>=12.4->pip-audit)
+  Downloading pygments-2.21.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=12.4->pip-audit)
+  Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+Downloading pip_audit-2.10.1-py3-none-any.whl (62 kB)
+Downloading cyclonedx_python_lib-11.12.0-py3-none-any.whl (529 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 529.5/529.5 kB 56.4 MB/s  0:00:00
+Downloading license_expression-30.4.4-py3-none-any.whl (120 kB)
+Downloading packageurl_python-0.17.6-py3-none-any.whl (36 kB)
+Downloading py_serializable-2.1.0-py3-none-any.whl (23 kB)
+Downloading defusedxml-0.7.1-py2.py3-none-any.whl (25 kB)
+Downloading sortedcontainers-2.4.0-py2.py3-none-any.whl (29 kB)
+Downloading boolean_py-5.0-py3-none-any.whl (26 kB)
+Downloading cachecontrol-0.14.4-py3-none-any.whl (22 kB)
+Downloading msgpack-1.2.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (466 kB)
+Downloading filelock-4.0.12-py3-none-any.whl (111 kB)
+Downloading packaging-26.3-py3-none-any.whl (129 kB)
+Downloading pip_api-0.0.35-py3-none-any.whl (123 kB)
+Downloading pip_requirements_parser-32.0.1-py3-none-any.whl (35 kB)
+Downloading platformdirs-4.12.3-py3-none-any.whl (32 kB)
+Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+Downloading charset_normalizer-3.5.2-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (254 kB)
+Downloading idna-3.20-py3-none-any.whl (69 kB)
+Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+Downloading rich-15.0.0-py3-none-any.whl (310 kB)
+Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 155.5 MB/s  0:00:00
+Downloading markdown_it_py-4.2.0-py3-none-any.whl (91 kB)
+Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+Downloading tomli-2.5.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (283 kB)
+Downloading tomli_w-1.2.0-py3-none-any.whl (6.7 kB)
+Downloading pyparsing-3.3.3-py3-none-any.whl (126 kB)
+Installing collected packages: sortedcontainers, boolean.py, urllib3, tomli-w, tomli, pyparsing, pygments, platformdirs, pip-api, packaging, packageurl-python, msgpack, mdurl, license-expression, idna, filelock, defusedxml, charset_normalizer, certifi, requests, py-serializable, pip-requirements-parser, markdown-it-py, rich, cyclonedx-python-lib, CacheControl, pip-audit
+
+Successfully installed CacheControl-0.14.4 boolean.py-5.0 certifi-2026.7.22 charset_normalizer-3.5.2 cyclonedx-python-lib-11.12.0 defusedxml-0.7.1 filelock-4.0.12 idna-3.20 license-expression-30.4.4 markdown-it-py-4.2.0 mdurl-0.1.2 msgpack-1.2.3 packageurl-python-0.17.6 packaging-26.3 pip-api-0.0.35 pip-audit-2.10.1 pip-requirements-parser-32.0.1 platformdirs-4.12.3 py-serializable-2.1.0 pygments-2.21.0 pyparsing-3.3.3 requests-2.34.2 rich-15.0.0 sortedcontainers-2.4.0 tomli-2.5.0 tomli-w-1.2.0 urllib3-2.8.0
+No known vulnerabilities found
+
+===== [SCA (pip-audit + npm audit + Trivy fs)] npm audit (fail on high+) =====
+^[[36;1mnpm audit --audit-level=high^[[0m
+  pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+found 0 vulnerabilities
+
+===== [SCA (pip-audit + npm audit + Trivy fs)] Trivy filesystem scan of lockfiles (HIGH/CRITICAL) =====
+^[[36;1mdocker run --rm -v "$PWD:/src" "$TRIVY_IMAGE" fs --quiet --scanners vuln \^[[0m
+^[[36;1m  --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "/src/$APP_DIR/application"^[[0m
+  pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+Unable to find image 'aquasec/trivy:0.75.0' locally
+0.75.0: Pulling from aquasec/trivy
+Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+Status: Downloaded newer image for aquasec/trivy:0.75.0
+
+Report Summary
+
+┌────────────────────────────┬──────┬─────────────────┐
+│           Target           │ Type │ Vulnerabilities │
+├────────────────────────────┼──────┼─────────────────┤
+│ backend/requirements.txt   │ pip  │        0        │
+├────────────────────────────┼──────┼─────────────────┤
+│ frontend/package-lock.json │ npm  │        0        │
+└────────────────────────────┴──────┴─────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+===== [Backend lint + pytest] Ruff (lint + format check) =====
+^[[36;1mruff check . && ruff format --check .^[[0m
+  pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+All checks passed!
+13 files already formatted
+
+===== [Backend lint + pytest] Pytest (SQLite test DB, never production) =====
+^[[36;1mpytest -v --junitxml=pytest-report.xml^[[0m
+  pythonLocation: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+  Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.15/x64
+============================= test session starts ==============================
+platform linux -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0 -- /opt/hostedtoolcache/Python/3.13.15/x64/bin/python
+cachedir: .pytest_cache
+rootdir: /home/runner/work/devops-assignments/devops-assignments/DevOps/21-final-devops-project/application/backend
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.15.1
+collecting ... collected 13 items
+
+tests/test_api.py::test_health_is_up PASSED                              [  7%]
+tests/test_api.py::test_ready_checks_database PASSED                     [ 15%]
+tests/test_api.py::test_info_reports_environment PASSED                  [ 23%]
+tests/test_api.py::test_create_ticket_defaults PASSED                    [ 30%]
+tests/test_api.py::test_create_ticket_rejects_invalid_priority PASSED    [ 38%]
+tests/test_api.py::test_create_ticket_rejects_short_subject PASSED       [ 46%]
+tests/test_api.py::test_list_and_filter_tickets PASSED                   [ 53%]
+tests/test_api.py::test_get_ticket_and_404 PASSED                        [ 61%]
+tests/test_api.py::test_update_ticket_status PASSED                      [ 69%]
+tests/test_api.py::test_delete_ticket PASSED                             [ 76%]
+tests/test_api.py::test_comments_round_trip PASSED                       [ 84%]
+tests/test_api.py::test_stats_counts_by_status PASSED                    [ 92%]
+tests/test_api.py::test_metrics_endpoint_exposes_prometheus_format PASSED [100%]
+
+=============================== warnings summary ===============================
+../../../../../../../../../opt/hostedtoolcache/Python/3.13.15/x64/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /opt/hostedtoolcache/Python/3.13.15/x64/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/runner/work/devops-assignments/devops-assignments/DevOps/21-final-devops-project/application/backend/pytest-report.xml -
+======================== 13 passed, 1 warning in 0.29s =========================
+
+===== [IaC misconfiguration scan (Trivy config)] Trivy config — Dockerfiles, raw manifests, Helm chart, Terraform =====
+^[[36;1mdocker run --rm -v "$PWD:/src" -w "/src/$APP_DIR" "$TRIVY_IMAGE" config --quiet \^[[0m
+^[[36;1m  --severity HIGH,CRITICAL --exit-code 1 --ignorefile security/trivyignore.yaml \^[[0m
+^[[36;1m  --skip-dirs application --skip-dirs troubleshooting --skip-dirs evidence \^[[0m
+^[[36;1m  --skip-files kubernetes/cluster/ingress-nginx-kind-v1.15.1.yaml .^[[0m
+Unable to find image 'aquasec/trivy:0.75.0' locally
+0.75.0: Pulling from aquasec/trivy
+Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+Status: Downloaded newer image for aquasec/trivy:0.75.0
+
+Report Summary
+
+┌─────────────────────────────────────────────────┬────────────┬───────────────────┐
+│                     Target                      │    Type    │ Misconfigurations │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ docker/backend.Dockerfile                       │ dockerfile │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ docker/frontend.Dockerfile                      │ dockerfile │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ gitops/argocd/application.yaml                  │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ helm/tickethub/templates/backend.yaml           │    helm    │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ helm/tickethub/templates/configmap.yaml         │    helm    │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ helm/tickethub/templates/frontend.yaml          │    helm    │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ helm/tickethub/templates/grafana-dashboard.yaml │    helm    │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ helm/tickethub/templates/hpa.yaml               │    helm    │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ helm/tickethub/templates/ingress.yaml           │    helm    │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ helm/tickethub/templates/networkpolicy.yaml     │    helm    │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ helm/tickethub/templates/postgres.yaml          │    helm    │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ helm/tickethub/templates/secret.yaml            │    helm    │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ kubernetes/00-namespace.yaml                    │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ kubernetes/01-configmap.yaml                    │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ kubernetes/03-postgres.yaml                     │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ kubernetes/04-backend.yaml                      │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ kubernetes/05-frontend.yaml                     │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ kubernetes/06-ingress.yaml                      │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ kubernetes/07-hpa.yaml                          │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ kubernetes/08-networkpolicy.yaml                │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ kubernetes/namespace.yaml                       │ kubernetes │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ terraform                                       │ terraform  │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ terraform/bootstrap                             │ terraform  │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ terraform/bootstrap/main.tf                     │ terraform  │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ terraform/s3.tf                                 │ terraform  │         0         │
+├─────────────────────────────────────────────────┼────────────┼───────────────────┤
+│ terraform/security_groups.tf                    │ terraform  │         0         │
+└─────────────────────────────────────────────────┴────────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+===== [SAST (Bandit + Semgrep)] Bandit — Python security linter (fail on medium+) =====
+^[[36;1mpip install bandit==1.9.4^[[0m
+^[[36;1mbandit -r "$APP_DIR/application/backend/app" -ll -f txt^[[0m
+Defaulting to user installation because normal site-packages is not writeable
+Collecting bandit==1.9.4
+  Downloading bandit-1.9.4-py3-none-any.whl.metadata (7.1 kB)
+Requirement already satisfied: PyYAML>=5.3.1 in /usr/lib/python3/dist-packages (from bandit==1.9.4) (6.0.1)
+Collecting stevedore>=1.20.0 (from bandit==1.9.4)
+  Downloading stevedore-5.9.1-py3-none-any.whl.metadata (2.3 kB)
+Requirement already satisfied: rich in /usr/lib/python3/dist-packages (from bandit==1.9.4) (13.7.1)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/lib/python3/dist-packages (from rich->bandit==1.9.4) (3.0.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/lib/python3/dist-packages (from rich->bandit==1.9.4) (2.17.2)
+Requirement already satisfied: mdurl~=0.1 in /usr/lib/python3/dist-packages (from markdown-it-py>=2.2.0->rich->bandit==1.9.4) (0.1.2)
+Downloading bandit-1.9.4-py3-none-any.whl (134 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.7/134.7 kB 5.2 MB/s eta 0:00:00
+Downloading stevedore-5.9.1-py3-none-any.whl (54 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 54.9/54.9 kB 24.3 MB/s eta 0:00:00
+Installing collected packages: stevedore, bandit
+Successfully installed bandit-1.9.4 stevedore-5.9.1
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.12.3
+Run started:2026-10-07 14:26:05.669665+00:00
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 396
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+
+===== [SAST (Bandit + Semgrep)] Semgrep — Python / JavaScript / React / Dockerfile rules =====
+^[[36;1mdocker run --rm -v "$PWD:/src" -w /src "$SEMGREP_IMAGE" semgrep scan \^[[0m
+^[[36;1m  --config p/python --config p/javascript --config p/react --config p/dockerfile \^[[0m
+^[[36;1m  --error --metrics=off "$APP_DIR/application" "$APP_DIR/docker"^[[0m
+Unable to find image 'semgrep/semgrep:1.179.0' locally
+1.179.0: Pulling from semgrep/semgrep
+Digest: sha256:93963d9295a366f59e4850127b1550400ee7b388f04fe144e4a1f6325d96e01b
+Status: Downloaded newer image for semgrep/semgrep:1.179.0
+               
+               
+┌─────────────┐
+│ Scan Status │
+└─────────────┘
+  Scanning 33 files tracked by git with 232 Code rules:
+                                                                                                                        
+  Language     Rules   Files          Origin      Rules                                                                 
+ ────────────────────────────        ───────────────────                                                                
+  python         151      11          Community     232                                                                 
+  js              68       6                                                                                            
+  dockerfile       7       2                                                                                            
+  yaml             1       1                                                                                            
+                                                                                                                        
+                
+                
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 0 (0 blocking)
+ • Rules run: 226
+ • Targets scanned: 20
+ • Parsed lines: ~100.0%
+ • Scan skipped: 
+   ◦ Files matching .semgrepignore patterns: 2
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 226 rules on 20 files: 0 findings.
+(need more rules? `semgrep login` for additional free Semgrep Registry rules)
+
+If Semgrep missed a finding, please send us feedback to let us know!
+See https://semgrep.dev/docs/reporting-false-negatives/
+
+===== [Docker build + Trivy image scan (frontend)] Trivy image scan — gate on fixable HIGH/CRITICAL =====
+^[[36;1mdocker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \^[[0m
+^[[36;1m  --quiet --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \^[[0m
+^[[36;1m  "$IMAGE_PREFIX-frontend:$GITHUB_SHA"^[[0m
+Unable to find image 'aquasec/trivy:0.75.0' locally
+0.75.0: Pulling from aquasec/trivy
+Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+Status: Downloaded newer image for aquasec/trivy:0.75.0
+
+Report Summary
+
+┌──────────────────────────────────────────────────────────────────────────────────┬────────┬─────────────────┬─────────┐
+│                                      Target                                      │  Type  │ Vulnerabilities │ Secrets │
+├──────────────────────────────────────────────────────────────────────────────────┼────────┼─────────────────┼─────────┤
+│ ghcr.io/astro-dude/s21-tickethub-frontend:0b9665e38a2db926e487fe72e9283d84e672c- │ alpine │        0        │    -    │
+│ 0d5 (alpine 3.23.4)                                                              │        │                 │         │
+└──────────────────────────────────────────────────────────────────────────────────┴────────┴─────────────────┴─────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+===== [Docker build + Trivy image scan (backend)] Trivy image scan — gate on fixable HIGH/CRITICAL =====
+^[[36;1mdocker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \^[[0m
+^[[36;1m  --quiet --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 \^[[0m
+^[[36;1m  "$IMAGE_PREFIX-backend:$GITHUB_SHA"^[[0m
+Unable to find image 'aquasec/trivy:0.75.0' locally
+0.75.0: Pulling from aquasec/trivy
+Digest: sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+Status: Downloaded newer image for aquasec/trivy:0.75.0
+
+Report Summary
+
+┌──────────────────────────────────────────────────────────────────────────────────┬────────────┬─────────────────┬─────────┐
+│                                      Target                                      │    Type    │ Vulnerabilities │ Secrets │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0- │   alpine   │        0        │    -    │
+│ d5 (alpine 3.24.2)                                                               │            │                 │         │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/alembic-1.20.0.dist-info/METADATA              │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/annotated_doc-0.0.5.dist-info/METADATA         │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/annotated_types-0.8.0.dist-info/METADATA       │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/anyio-4.15.1.dist-info/METADATA                │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/click-8.5.0.dist-info/METADATA                 │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/fastapi-0.142.2.dist-info/METADATA             │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/h11-0.16.0.dist-info/METADATA                  │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/httptools-0.8.0.dist-info/METADATA             │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/idna-3.20.dist-info/METADATA                   │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/mako-1.4.3.dist-info/METADATA                  │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/markupsafe-3.0.4.dist-info/METADATA            │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/opentelemetry_api-1.45.1.dist-info/METADATA    │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/prometheus_client-0.26.0.dist-info/METADATA    │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/psycopg-3.3.6.dist-info/METADATA               │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/psycopg_binary-3.3.6.dist-info/METADATA        │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/pydantic-2.13.5.dist-info/METADATA             │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/pydantic_core-2.46.5.dist-info/METADATA        │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/pydantic_settings-2.15.0.dist-info/METADATA    │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/python_dotenv-1.2.4.dist-info/METADATA         │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/pyyaml-6.0.3.dist-info/METADATA                │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/sqlalchemy-2.1.3.dist-info/METADATA            │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/starlette-1.7.0.dist-info/METADATA             │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/typing_extensions-4.16.0.dist-info/METADATA    │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/typing_inspection-0.4.4.dist-info/METADATA     │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/uvicorn-0.54.0.dist-info/METADATA              │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/uvloop-0.23.0.dist-info/METADATA               │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/watchfiles-1.3.0.dist-info/METADATA            │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ venv/lib/python3.13/site-packages/websockets-17.2.dist-info/METADATA             │ python-pkg │        0        │    -    │
+└──────────────────────────────────────────────────────────────────────────────────┴────────────┴─────────────────┴─────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+===== [Security gate] Every quality and security check must have passed =====
+^[[36;1mecho "## Security gate" >> "$GITHUB_STEP_SUMMARY"^[[0m
+^[[36;1mecho "| check | result |" >> "$GITHUB_STEP_SUMMARY"^[[0m
+^[[36;1mecho "|---|---|" >> "$GITHUB_STEP_SUMMARY"^[[0m
+^[[36;1mecho "$RESULTS" | jq -r 'to_entries[] | "| \(.key) | \(.value.result) |"' >> "$GITHUB_STEP_SUMMARY"^[[0m
+^[[36;1mfailed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result != "success") | .key] | join(", ")')^[[0m
+^[[36;1mif [ -n "$failed" ]; then^[[0m
+^[[36;1m  echo "Gate CLOSED - failed/skipped: $failed" | tee -a "$GITHUB_STEP_SUMMARY"^[[0m
+^[[36;1m  exit 1^[[0m
+^[[36;1mfi^[[0m
+^[[36;1mecho "Gate OPEN - image may be published" | tee -a "$GITHUB_STEP_SUMMARY"^[[0m
+  "backend-test": {
+    "result": "success",
+    "outputs": {}
+  },
+  "frontend-test": {
+    "result": "success",
+    "outputs": {}
+  },
+  "sast": {
+    "result": "success",
+    "outputs": {}
+  },
+  "sca": {
+    "result": "success",
+    "outputs": {}
+  },
+  "secret-scan": {
+    "result": "success",
+    "outputs": {}
+  },
+  "iac-scan": {
+    "result": "success",
+    "outputs": {}
+  },
+  "docker-build": {
+    "result": "success",
+    "outputs": {}
+  }
+}
+Gate OPEN - image may be published
+
+===== [Push images to GHCR] Push SHA-tagged images (never :latest) =====
+^[[36;1mfor c in backend frontend; do^[[0m
+^[[36;1m  gunzip -c "image-$c.tar.gz" | docker load^[[0m
+^[[36;1m  docker push "$IMAGE_PREFIX-$c:$GITHUB_SHA"^[[0m
+^[[36;1m  echo "- \`$IMAGE_PREFIX-$c:$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"^[[0m
+^[[36;1mdone^[[0m
+Loaded image: ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5
+The push refers to repository [ghcr.io/astro-dude/s21-tickethub-backend]
+a485790f02e2: Preparing
+7f2473dd89f5: Preparing
+f3e84f93d587: Preparing
+4d07e41a0271: Preparing
+b1b437613743: Preparing
+ef4cd25d6a87: Preparing
+09b41e0a8d45: Preparing
+4b3c5e4553e1: Preparing
+ebc25a728871: Preparing
+74d97c428c51: Preparing
+b1b437613743: Pushed
+f3e84f93d587: Pushed
+7f2473dd89f5: Pushed
+a485790f02e2: Pushed
+09b41e0a8d45: Pushed
+ebc25a728871: Pushed
+74d97c428c51: Layer already exists
+ef4cd25d6a87: Pushed
+4b3c5e4553e1: Pushed
+4d07e41a0271: Pushed
+0b9665e38a2db926e487fe72e9283d84e672c0d5: digest: sha256:ad9ab2db419c2b14de07dcadb1035b6340011120153623167adddc6da1654d56 size: 2408
+Loaded image: ghcr.io/astro-dude/s21-tickethub-frontend:0b9665e38a2db926e487fe72e9283d84e672c0d5
+The push refers to repository [ghcr.io/astro-dude/s21-tickethub-frontend]
+6d0a8b89e634: Preparing
+0ec24c0652ff: Preparing
+207bfaa5eec7: Preparing
+f8efa76e4546: Preparing
+0acfc468e23b: Preparing
+76abe25906cc: Preparing
+6ef4bb34c7eb: Preparing
+b9918233dc72: Preparing
+70c5236ec63b: Preparing
+26018f2b5e36: Preparing
+bbf693738c79: Preparing
+29df493baa13: Preparing
+0acfc468e23b: Pushed
+6d0a8b89e634: Pushed
+0ec24c0652ff: Pushed
+76abe25906cc: Pushed
+6ef4bb34c7eb: Pushed
+207bfaa5eec7: Pushed
+b9918233dc72: Pushed
+f8efa76e4546: Pushed
+70c5236ec63b: Pushed
+26018f2b5e36: Pushed
+bbf693738c79: Pushed
+29df493baa13: Pushed
+0b9665e38a2db926e487fe72e9283d84e672c0d5: digest: sha256:2f2428c197e8f760f50c6671486b6114c00e6e446bf55382b3320533a788ca85 size: 2824
+
+===== [Deploy to ephemeral kind cluster + smoke test] helm upgrade --install (images pulled from GHCR by SHA) =====
+^[[36;1mhelm upgrade --install tickethub "$APP_DIR/helm/tickethub" -n tickethub \^[[0m
+^[[36;1m  -f "$APP_DIR/helm/tickethub/values-dev.yaml" \^[[0m
+^[[36;1m  --set image.backend.tag="$GITHUB_SHA" --set image.frontend.tag="$GITHUB_SHA" \^[[0m
+^[[36;1m  --set database.existingSecret=tickethub-db \^[[0m
+^[[36;1m  --set "imagePullSecrets[0].name=ghcr-pull" \^[[0m
+^[[36;1m  --wait --timeout 5m^[[0m
+^[[36;1mkubectl -n tickethub get deploy,pods,svc,ingress,hpa,pvc -o wide^[[0m
+Release "tickethub" does not exist. Installing it now.
+NAME: tickethub
+LAST DEPLOYED: Wed Oct  7 14:29:11 2026
+NAMESPACE: tickethub
+STATUS: deployed
+REVISION: 1
+NOTES:
+TicketHub 1.0.0 deployed as release "tickethub" in namespace "tickethub".
+
+  backend image : ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5
+  frontend image: ghcr.io/astro-dude/s21-tickethub-frontend:0b9665e38a2db926e487fe72e9283d84e672c0d5
+  URL           : http://tickethub.localtest.me/   (kind: add :28080)
+
+Check it:
+  kubectl -n tickethub get pods,svc,ingress,hpa,pvc
+  helm test tickethub -n tickethub
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES                                                                               SELECTOR
+deployment.apps/tickethub-backend    1/1     1            1           28s   backend      ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5    app.kubernetes.io/instance=tickethub,app.kubernetes.io/name=tickethub-backend
+deployment.apps/tickethub-frontend   1/1     1            1           28s   frontend     ghcr.io/astro-dude/s21-tickethub-frontend:0b9665e38a2db926e487fe72e9283d84e672c0d5   app.kubernetes.io/instance=tickethub,app.kubernetes.io/name=tickethub-frontend
+deployment.apps/tickethub-postgres   1/1     1            1           28s   postgres     postgres:17-alpine                                                                   app.kubernetes.io/instance=tickethub,app.kubernetes.io/name=tickethub-postgres
+
+NAME                                      READY   STATUS    RESTARTS   AGE   IP            NODE                   NOMINATED NODE   READINESS GATES
+pod/tickethub-backend-6f7d6f4759-wb7vg    1/1     Running   0          28s   10.244.0.9    s21-ci-control-plane   <none>           <none>
+pod/tickethub-frontend-67495b6d9-jq7gx    1/1     Running   0          28s   10.244.0.8    s21-ci-control-plane   <none>           <none>
+pod/tickethub-postgres-6c7cb8894f-vrqjl   1/1     Running   0          28s   10.244.0.11   s21-ci-control-plane   <none>           <none>
+
+NAME                         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE   SELECTOR
+service/tickethub-backend    ClusterIP   10.96.36.81     <none>        8000/TCP   28s   app.kubernetes.io/instance=tickethub,app.kubernetes.io/name=tickethub-backend
+service/tickethub-frontend   ClusterIP   10.96.90.109    <none>        80/TCP     28s   app.kubernetes.io/instance=tickethub,app.kubernetes.io/name=tickethub-frontend
+service/tickethub-postgres   ClusterIP   10.96.187.146   <none>        5432/TCP   28s   app.kubernetes.io/instance=tickethub,app.kubernetes.io/name=tickethub-postgres
+
+NAME                                  CLASS   HOSTS                    ADDRESS   PORTS   AGE
+ingress.networking.k8s.io/tickethub   nginx   tickethub.localtest.me             80      28s
+
+NAME                                                    REFERENCE                      TARGETS                                     MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/tickethub-backend   Deployment/tickethub-backend   cpu: <unknown>/70%, memory: <unknown>/85%   1         3         1          28s
+
+NAME                                            STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+persistentvolumeclaim/tickethub-postgres-data   Bound    pvc-28f4df02-0e3d-45c4-8f75-594b661c3974   1Gi        RWO            standard       <unset>                 28s   Filesystem
+
+===== [Deploy to ephemeral kind cluster + smoke test] Smoke test through the Ingress =====
+^[[36;1mH="Host: tickethub.localtest.me"^[[0m
+^[[36;1mfor i in $(seq 1 30); do curl -sf -H "$H" http://localhost/api/info && break; sleep 2; done^[[0m
+^[[36;1mecho^[[0m
+^[[36;1mcurl -sf -H "$H" http://localhost/api/info | jq -e --arg v "${GITHUB_SHA::7}" '.version == $v'^[[0m
+^[[36;1mcurl -sf -H "$H" -X POST http://localhost/api/tickets -H 'content-type: application/json' \^[[0m
+^[[36;1m  -d '{"subject":"CI smoke test ticket","requester":"ci@github","priority":"LOW"}' | jq .^[[0m
+^[[36;1mcurl -sf -H "$H" http://localhost/api/stats | jq -e '.total >= 1'^[[0m
+^[[36;1mcurl -sf -H "$H" http://localhost/ | grep -q '<div id="root">'^[[0m
+^[[36;1mecho "UI and API reachable through ingress-nginx"^[[0m
+{"service":"TicketHub API","version":"0b9665e","environment":"dev","pod":"tickethub-backend-6f7d6f4759-wb7vg","default_team":"L1 Support"}
+true
+{
+  "id": 1,
+  "subject": "CI smoke test ticket",
+  "description": "",
+  "requester": "ci@github",
+  "category": "GENERAL",
+  "priority": "LOW",
+  "status": "OPEN",
+  "team": "L1 Support",
+  "created_at": "2026-10-07T14:29:39.877228Z",
+  "updated_at": "2026-10-07T14:29:39.877233Z"
+}
+true
+UI and API reachable through ingress-nginx
+
+===== [Deploy to ephemeral kind cluster + smoke test] helm test =====
+^[[36;1mhelm test tickethub -n tickethub --logs^[[0m
+NAME: tickethub
+LAST DEPLOYED: Wed Oct  7 14:29:11 2026
+NAMESPACE: tickethub
+STATUS: deployed
+REVISION: 1
+TEST SUITE:     tickethub-smoke-test
+Last Started:   Wed Oct  7 14:29:40 2026
+Last Completed: Wed Oct  7 14:29:44 2026
+Phase:          Succeeded
+NOTES:
+TicketHub 1.0.0 deployed as release "tickethub" in namespace "tickethub".
+
+  backend image : ghcr.io/astro-dude/s21-tickethub-backend:0b9665e38a2db926e487fe72e9283d84e672c0d5
+  frontend image: ghcr.io/astro-dude/s21-tickethub-frontend:0b9665e38a2db926e487fe72e9283d84e672c0d5
+  URL           : http://tickethub.localtest.me/   (kind: add :28080)
+
+Check it:
+  kubectl -n tickethub get pods,svc,ingress,hpa,pvc
+  helm test tickethub -n tickethub
+
+POD LOGS: tickethub-smoke-test
+{"status":"READY"}{"total":1,"open":1,"in_progress":0,"resolved":0,"closed":0,"urgent_open":0}ok
+
